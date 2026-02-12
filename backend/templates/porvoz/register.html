@@ -3,63 +3,82 @@
 
 {% block body %}
 <div class="auth-wrapper">
-    <div class="auth-card">
-        <div class="auth-header">
-            <div class="auth-logo">
-                <img src="{% static 'LogoPorvoz.jpeg' %}" alt="Logo Porvoz">
-            </div>
-            <div>
-                <div class="auth-title">Crea tu cuenta de cuidador</div>
-                <div class="auth-subtitle">Configura pacientes y medicamentos desde un solo lugar.</div>
-            </div>
-        </div>
-
-        {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <div class="message {{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <form method="post" novalidate>
-            {% csrf_token %}
-            <div class="form-group">
-                <label class="form-label" for="id_full_name">Nombre completo</label>
-                <input class="form-input" type="text" id="id_full_name" name="full_name" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="id_email">Correo electrónico</label>
-                <input class="form-input" type="email" id="id_email" name="email" autocomplete="email" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="id_password">Contraseña</label>
-                <input class="form-input" type="password" id="id_password" name="password" autocomplete="new-password" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="id_password_confirm">Confirmar contraseña</label>
-                <input class="form-input" type="password" id="id_password_confirm" name="password_confirm" autocomplete="new-password" required>
-            </div>
-            <div class="form-group">
-                <span class="form-label">Tipo de cuenta</span>
-                <div style="display:flex; gap:10px; font-size:13px;">
-                    <label style="display:flex; align-items:center; gap:6px;">
-                        <input type="radio" name="role" value="caregiver" checked>
-                        <span>Cuidador</span>
-                    </label>
-                    <label style="display:flex; align-items:center; gap:6px;">
-                        <input type="radio" name="role" value="patient">
-                        <span>Paciente</span>
-                    </label>
+    <div style="margin:auto; width:100%; max-width:760px; padding:40px 24px;">
+        <section class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <img src="{% static 'LogoPorvoz.jpeg' %}" alt="Logo Porvoz">
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:.18em; color:#9ca3af; margin-bottom:2px;">
+                        Paso 1 de 2
+                    </div>
+                    <div class="auth-title">Crea tu cuenta</div>
+                    <div class="auth-subtitle">Ingresa tus datos para empezar a probar la versión beta de Porvoz.</div>
                 </div>
             </div>
-            <button class="primary-btn" type="submit">Crear cuenta</button>
-        </form>
 
-        <p class="auth-footer-text">
-            ¿Ya tienes cuenta?
-            <a href="{% url 'login' %}">Inicia sesión</a>
-        </p>
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 16px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="id_full_name">Nombre completo</label>
+                        <input class="form-input" type="text" id="id_full_name" name="full_name" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="id_phone">Número de teléfono</label>
+                        <input class="form-input" type="tel" id="id_phone" name="phone" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="id_age">Edad</label>
+                        <input class="form-input" type="number" min="0" id="id_age" name="age" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="id_address">Dirección</label>
+                        <input class="form-input" type="text" id="id_address" name="address" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="id_email">Correo electrónico</label>
+                        <input class="form-input" type="email" id="id_email" name="email" autocomplete="email" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="id_password">Contraseña</label>
+                        <input class="form-input" type="password" id="id_password" name="password" autocomplete="new-password" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="id_password_confirm">Confirmar contraseña</label>
+                        <input class="form-input" type="password" id="id_password_confirm" name="password_confirm" autocomplete="new-password" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <span class="form-label">Tipo de cuenta</span>
+                        <div style="display:flex; gap:10px; font-size:13px;">
+                            <label style="display:flex; align-items:center; gap:6px;">
+                                <input type="radio" name="role" value="caregiver" checked>
+                                <span>Cuidador</span>
+                            </label>
+                            <label style="display:flex; align-items:center; gap:6px;">
+                                <input type="radio" name="role" value="patient">
+                                <span>Paciente</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <button class="primary-btn" type="submit">Crear cuenta</button>
+            </form>
+
+            <p class="auth-footer-text">
+                ¿Ya tienes cuenta?
+                <a href="{% url 'login' %}">Inicia sesión</a>
+            </p>
+        </section>
     </div>
 </div>
 {% endblock %}

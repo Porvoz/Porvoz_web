@@ -8,13 +8,18 @@
         <aside class="sidebar">
             <div>
                 <div class="sidebar-header">
-                    <div class="sidebar-logo">
-                        <img src="{% static 'LogoPorvoz.jpeg' %}" alt="Logo Porvoz">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="sidebar-logo">
+                            <img src="{% static 'LogoPorvoz.jpeg' %}" alt="Logo Porvoz">
+                        </div>
+                        <div>
+                            <div class="sidebar-title">Porvoz</div>
+                            <div class="sidebar-subtitle">Panel del paciente</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="sidebar-title">Porvoz</div>
-                        <div class="sidebar-subtitle">Panel del paciente</div>
-                    </div>
+                    <button type="button" class="sidebar-toggle" data-sidebar-toggle title="Plegar barra lateral">
+                        ☰
+                    </button>
                 </div>
 
                 <div class="sidebar-nav">
@@ -40,7 +45,8 @@
                 <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
                     <button type="submit" class="logout-btn">
-                        <span>Logout</span>
+                        <span style="font-size:14px;">⏻</span>
+                        <span>Cerrar sesión</span>
                     </button>
                 </form>
             </div>
@@ -58,18 +64,81 @@
             </header>
 
             <section class="main-content">
+                <!-- Fila de métricas rápidas para el paciente -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Resumen de hoy</div>
+                            <div class="card-subtitle">
+                                Una vista rápida de tus recordatorios y llamadas relacionadas.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Próxima llamada</div>
+                            <div class="stat-value">08:30 p.m.</div>
+                            <div class="stat-pill">Ejemplo para este MVP</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Llamadas de hoy</div>
+                            <div class="stat-value">3</div>
+                            <div class="stat-pill">Recordatorios amables</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Adherencia estimada</div>
+                            <div class="stat-value">78%</div>
+                            <div class="stat-pill">Basado en llamadas atendidas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Llamadas y medicamentos próximos -->
                 <div class="card">
                     <div class="card-header">
                         <div>
                             <div class="card-title">Tus próximas llamadas y medicamentos</div>
                             <div class="card-subtitle">
-                                Aquí verás las llamadas recibidas y las próximas tomas de medicamento relacionadas.
+                                Esta sección está lista para mostrar tu agenda real de recordatorios.
                             </div>
                         </div>
                     </div>
-                    <p style="font-size:13px; color:#6b7280; margin:0;">
-                        Más adelante se conectará con tu historial real de llamadas y un indicador de si atendiste o no cada recordatorio.
+                    <p style="font-size:13px; color:#6b7280; margin-bottom:12px;">
+                        Por ahora verás un ejemplo de cómo se organizará la información. Más adelante se conectará con tu
+                        historial real de llamadas y un indicador de si atendiste o no cada recordatorio.
                     </p>
+
+                    <div style="display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1.2fr); gap:14px;">
+                        <div style="border-radius:14px; border:1px solid rgba(229,231,235,0.9); padding:10px 12px; font-size:13px;">
+                            <div style="font-weight:600; margin-bottom:6px;">Agenda de ejemplo</div>
+                            <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px;">
+                                <li>
+                                    <strong>08:30 a.m.</strong> — Llamada para recordar <span style="color:#4f46e5;">Losartán 50mg</span>.
+                                </li>
+                                <li>
+                                    <strong>02:00 p.m.</strong> — Llamada para recordar <span style="color:#4f46e5;">Metformina 850mg</span>.
+                                </li>
+                                <li>
+                                    <strong>08:30 p.m.</strong> — Llamada para recordar <span style="color:#4f46e5;">Atorvastatina 20mg</span>.
+                                </li>
+                            </ul>
+                        </div>
+                        <div style="border-radius:14px; border:1px solid rgba(229,231,235,0.9); padding:10px 12px; font-size:13px;">
+                            <div style="font-weight:600; margin-bottom:6px;">Llamadas recientes (ejemplo)</div>
+                            <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px;">
+                                <li>
+                                    <strong>Ayer • 08:30 p.m.</strong> — Llamada atendida ✅
+                                </li>
+                                <li>
+                                    <strong>Ayer • 02:00 p.m.</strong> — No contestó ❌
+                                </li>
+                                <li>
+                                    <strong>Hace 2 días • 08:30 a.m.</strong> — Llamada atendida ✅
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>

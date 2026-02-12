@@ -12,6 +12,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
+from .models import Perfil
+
 
 @require_http_methods(["GET", "POST"])
 def login_view(request):
@@ -73,29 +75,51 @@ def register_view(request):
         password = request.POST.get("password", "").strip()
         password_confirm = request.POST.get("password_confirm", "").strip()
         role = request.POST.get("role", "caregiver")
+        phone = request.POST.get("phone", "").strip()
+        age_raw = request.POST.get("age", "").strip()
+        address = request.POST.get("address", "").strip()
 
-        if not full_name or not email or not password:
+        # Validaciones básicas de formulario
+        if not all([full_name, email, password, phone, age_raw, address]):
             messages.error(request, "Todos los campos son obligatorios.")
         elif password != password_confirm:
             messages.error(request, "Las contraseñas no coinciden.")
-        elif User.objects.filter(email=email).exists():
-            messages.error(request, "Ya existe un usuario registrado con este correo.")
         else:
-            username = email  # Para simplificar, usamos el email como username
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                first_name=full_name,
-            )
-            # Marcamos a los cuidadores como usuarios de staff
-            if role == "caregiver":
-                user.is_staff = True
-                user.save(update_fields=["is_staff"])
-            login(request, user)
-            if user.is_staff:
-                return redirect("dashboard")
-            return redirect("patient_dashboard")
+            try:
+                age = int(age_raw)
+                if age < 0:
+                    raise ValueError
+            except ValueError:
+                messages.error(request, "La edad debe ser un número válido.")
+            else:
+                if User.objects.filter(email=email).exists():
+                    messages.error(request, "Ya existe un usuario registrado con este correo.")
+                else:
+                    username = email  # Para simplificar, usamos el email como username
+                    user = User.objects.create_user(
+                        username=username,
+                        email=email,
+                        password=password,
+                        first_name=full_name,
+                    )
+                    # Marcamos a los cuidadores como usuarios de staff
+                    if role == "caregiver":
+                        user.is_staff = True
+                        user.save(update_fields=["is_staff"])
+
+                    # Creamos el perfil con la información adicional
+                    Perfil.objects.create(
+                        user=user,
+                        phone=phone,
+                        age=age,
+                        address=address,
+                        role=role,
+                    )
+
+                    login(request, user)
+                    if user.is_staff:
+                        return redirect("dashboard")
+                    return redirect("patient_dashboard")
 
     return render(request, "porvoz/register.html")
 

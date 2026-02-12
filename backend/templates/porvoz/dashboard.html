@@ -8,13 +8,18 @@
         <aside class="sidebar">
             <div>
                 <div class="sidebar-header">
-                    <div class="sidebar-logo">
-                        <img src="{% static 'LogoPorvoz.jpeg' %}" alt="Logo Porvoz">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="sidebar-logo">
+                            <img src="{% static 'LogoPorvoz.jpeg' %}" alt="Logo Porvoz">
+                        </div>
+                        <div>
+                            <div class="sidebar-title">Porvoz</div>
+                            <div class="sidebar-subtitle">Panel del cuidador</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="sidebar-title">Porvoz</div>
-                        <div class="sidebar-subtitle">Panel del cuidador</div>
-                    </div>
+                    <button type="button" class="sidebar-toggle" data-sidebar-toggle title="Plegar barra lateral">
+                        ☰
+                    </button>
                 </div>
 
                 <div class="sidebar-nav">
@@ -40,7 +45,8 @@
                 <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
                     <button type="submit" class="logout-btn">
-                        <span>Logout</span>
+                        <span style="font-size:14px;">⏻</span>
+                        <span>Cerrar sesión</span>
                     </button>
                 </form>
             </div>
@@ -67,13 +73,13 @@
             </header>
 
             <section class="main-content">
-                <!-- Hero principal similar al ejemplo -->
-                <div class="card" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#eef2ff;">
+                <!-- Hero superior tipo banner -->
+                <div class="card" style="background:linear-gradient(135deg,#4f46e5,#6366f1);color:#eef2ff;">
                     <div class="card-header">
                         <div>
-                            <div class="card-title" style="font-size:18px;">Recordatorios claros, pacientes tranquilos</div>
+                            <div class="card-title" style="font-size:18px;">Dashboard de recordatorios</div>
                             <div class="card-subtitle" style="color:#e0e7ff;">
-                                Configura medicamentos y horarios. Porvoz se encargará después de las llamadas automáticas.
+                                Vista general de tus pacientes, medicamentos y llamadas simuladas de Porvoz.
                             </div>
                         </div>
                         <span class="badge-pill" style="background:rgba(15,23,42,0.15);color:#e5e7eb;">
@@ -82,13 +88,13 @@
                     </div>
                 </div>
 
-                <!-- Tarjetas de resumen -->
+                <!-- Fila de métricas principales -->
                 <div class="card">
                     <div class="card-header">
                         <div>
-                            <div class="card-title">Resumen de tu panel</div>
+                            <div class="card-title">Resumen rápido</div>
                             <div class="card-subtitle">
-                                Vista rápida de cómo va el tratamiento de tus pacientes.
+                                Indicadores clave del estado de tus pacientes hoy.
                             </div>
                         </div>
                     </div>
@@ -112,21 +118,47 @@
                     </div>
                 </div>
 
-                <!-- Sección inferior tipo “próximas acciones” -->
-                <div class="card">
-                    <div class="card-header">
-                        <div>
-                            <div class="card-title">Próximas acciones</div>
-                            <div class="card-subtitle">
-                                Preparado para conectar con la lógica de pacientes, medicamentos y llamadas.
+                <!-- Grid principal a dos columnas tipo SaaS -->
+                <div class="card" style="padding:0; border:none; background:transparent;">
+                    <div style="display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1.4fr); gap:16px;">
+                        <!-- Columna izquierda: overview visual -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Vista general de recordatorios</div>
+                                    <div class="card-subtitle">
+                                        Espacio preparado para conectar gráficos de adherencia y llamadas reales.
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="height:180px; border-radius:16px; background:radial-gradient(circle at top,#e0edff,#eef2ff); display:flex; align-items:center; justify-content:center; color:#6b7280; font-size:13px;">
+                                Aquí iría un gráfico de ejemplo (adherencia vs llamadas) en la versión completa.
                             </div>
                         </div>
+
+                        <!-- Columna derecha: próximas acciones / lista -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Próximas acciones</div>
+                                    <div class="card-subtitle">
+                                        Sección lista para enlazar con pacientes, medicamentos y llamadas.
+                                    </div>
+                                </div>
+                            </div>
+                            <ul style="list-style:none; padding:0; margin:0; font-size:13px; color:#4b5563; display:flex; flex-direction:column; gap:8px;">
+                                <li style="padding:8px 10px; border-radius:10px; border:1px solid rgba(229,231,235,0.9); background:#f9fafb;">
+                                    Definir pacientes y sus medicamentos principales.
+                                </li>
+                                <li style="padding:8px 10px; border-radius:10px; border:1px solid rgba(229,231,235,0.9); background:#f9fafb;">
+                                    Configurar horarios de llamadas de prueba para cada medicamento.
+                                </li>
+                                <li style="padding:8px 10px; border-radius:10px; border:1px solid rgba(229,231,235,0.9); background:#f9fafb;">
+                                    Revisar el historial de llamadas simuladas y adherencia (próximo módulo).
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                    <p style="font-size:13px; color:#6b7280; margin:0;">
-                        En las siguientes iteraciones podrás entrar desde aquí a: gestión de pacientes, configuración de
-                        medicamentos y un historial visual de tomas y llamadas. Este panel ya está diseñado para esa
-                        evolución sin tener que rehacer el frontend.
-                    </p>
                 </div>
             </section>
         </main>
