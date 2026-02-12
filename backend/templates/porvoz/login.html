@@ -1,0 +1,67 @@
+{% extends "porvoz/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="auth-wrapper">
+    <div class="auth-layout">
+        <!-- Lado izquierdo tipo ilustración -->
+        <section class="auth-hero">
+            <div>
+                <h1 class="auth-hero-title">
+                    Cambia la forma en que
+                    <span class="highlight">recuerdan sus medicamentos</span>.
+                </h1>
+                <p class="auth-hero-text">
+                    Porvoz combina llamadas por voz y un panel web simple para que familiares y pacientes
+                    tengan siempre claro qué tomar y a qué hora.
+                </p>
+            </div>
+            <div class="auth-hero-mini">
+                <span style="font-weight:500;">Cuidadores y pacientes en un solo lugar.</span>
+                <span style="color:#6b7280;">Configura, supervisa y acompaña el tratamiento día a día.</span>
+            </div>
+        </section>
+
+        <!-- Lado derecho: card de login -->
+        <section class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <img src="{% static 'LogoPorvoz.jpeg' %}" alt="Logo Porvoz">
+                </div>
+                <div>
+                    <div class="auth-title">Bienvenido a Porvoz</div>
+                    <div class="auth-subtitle">Inicia sesión para gestionar tus pacientes y recordatorios.</div>
+                </div>
+            </div>
+
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="id_email">Correo o usuario</label>
+                    <input class="form-input" type="text" id="id_email" name="email" autocomplete="email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_password">Contraseña</label>
+                    <input class="form-input" type="password" id="id_password" name="password" autocomplete="current-password" required>
+                </div>
+                <button class="primary-btn" type="submit">Entrar a Porvoz</button>
+            </form>
+
+            <p class="auth-footer-text">
+                ¿No tienes cuenta?
+                <a href="{% url 'register' %}">Crear cuenta</a>
+            </p>
+        </section>
+    </div>
+  </div>
+{% endblock %}
+
+

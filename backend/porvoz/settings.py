@@ -130,15 +130,24 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Directorios adicionales de archivos estáticos para la webapp
+# - frontend/css y frontend/js: assets del prototipo
+# - BASE_DIR.parent: para poder usar el logo LogoPorvoz.jpeg ubicado en la raíz del proyecto
 STATICFILES_DIRS = [
     BASE_DIR.parent / 'frontend' / 'css',
     BASE_DIR.parent / 'frontend' / 'js',
+    BASE_DIR.parent,
 ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configuración de autenticación
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login'
 
 # REST Framework configuration
 REST_FRAMEWORK = {

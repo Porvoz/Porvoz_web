@@ -1,0 +1,137 @@
+{% extends "porvoz/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="app-shell">
+    <div class="app-container">
+        <!-- Sidebar cuidador -->
+        <aside class="sidebar">
+            <div>
+                <div class="sidebar-header">
+                    <div class="sidebar-logo">
+                        <img src="{% static 'LogoPorvoz.jpeg' %}" alt="Logo Porvoz">
+                    </div>
+                    <div>
+                        <div class="sidebar-title">Porvoz</div>
+                        <div class="sidebar-subtitle">Panel del cuidador</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-nav">
+                    <div class="nav-section-label">General</div>
+                    <a class="nav-item active" href="{% url 'dashboard' %}">
+                        <span class="icon">🏠</span>
+                        <span>Inicio</span>
+                    </a>
+                    <a class="nav-item" href="#">
+                        <span class="icon">👥</span>
+                        <span>Pacientes</span>
+                    </a>
+
+                    <div class="nav-section-label" style="margin-top:10px;">Cuenta</div>
+                    <a class="nav-item" href="#">
+                        <span class="icon">⚙️</span>
+                        <span>Editar perfil</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main">
+            <header class="top-bar">
+                <div>
+                    <div class="top-bar-title">Hola, {{ user_name }}</div>
+                    <div class="top-bar-subtitle">
+                        Controla pacientes, medicamentos y recordatorios desde este panel principal.
+                    </div>
+                </div>
+                <div class="user-chip">
+                    <div class="user-avatar">
+                        {{ user_name|first|upper }}
+                    </div>
+                    <div>
+                        <div style="font-size:13px; font-weight:500;">{{ user_name }}</div>
+                        <div style="font-size:11px; color:#9ca3af;">Cuidador</div>
+                    </div>
+                </div>
+            </header>
+
+            <section class="main-content">
+                <!-- Hero principal similar al ejemplo -->
+                <div class="card" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#eef2ff;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title" style="font-size:18px;">Recordatorios claros, pacientes tranquilos</div>
+                            <div class="card-subtitle" style="color:#e0e7ff;">
+                                Configura medicamentos y horarios. Porvoz se encargará después de las llamadas automáticas.
+                            </div>
+                        </div>
+                        <span class="badge-pill" style="background:rgba(15,23,42,0.15);color:#e5e7eb;">
+                            Vista de cuidador
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Tarjetas de resumen -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Resumen de tu panel</div>
+                            <div class="card-subtitle">
+                                Vista rápida de cómo va el tratamiento de tus pacientes.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Pacientes activos</div>
+                            <div class="stat-value">{{ active_patients }}</div>
+                            <div class="stat-pill">Bajo tu cuidado</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Medicamentos configurados</div>
+                            <div class="stat-value">{{ active_medications }}</div>
+                            <div class="stat-pill">Listos para recordatorios</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Recordatorios de hoy</div>
+                            <div class="stat-value">{{ today_reminders }}</div>
+                            <div class="stat-pill">Simulados en este MVP</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección inferior tipo “próximas acciones” -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Próximas acciones</div>
+                            <div class="card-subtitle">
+                                Preparado para conectar con la lógica de pacientes, medicamentos y llamadas.
+                            </div>
+                        </div>
+                    </div>
+                    <p style="font-size:13px; color:#6b7280; margin:0;">
+                        En las siguientes iteraciones podrás entrar desde aquí a: gestión de pacientes, configuración de
+                        medicamentos y un historial visual de tomas y llamadas. Este panel ya está diseñado para esa
+                        evolución sin tener que rehacer el frontend.
+                    </p>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+

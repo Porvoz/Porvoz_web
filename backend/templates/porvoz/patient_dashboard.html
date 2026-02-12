@@ -1,0 +1,80 @@
+{% extends "porvoz/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="app-shell">
+    <div class="app-container">
+        <!-- Sidebar para paciente -->
+        <aside class="sidebar">
+            <div>
+                <div class="sidebar-header">
+                    <div class="sidebar-logo">
+                        <img src="{% static 'LogoPorvoz.jpeg' %}" alt="Logo Porvoz">
+                    </div>
+                    <div>
+                        <div class="sidebar-title">Porvoz</div>
+                        <div class="sidebar-subtitle">Panel del paciente</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-nav">
+                    <div class="nav-section-label">General</div>
+                    <a class="nav-item active" href="{% url 'patient_dashboard' %}">
+                        <span class="icon">🏠</span>
+                        <span>Inicio</span>
+                    </a>
+                    <a class="nav-item" href="#">
+                        <span class="icon">📞</span>
+                        <span>Llamadas recibidas</span>
+                    </a>
+
+                    <div class="nav-section-label" style="margin-top:10px;">Cuenta</div>
+                    <a class="nav-item" href="#">
+                        <span class="icon">⚙️</span>
+                        <span>Editar perfil</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Contenido principal del paciente -->
+        <main class="main">
+            <header class="top-bar">
+                <div>
+                    <div class="top-bar-title">Hola, {{ user_name }}</div>
+                    <div class="top-bar-subtitle">
+                        Aquí verás tus próximas llamadas y medicamentos de forma clara y sencilla.
+                    </div>
+                </div>
+            </header>
+
+            <section class="main-content">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Tus próximas llamadas y medicamentos</div>
+                            <div class="card-subtitle">
+                                Aquí verás las llamadas recibidas y las próximas tomas de medicamento relacionadas.
+                            </div>
+                        </div>
+                    </div>
+                    <p style="font-size:13px; color:#6b7280; margin:0;">
+                        Más adelante se conectará con tu historial real de llamadas y un indicador de si atendiste o no cada recordatorio.
+                    </p>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+
