@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porvoz - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .status {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .status h2 {
+            color: #667eea;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        
+        .status p {
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .endpoints {
+            margin-top: 30px;
+        }
+        
+        .endpoints h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .endpoint-list {
+            list-style: none;
+        }
+        
+        .endpoint-list li {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .endpoint-list a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .endpoint-list a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Porvoz</h1>
+        <p class="subtitle">Sistema de Recordatorios de Medicamentos</p>
+        
+        <div class="status">
+            <h2>✅ Sistema Operativo</h2>
+            <p>El servidor Django está funcionando correctamente. La aplicación está lista para usar.</p>
+        </div>
+        
+        <div class="endpoints">
+            <h3>Endpoints Disponibles:</h3>
+            <ul class="endpoint-list">
+                <li><a href="/admin/">🔐 Panel de Administración</a></li>
+                <li><a href="/api/cuidadores/">👥 API - Cuidadores</a></li>
+                <li><a href="/api/pacientes/">👤 API - Pacientes</a></li>
+                <li><a href="/api/medicamentos/">💊 API - Medicamentos</a></li>
+                <li><a href="/api/recordatorios/">⏰ API - Recordatorios</a></li>
+                <li><a href="/api/llamadas/">📞 API - Llamadas</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>Versión 1.0.0 | Porvoz Web Application</p>
+        </div>
+    </div>
+</body>
+</html>
+
