@@ -25,4 +25,43 @@ Esto mejora la adherencia al tratamiento, reduce riesgos de salud y brinda mayor
 - Mateo Zacar
 - Styven Bedoya
 
-## Acuerdo con el Cliente 
+## Acuerdo con el Cliente
+
+## Configuración del Entorno de Desarrollo
+
+### Pasos para comenzar a trabajar
+
+1. **Clonar el repositorio:**
+   ```bash
+   git clone https://github.com/Porvoz/Porvoz_web.git
+   cd Porvoz_web
+   ```
+
+2. **Activar el entorno virtual:**
+   ```bash
+   # Windows
+   venv\Scripts\activate
+   
+   # Linux/Mac
+   source venv/bin/activate
+   ```
+
+3. **Instalar dependencias:**
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   ```
+
+4. **Trabajar en una rama:**
+   ```bash
+   git checkout development
+   git pull origin development
+   git checkout -b feature/nombre-de-la-funcionalidad
+   ```
+
+5. **Después de hacer cambios:**
+   ```bash
+   git add .
+   git commit -m "descripción del cambio"
+   git push origin feature/nombre-de-la-funcionalidad
+   ``` 
