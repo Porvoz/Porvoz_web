@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Porvoz - Dashboard</title>
+    <title>Porvoz - Sistema de Recordatorios de Medicamentos</title>
     <style>
         * {
             margin: 0;
@@ -12,124 +12,397 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 800px;
-            width: 100%;
-        }
-        
-        h1 {
-            color: #667eea;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 2.5em;
-        }
-        
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 1.1em;
-        }
-        
-        .status {
-            background: #f0f4ff;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 30px;
-        }
-        
-        .status h2 {
-            color: #667eea;
-            font-size: 1.2em;
-            margin-bottom: 10px;
-        }
-        
-        .status p {
-            color: #555;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
             line-height: 1.6;
+            min-height: 100vh;
         }
         
-        .endpoints {
-            margin-top: 30px;
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         
-        .endpoints h3 {
-            color: #333;
-            margin-bottom: 15px;
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .endpoint-list {
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .logo-icon {
+            font-size: 2rem;
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
             list-style: none;
         }
         
-        .endpoint-list li {
-            background: #f8f9fa;
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border-left: 3px solid #667eea;
-        }
-        
-        .endpoint-list a {
-            color: #667eea;
+        .nav-links a {
+            color: #4a5568;
             text-decoration: none;
             font-weight: 500;
+            transition: color 0.2s;
         }
         
-        .endpoint-list a:hover {
-            text-decoration: underline;
+        .nav-links a:hover {
+            color: #2d3748;
+        }
+        
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .welcome-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .welcome-section h1 {
+            font-size: 2rem;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+        
+        .welcome-section p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        
+        .status-card {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-left: 4px solid #48bb78;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-card h2 {
+            color: #22543d;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-card p {
+            color: #2f855a;
+            font-size: 0.95rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            color: #1a202c;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .card-icon {
+            font-size: 1.75rem;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+        
+        .card-description {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #4299e1;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        
+        .card-link:hover {
+            color: #2b6cb0;
+        }
+        
+        .card-link::after {
+            content: '→';
+            transition: transform 0.2s;
+        }
+        
+        .card-link:hover::after {
+            transform: translateX(4px);
+        }
+        
+        .api-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .api-list {
+            list-style: none;
+        }
+        
+        .api-item {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 0;
+        }
+        
+        .api-item:last-child {
+            border-bottom: none;
+        }
+        
+        .api-item a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .api-item a:hover {
+            color: #2d3748;
+        }
+        
+        .api-icon {
+            font-size: 1.25rem;
+            width: 2rem;
+            text-align: center;
         }
         
         .footer {
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            padding: 2rem;
+            margin-top: 3rem;
             text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            color: #999;
-            font-size: 0.9em;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-container {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🏥 Porvoz</h1>
-        <p class="subtitle">Sistema de Recordatorios de Medicamentos</p>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🏥</span>
+                <span class="logo-text">Porvoz</span>
+            </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="/">Inicio</a></li>
+                    <li><a href="/admin/">Administración</a></li>
+                    <li><a href="#apis">APIs</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <main class="main-container">
+        <section class="welcome-section">
+            <h1>Sistema de Recordatorios de Medicamentos</h1>
+            <p>Gestión inteligente de medicamentos para adultos mayores y pacientes crónicos</p>
+        </section>
         
-        <div class="status">
-            <h2>✅ Sistema Operativo</h2>
+        <div class="status-card">
+            <h2>
+                <span>✅</span>
+                Sistema Operativo
+            </h2>
             <p>El servidor Django está funcionando correctamente. La aplicación está lista para usar.</p>
         </div>
         
-        <div class="endpoints">
-            <h3>Endpoints Disponibles:</h3>
-            <ul class="endpoint-list">
-                <li><a href="/admin/">🔐 Panel de Administración</a></li>
-                <li><a href="/api/cuidadores/">👥 API - Cuidadores</a></li>
-                <li><a href="/api/pacientes/">👤 API - Pacientes</a></li>
-                <li><a href="/api/medicamentos/">💊 API - Medicamentos</a></li>
-                <li><a href="/api/recordatorios/">⏰ API - Recordatorios</a></li>
-                <li><a href="/api/llamadas/">📞 API - Llamadas</a></li>
-            </ul>
-        </div>
+        <section>
+            <h2 class="section-title">Accesos Rápidos</h2>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔐</span>
+                        <h3 class="card-title">Panel de Administración</h3>
+                    </div>
+                    <p class="card-description">
+                        Accede al panel de administración de Django para gestionar usuarios, datos y configuraciones del sistema.
+                    </p>
+                    <a href="/admin/" class="card-link">Ir al panel</a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">👥</span>
+                        <h3 class="card-title">Cuidadores</h3>
+                    </div>
+                    <p class="card-description">
+                        Gestiona la información de los cuidadores responsables del seguimiento de pacientes.
+                    </p>
+                    <a href="/api/cuidadores/" class="card-link">Ver API</a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">👤</span>
+                        <h3 class="card-title">Pacientes</h3>
+                    </div>
+                    <p class="card-description">
+                        Administra los datos de los pacientes que reciben recordatorios de medicamentos.
+                    </p>
+                    <a href="/api/pacientes/" class="card-link">Ver API</a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">💊</span>
+                        <h3 class="card-title">Medicamentos</h3>
+                    </div>
+                    <p class="card-description">
+                        Consulta y gestiona la información sobre medicamentos, dosis y horarios.
+                    </p>
+                    <a href="/api/medicamentos/" class="card-link">Ver API</a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">⏰</span>
+                        <h3 class="card-title">Recordatorios</h3>
+                    </div>
+                    <p class="card-description">
+                        Configura y monitorea los recordatorios programados para la toma de medicamentos.
+                    </p>
+                    <a href="/api/recordatorios/" class="card-link">Ver API</a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📞</span>
+                        <h3 class="card-title">Llamadas</h3>
+                    </div>
+                    <p class="card-description">
+                        Revisa el historial y estado de las llamadas automatizadas realizadas por el sistema.
+                    </p>
+                    <a href="/api/llamadas/" class="card-link">Ver API</a>
+                </div>
+            </div>
+        </section>
         
-        <div class="footer">
-            <p>Versión 1.0.0 | Porvoz Web Application</p>
-        </div>
-    </div>
+        <section class="api-section" id="apis">
+            <h2 class="section-title">Endpoints de API</h2>
+            <ul class="api-list">
+                <li class="api-item">
+                    <a href="/api/cuidadores/">
+                        <span class="api-icon">👥</span>
+                        <span>/api/cuidadores/</span>
+                    </a>
+                </li>
+                <li class="api-item">
+                    <a href="/api/pacientes/">
+                        <span class="api-icon">👤</span>
+                        <span>/api/pacientes/</span>
+                    </a>
+                </li>
+                <li class="api-item">
+                    <a href="/api/medicamentos/">
+                        <span class="api-icon">💊</span>
+                        <span>/api/medicamentos/</span>
+                    </a>
+                </li>
+                <li class="api-item">
+                    <a href="/api/recordatorios/">
+                        <span class="api-icon">⏰</span>
+                        <span>/api/recordatorios/</span>
+                    </a>
+                </li>
+                <li class="api-item">
+                    <a href="/api/llamadas/">
+                        <span class="api-icon">📞</span>
+                        <span>/api/llamadas/</span>
+                    </a>
+                </li>
+            </ul>
+        </section>
+    </main>
+    
+    <footer class="footer">
+        <p>Versión 1.0.0 | Porvoz Web Application | Sistema de Recordatorios de Medicamentos</p>
+    </footer>
 </body>
 </html>
-

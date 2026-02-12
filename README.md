@@ -52,14 +52,29 @@ Esto mejora la adherencia al tratamiento, reduce riesgos de salud y brinda mayor
    pip install -r requirements.txt
    ```
 
-4. **Trabajar en una rama:**
+4. **Ejecutar el servidor Django:**
+   ```bash
+   # Opción 1: Usar el script (recomendado)
+   .\runserver.ps1
+   
+   # Opción 2: Usar Python del venv directamente
+   cd backend
+   ..\venv\Scripts\python.exe manage.py runserver
+   ```
+   
+   **IMPORTANTE:** Si ves el error `ModuleNotFoundError: No module named 'rest_framework'`, asegúrate de:
+   - Estar usando el Python del venv (no el del sistema)
+   - Tener el venv activado: `.\venv\Scripts\Activate.ps1`
+   - O usar la ruta completa: `.\venv\Scripts\python.exe manage.py runserver`
+
+5. **Trabajar en una rama:**
    ```bash
    git checkout development
    git pull origin development
    git checkout -b feature/nombre-de-la-funcionalidad
    ```
 
-5. **Después de hacer cambios:**
+6. **Después de hacer cambios:**
    ```bash
    git add .
    git commit -m "descripción del cambio"
