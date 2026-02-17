@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+porvoz/staticfiles/
+porvoz/media/*
+!porvoz/media/.gitkeep
+
+# Environment variables
+.env
+.env.local
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific leftovers
+runserver*
+fotos wiki/
+"fotos wiki"/
+backend/
+frontend/
+/LogoPorvoz.jpeg
+

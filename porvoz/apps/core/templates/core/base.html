@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porvoz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .sidebar {
+            transition: width .2s ease;
+        }
+        .sidebar.collapsed {
+            width: 88px !important;
+        }
+        .sidebar.collapsed .label-text {
+            display: none;
+        }
+        .sidebar.collapsed .brand-text {
+            display: none;
+        }
+        .sidebar.collapsed .user-meta {
+            display: none;
+        }
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+        }
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0 !important;
+        }
+        .sidebar.collapsed .logout-btn {
+            justify-content: center;
+        }
+        .sidebar.collapsed .logout-btn span {
+            display: none;
+        }
+        .sidebar.collapsed .sidebar-toggle i::before {
+            content: "\f284";
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    {% block body %}{% endblock %}
+
+    <script>
+        (function () {
+            const STORAGE_KEY = "porvoz-sidebar-collapsed";
+
+            function applyInitialState() {
+                if (window.innerWidth <= 768) return;
+                const shouldCollapse = window.localStorage.getItem(STORAGE_KEY) === "1";
+                if (!shouldCollapse) return;
+                document.querySelectorAll(".sidebar").forEach(function (sidebar) {
+                    sidebar.classList.add("collapsed");
+                });
+            }
+
+            function setupToggle() {
+                document.addEventListener("click", function (event) {
+                    const button = event.target.closest("[data-sidebar-toggle]");
+                    if (!button) return;
+                    event.preventDefault();
+                    const sidebar = button.closest(".sidebar");
+                    if (!sidebar) return;
+                    if (window.innerWidth <= 768) return;
+                    const collapsed = sidebar.classList.toggle("collapsed");
+                    try {
+                        window.localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
+                    } catch (e) {}
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                applyInitialState();
+                setupToggle();
+            });
+
+            // Logo fallback: if static/images path fails, try static root path.
+            document.addEventListener(
+                "error",
+                function (event) {
+                    const img = event.target;
+                    if (!(img instanceof HTMLImageElement)) return;
+                    if (!img.hasAttribute("data-logo")) return;
+                    if (img.dataset.fallbackTried === "1") {
+                        const fallbackBlock = img.nextElementSibling;
+                        if (fallbackBlock) fallbackBlock.style.display = "flex";
+                        return;
+                    }
+                    const fallbackSrc = img.getAttribute("data-fallback-src");
+                    if (!fallbackSrc) return;
+                    img.dataset.fallbackTried = "1";
+                    img.src = fallbackSrc;
+                },
+                true
+            );
+        })();
+    </script>
+</body>
+</html>
+
+
