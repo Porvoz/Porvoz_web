@@ -14,7 +14,9 @@ urlpatterns = [
     path("login/", core_views.login_view, name="login"),
     path("register/", core_views.register_view, name="register"),
     path("logout/", core_views.logout_view, name="logout"),
+    path("reset-password/", core_views.reset_password_view, name="reset_password"),
     path("perfil/editar/", core_views.complete_profile_view, name="edit_profile"),
+    path("perfil/cambiar-contraseña/", core_views.change_password_view, name="change_password"),
     
     # Dashboards
     path("", core_views.dashboard_router, name="dashboard_router"),

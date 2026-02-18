@@ -18,10 +18,11 @@ def login_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "").strip()
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect("dashboard_router")
+        if username and password:
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect("dashboard_router")
         messages.error(request, "Credenciales inválidas.")
 
     return render(request, "core/login.html")
@@ -126,14 +127,50 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
         perfil.profile_completed = True
         perfil.save()
 
-        request.user.first_name = perfil.first_name
-        request.user.last_name = perfil.last_name
+        request.user.first_name = perfil.first_name or request.user.first_name
+        request.user.last_name = perfil.last_name or request.user.last_name
         request.user.save()
 
-        messages.success(request, "Perfil completado correctamente.")
+        messages.success(request, "Perfil actualizado correctamente.")
         return redirect("dashboard_router")
 
-    return render(request, "core/edit_profile.html", {"perfil": perfil})
+    # Usar datos del perfil, o del User si el perfil no los tiene
+    first_name = perfil.first_name or request.user.first_name or ""
+    last_name = perfil.last_name or request.user.last_name or ""
+    
+    # Parsear teléfonos para mostrar en el formulario
+    phone_country = "+57"
+    phone_number = ""
+    if perfil.phone:
+        parts = perfil.phone.split(" ", 1)
+        if len(parts) == 2:
+            phone_country = parts[0]
+            phone_number = parts[1]
+        elif perfil.phone.startswith("+"):
+            phone_country = perfil.phone[:3] if len(perfil.phone) >= 3 else "+57"
+            phone_number = perfil.phone[3:].strip()
+
+    emergency_phone_country = "+57"
+    emergency_phone_number = ""
+    if perfil.emergency_contact_phone:
+        parts = perfil.emergency_contact_phone.split(" ", 1)
+        if len(parts) == 2:
+            emergency_phone_country = parts[0]
+            emergency_phone_number = parts[1]
+        elif perfil.emergency_contact_phone.startswith("+"):
+            emergency_phone_country = perfil.emergency_contact_phone[:3] if len(perfil.emergency_contact_phone) >= 3 else "+57"
+            emergency_phone_number = perfil.emergency_contact_phone[3:].strip()
+
+    context = {
+        "perfil": perfil,
+        "first_name": first_name,
+        "last_name": last_name,
+        "phone_country": phone_country,
+        "phone_number": phone_number,
+        "emergency_phone_country": emergency_phone_country,
+        "emergency_phone_number": emergency_phone_number,
+    }
+    return render(request, "core/edit_profile.html", context)
 
 
 @login_required
@@ -172,4 +209,70 @@ def caregiver_patients_view(request: HttpRequest) -> HttpResponse:
     if perfil.role != Perfil.ROLE_CAREGIVER:
         return redirect("patient_dashboard")
     return render(request, "core/caregiver_patients.html", {"perfil": perfil})
+
+
+@login_required
+def change_password_view(request: HttpRequest) -> HttpResponse:
+    """Vista para cambiar la contraseña del usuario."""
+    perfil, _ = Perfil.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        old_password = request.POST.get("old_password", "")
+        new_password = request.POST.get("new_password", "")
+        confirm_password = request.POST.get("confirm_password", "")
+
+        if not old_password or not new_password or not confirm_password:
+            messages.error(request, "Todos los campos son obligatorios.")
+        elif not request.user.check_password(old_password):
+            messages.error(request, "La contraseña actual es incorrecta.")
+        elif len(new_password) < 8:
+            messages.error(request, "La nueva contraseña debe tener al menos 8 caracteres.")
+        elif new_password != confirm_password:
+            messages.error(request, "Las nuevas contraseñas no coinciden.")
+        elif old_password == new_password:
+            messages.error(request, "La nueva contraseña debe ser diferente a la actual.")
+        else:
+            request.user.set_password(new_password)
+            request.user.save()
+            messages.success(request, "Contraseña actualizada correctamente. Por favor, inicia sesión nuevamente.")
+            return redirect("login")
+
+    return render(request, "core/change_password.html", {"perfil": perfil})
+
+
+def reset_password_view(request: HttpRequest) -> HttpResponse:
+    """Vista para solicitar recuperación de contraseña."""
+    if request.user.is_authenticated:
+        return redirect("dashboard_router")
+
+    if request.method == "POST":
+        username_or_email = request.POST.get("username_or_email", "").strip()
+        
+        if not username_or_email:
+            messages.error(request, "Por favor ingresa tu usuario o correo electrónico.")
+        else:
+            # Buscar usuario por username o email
+            from django.contrib.auth.models import User
+            try:
+                if "@" in username_or_email:
+                    user = User.objects.get(email=username_or_email)
+                else:
+                    user = User.objects.get(username=username_or_email)
+                
+                # Aquí iría la lógica para enviar el email de recuperación
+                # Por ahora solo mostramos un mensaje de éxito
+                messages.success(
+                    request,
+                    f"Si existe una cuenta con ese usuario o correo, se ha enviado un enlace de recuperación. "
+                    f"Por favor revisa tu correo electrónico. (Funcionalidad en desarrollo)"
+                )
+            except User.DoesNotExist:
+                # Por seguridad, no revelamos si el usuario existe o no
+                messages.success(
+                    request,
+                    "Si existe una cuenta con ese usuario o correo, se ha enviado un enlace de recuperación. "
+                    "Por favor revisa tu correo electrónico. (Funcionalidad en desarrollo)"
+                )
+
+    return render(request, "core/reset_password.html")
 

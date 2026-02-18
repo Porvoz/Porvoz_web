@@ -38,6 +38,12 @@
         .sidebar.collapsed .sidebar-toggle i::before {
             content: "\f284";
         }
+        .sidebar-toggle i {
+            transition: transform 0.3s ease;
+        }
+        .sidebar.collapsed .sidebar-toggle i {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">

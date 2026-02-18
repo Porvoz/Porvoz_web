@@ -3,14 +3,14 @@
 
 {% block body %}
 <div class="min-h-screen flex bg-slate-100">
-    <aside class="sidebar fixed left-0 top-0 h-screen w-24 lg:w-64 bg-white border-r border-slate-200 z-20 flex flex-col shadow-sm">
-        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+    <aside class="sidebar fixed left-0 top-0 h-screen w-24 lg:w-64 bg-gradient-to-b from-slate-100 via-slate-50 to-white border-r border-slate-300/50 z-20 flex flex-col shadow-lg">
+        <div class="px-5 py-4 border-b border-slate-300/50 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-slate-50 backdrop-blur-sm rounded-br-lg">
             <div class="user-meta">
                 <div class="flex items-center gap-3">
                     {% if perfil.profile_image %}
                     <img src="{{ perfil.profile_image.url }}" alt="Foto de perfil" class="h-10 w-10 rounded-full object-cover border border-slate-200">
                     {% else %}
-                    <div class="h-10 w-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold">
+                    <div class="h-10 w-10 rounded-full bg-slate-700 text-white flex items-center justify-center text-sm font-bold">
                         {{ request.user.first_name|default:request.user.username|slice:":1"|upper }}
                     </div>
                     {% endif %}
@@ -20,7 +20,7 @@
                     </div>
                 </div>
             </div>
-            <button type="button" class="sidebar-toggle hidden lg:flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100" data-sidebar-toggle>
+            <button type="button" class="sidebar-toggle hidden lg:flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors" data-sidebar-toggle>
                 <i class="bi bi-chevron-left text-slate-600 text-sm"></i>
             </button>
         </div>
@@ -58,114 +58,225 @@
     </aside>
 
     <!-- Contenido principal -->
-    <main class="flex-1 lg:ml-64 py-8 px-6 lg:px-10 bg-gradient-to-b from-slate-50 to-indigo-50">
-        <div class="max-w-3xl mx-auto">
-            <div class="flex items-start justify-between mb-2">
-                <h1 class="text-2xl font-bold text-gray-900">Completar perfil</h1>
-                <img src="{% static 'images/LogoPorvoz.jpeg' %}" data-logo="1" data-fallback-src="{% static 'LogoPorvoz.jpeg' %}" alt="Porvoz" class="w-44 h-14 object-contain rounded-xl bg-white p-1 shadow border border-gray-100">
-                <div class="hidden h-14 w-44 items-center justify-center rounded-xl bg-indigo-600 text-white font-bold">PORVOZ</div>
+    <main class="flex-1 lg:ml-64 px-5 py-6 lg:px-10 bg-slate-100">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="mb-4">
+                <h1 class="text-xl lg:text-2xl font-black text-slate-900 tracking-tight">Editar perfil</h1>
+                <p class="mt-0.5 text-xs text-slate-600">Actualiza tu información personal y de contacto.</p>
             </div>
-            <p class="text-sm text-gray-500 mb-6">
-                Antes de continuar al panel principal, necesitamos algunos datos básicos.
-            </p>
 
             {% if messages %}
             <div class="mb-4 space-y-2">
                 {% for message in messages %}
-                    <div class="text-sm px-3 py-2 rounded-lg 
-                        {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
-                        {% elif message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200
-                        {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+                    <div class="rounded-lg border px-3 py-2 text-xs font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
             </div>
             {% endif %}
 
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Formulario -->
+            <div class="bg-white rounded-xl shadow-md border border-slate-200 p-5 lg:p-6">
+                <form method="post" enctype="multipart/form-data" class="space-y-4">
                     {% csrf_token %}
 
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Foto de perfil</label>
-                        <div class="flex items-center gap-4">
-                            {% if perfil.profile_image %}
-                            <img id="profile-image-preview" src="{{ perfil.profile_image.url }}" alt="Foto de perfil" class="h-16 w-16 rounded-full object-cover border border-slate-200">
-                            {% else %}
-                            <img id="profile-image-preview" src="" alt="Foto de perfil" class="hidden h-16 w-16 rounded-full object-cover border border-slate-200">
-                            {% endif %}
-                            <label class="inline-flex items-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">
-                                <i class="bi bi-camera mr-2"></i>Subir foto
+                    <!-- Sección: Foto de perfil -->
+                    <div class="border-b border-slate-200 pb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                {% if perfil.profile_image %}
+                                <img id="profile-image-preview" src="{{ perfil.profile_image.url }}" alt="Foto de perfil" class="h-12 w-12 rounded-full object-cover border border-slate-200">
+                                {% else %}
+                                <div id="profile-image-placeholder" class="h-12 w-12 rounded-full bg-slate-700 text-white flex items-center justify-center text-sm font-bold border border-slate-200">
+                                    {{ first_name|default:request.user.first_name|default:request.user.username|slice:":1"|upper }}
+                                </div>
+                                <img id="profile-image-preview" src="" alt="Foto de perfil" class="hidden h-12 w-12 rounded-full object-cover border border-slate-200">
+                                {% endif %}
+                            </div>
+                            <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition-all">
+                                <i class="bi bi-cloud-upload text-sm"></i>
+                                <span>Cambiar foto</span>
                                 <input id="profile_image" name="profile_image" type="file" accept="image/*" class="hidden">
                             </label>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Nombre</label>
-                        <input name="first_name" type="text" value="{{ perfil.first_name }}" required
-                               class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Apellido</label>
-                        <input name="last_name" type="text" value="{{ perfil.last_name }}" required
-                               class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2">
+                    <!-- Sección: Información personal -->
+                    <div class="space-y-3 border-b border-slate-200 pb-3">
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="bi bi-person text-slate-600 text-xs"></i>
+                            Información personal
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="block text-xs font-semibold text-slate-700">
+                                    Nombre <span class="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    name="first_name" 
+                                    type="text" 
+                                    value="{{ first_name }}" 
+                                    required
+                                    placeholder="Tu nombre"
+                                    class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                                >
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="block text-xs font-semibold text-slate-700">
+                                    Apellido <span class="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    name="last_name" 
+                                    type="text" 
+                                    value="{{ last_name }}" 
+                                    required
+                                    placeholder="Tu apellido"
+                                    class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                                >
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="block text-xs font-semibold text-slate-700">
+                                    Fecha de nacimiento
+                                </label>
+                                <input 
+                                    name="date_of_birth" 
+                                    type="date" 
+                                    value="{% if perfil.date_of_birth %}{{ perfil.date_of_birth|date:'Y-m-d' }}{% endif %}"
+                                    class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                                >
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="block text-xs font-semibold text-slate-700">
+                                    Ciudad
+                                </label>
+                                <input 
+                                    name="city" 
+                                    type="text" 
+                                    value="{{ perfil.city }}"
+                                    placeholder="Tu ciudad"
+                                    class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                                >
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Fecha de nacimiento</label>
-                        <input name="date_of_birth" type="date" value="{{ perfil.date_of_birth|date:'Y-m-d' }}"
-                               class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Ciudad</label>
-                        <input name="city" type="text" value="{{ perfil.city }}" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Teléfono</label>
-                        <div class="grid grid-cols-[90px_1fr] gap-2">
-                            <select name="phone_country" class="rounded-xl border-gray-300 text-sm">
-                                <option value="+57">+57</option>
-                                <option value="+1">+1</option>
-                                <option value="+34">+34</option>
-                                <option value="+52">+52</option>
-                            </select>
-                            <input name="phone_number" type="text" value="{{ perfil.phone }}" class="rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Documento de identidad</label>
-                        <div class="grid grid-cols-[180px_1fr] gap-2">
-                            <select name="document_type" class="rounded-xl border-gray-300 text-sm">
-                                <option value="cc" {% if perfil.document_type == 'cc' %}selected{% endif %}>Cédula ciudadanía</option>
-                                <option value="ce" {% if perfil.document_type == 'ce' %}selected{% endif %}>Cédula extranjería</option>
-                                <option value="ti" {% if perfil.document_type == 'ti' %}selected{% endif %}>Tarjeta identidad</option>
-                                <option value="pp" {% if perfil.document_type == 'pp' %}selected{% endif %}>Pasaporte</option>
-                            </select>
-                            <input name="document_number" type="text" value="{{ perfil.document_number }}" class="rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Contacto de emergencia (nombre)</label>
-                        <input name="emergency_contact_name" type="text" value="{{ perfil.emergency_contact_name }}" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Contacto de emergencia (teléfono)</label>
-                        <div class="grid grid-cols-[90px_1fr] gap-2">
-                            <select name="emergency_contact_phone_country" class="rounded-xl border-gray-300 text-sm">
-                                <option value="+57">+57</option>
-                                <option value="+1">+1</option>
-                                <option value="+34">+34</option>
-                                <option value="+52">+52</option>
-                            </select>
-                            <input name="emergency_contact_phone_number" type="text" value="{{ perfil.emergency_contact_phone }}" class="rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-2">
+                    <!-- Sección: Contacto -->
+                    <div class="space-y-3 border-b border-slate-200 pb-3">
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="bi bi-telephone text-slate-600 text-xs"></i>
+                            Información de contacto
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="block text-xs font-semibold text-slate-700">
+                                    Teléfono
+                                </label>
+                                <div class="grid grid-cols-[90px_1fr] gap-2">
+                                    <select name="phone_country" class="rounded-lg border border-slate-300 text-xs px-2 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent bg-white">
+                                        <option value="+57" {% if phone_country == '+57' %}selected{% endif %}>+57</option>
+                                        <option value="+1" {% if phone_country == '+1' %}selected{% endif %}>+1</option>
+                                        <option value="+34" {% if phone_country == '+34' %}selected{% endif %}>+34</option>
+                                        <option value="+52" {% if phone_country == '+52' %}selected{% endif %}>+52</option>
+                                    </select>
+                                    <input 
+                                        name="phone_number" 
+                                        type="text" 
+                                        value="{{ phone_number }}"
+                                        placeholder="3001234567"
+                                        class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="block text-xs font-semibold text-slate-700">
+                                    Documento
+                                </label>
+                                <div class="grid grid-cols-[140px_1fr] gap-2">
+                                    <select name="document_type" class="rounded-lg border border-slate-300 text-xs px-2 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent bg-white">
+                                        <option value="cc" {% if perfil.document_type == 'cc' %}selected{% endif %}>Cédula</option>
+                                        <option value="ce" {% if perfil.document_type == 'ce' %}selected{% endif %}>Cédula extranjería</option>
+                                        <option value="ti" {% if perfil.document_type == 'ti' %}selected{% endif %}>Tarjeta identidad</option>
+                                        <option value="pp" {% if perfil.document_type == 'pp' %}selected{% endif %}>Pasaporte</option>
+                                    </select>
+                                    <input 
+                                        name="document_number" 
+                                        type="text" 
+                                        value="{{ perfil.document_number }}"
+                                        placeholder="Número"
+                                        class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                                    >
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="md:col-span-2 pt-3">
-                        <button type="submit"
-                                class="inline-flex justify-center items-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                            Guardar y continuar
+                    <!-- Sección: Contacto de emergencia -->
+                    <div class="space-y-3 border-b border-slate-200 pb-3">
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="bi bi-shield-exclamation text-slate-600 text-xs"></i>
+                            Contacto de emergencia
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="block text-xs font-semibold text-slate-700">
+                                    Nombre del contacto
+                                </label>
+                                <input 
+                                    name="emergency_contact_name" 
+                                    type="text" 
+                                    value="{{ perfil.emergency_contact_name }}"
+                                    placeholder="Nombre completo"
+                                    class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                                >
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="block text-xs font-semibold text-slate-700">
+                                    Teléfono del contacto
+                                </label>
+                                <div class="grid grid-cols-[90px_1fr] gap-2">
+                                    <select name="emergency_contact_phone_country" class="rounded-lg border border-slate-300 text-xs px-2 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent bg-white">
+                                        <option value="+57" {% if emergency_phone_country == '+57' %}selected{% endif %}>+57</option>
+                                        <option value="+1" {% if emergency_phone_country == '+1' %}selected{% endif %}>+1</option>
+                                        <option value="+34" {% if emergency_phone_country == '+34' %}selected{% endif %}>+34</option>
+                                        <option value="+52" {% if emergency_phone_country == '+52' %}selected{% endif %}>+52</option>
+                                    </select>
+                                    <input 
+                                        name="emergency_contact_phone_number" 
+                                        type="text" 
+                                        value="{{ emergency_phone_number }}"
+                                        placeholder="3001234567"
+                                        class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="pt-3 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <a href="{% if perfil.role == 'caregiver' %}{% url 'dashboard' %}{% else %}{% url 'patient_dashboard' %}{% endif %}" class="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors inline-flex items-center gap-1.5">
+                                <i class="bi bi-arrow-left text-sm"></i>
+                                Cancelar
+                            </a>
+                            <span class="text-slate-300">|</span>
+                            <a href="{% url 'change_password' %}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors inline-flex items-center gap-1.5">
+                                <i class="bi bi-key text-sm"></i>
+                                Cambiar contraseña
+                            </a>
+                        </div>
+                        <button 
+                            type="submit"
+                            class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-md hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:ring-offset-2 transition-all"
+                        >
+                            <i class="bi bi-check-circle"></i>
+                            Guardar
                         </button>
                     </div>
                 </form>
@@ -173,20 +284,28 @@
         </div>
     </main>
 </div>
+
 <script>
     (function () {
         const input = document.getElementById("profile_image");
         const preview = document.getElementById("profile-image-preview");
-        if (!input || !preview) return;
+        const placeholder = document.getElementById("profile-image-placeholder");
+        
+        if (!input) return;
+        
         input.addEventListener("change", function () {
             const file = input.files && input.files[0];
             if (!file) return;
+            
             const url = URL.createObjectURL(file);
-            preview.src = url;
-            preview.classList.remove("hidden");
+            if (preview) {
+                preview.src = url;
+                preview.classList.remove("hidden");
+            }
+            if (placeholder) {
+                placeholder.classList.add("hidden");
+            }
         });
     })();
 </script>
 {% endblock %}
-
-
