@@ -18,7 +18,9 @@ ENV/
 db.sqlite3
 db.sqlite3-journal
 porvoz/staticfiles/
-porvoz/media/*
+
+# Media files (uploaded by users - fotos de perfil y pacientes)
+porvoz/media/
 !porvoz/media/.gitkeep
 
 # Environment variables

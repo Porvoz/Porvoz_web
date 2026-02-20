@@ -7,12 +7,6 @@ class Perfil(models.Model):
     Perfil extendido para usuarios de Porvoz.
     """
 
-    ROLE_PATIENT = "patient"
-    ROLE_CAREGIVER = "caregiver"
-    ROLE_CHOICES = [
-        (ROLE_CAREGIVER, "Cuidador"),
-        (ROLE_PATIENT, "Paciente"),
-    ]
     DOC_CC = "cc"
     DOC_CE = "ce"
     DOC_TI = "ti"
@@ -29,7 +23,6 @@ class Perfil(models.Model):
         on_delete=models.CASCADE,
         related_name="perfil",
     )
-    role = models.CharField("Rol", max_length=20, choices=ROLE_CHOICES)
     first_name = models.CharField("Nombre", max_length=150, blank=True)
     last_name = models.CharField("Apellidos", max_length=150, blank=True)
     date_of_birth = models.DateField("Fecha de nacimiento", blank=True, null=True)
@@ -41,6 +34,24 @@ class Perfil(models.Model):
     emergency_contact_name = models.CharField("Nombre contacto de emergencia", max_length=150, blank=True)
     emergency_contact_phone = models.CharField("Teléfono contacto de emergencia", max_length=30, blank=True)
     profile_completed = models.BooleanField(default=False)
+    
+    # Planes
+    PLAN_FREEMIUM = "freemium"
+    PLAN_GROWTH = "growth"
+    PLAN_MULTI_BUSINESS = "multi_business"
+    PLAN_CHOICES = [
+        (PLAN_FREEMIUM, "Freemium"),
+        (PLAN_GROWTH, "Growth Plan"),
+        (PLAN_MULTI_BUSINESS, "Multi-business"),
+    ]
+    plan = models.CharField(
+        "Plan",
+        max_length=20,
+        choices=PLAN_CHOICES,
+        default=PLAN_FREEMIUM,
+        help_text="Plan de suscripción del usuario"
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -50,5 +61,5 @@ class Perfil(models.Model):
         db_table = "porvoz_perfil"
 
     def __str__(self) -> str:
-        return f"{self.user.username} ({self.get_role_display()})"
+        return f"{self.user.username}"
 

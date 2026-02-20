@@ -2,190 +2,195 @@
 {% load static %}
 
 {% block body %}
-<div class="h-screen overflow-hidden bg-slate-100">
-    <div class="grid h-full lg:grid-cols-[1fr_1fr]">
-        <section class="relative hidden overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-800 text-white lg:block">
-            <div class="pointer-events-none absolute -top-20 -left-20 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl"></div>
-            <div class="pointer-events-none absolute -bottom-16 -right-16 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl"></div>
-
-            <div class="relative z-10 mx-auto flex h-full w-full max-w-2xl flex-col justify-center px-8 py-10 space-y-6">
-                <div class="flex flex-col items-start gap-4">
-                    <div class="rounded-3xl bg-white p-3 shadow-2xl transform transition-transform hover:scale-105">
-                        <img
-                            src="{% static 'images/LogoPorvoz.jpeg' %}"
-                            data-logo="1"
-                            data-fallback-src="{% static 'LogoPorvoz.jpeg' %}"
-                            alt="Logo de la marca Porvoz"
-                            class="h-24 w-64 rounded-xl object-contain"
-                        >
-                        <div class="hidden h-24 w-64 items-center justify-center rounded-xl bg-indigo-600 font-bold tracking-wide text-white text-xl">PORVOZ</div>
-                    </div>
+<div class="bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+    <div class="grid lg:grid-cols-2 min-h-screen">
+        <!-- Sección izquierda - Información (solo desktop) -->
+        <section class="hidden lg:flex flex-col justify-center px-8 xl:px-12 py-12 bg-white border-r border-slate-200">
+            <div class="max-w-lg mx-auto">
+                <!-- Logo -->
+                <div class="mb-8">
+                    <img
+                        src="{% static 'images/LogoPorvoz.png' %}"
+                        data-logo="1"
+                        data-fallback-src="{% static 'LogoPorvoz.png' %}"
+                        alt="Logo de la marca Porvoz"
+                        class="h-16 w-auto object-contain"
+                    >
                 </div>
 
-                <div class="space-y-4">
-                    <h1 class="text-4xl font-extrabold leading-tight bg-gradient-to-r from-white via-indigo-100 to-white bg-clip-text text-transparent">
+                <!-- Contenido principal -->
+                <div class="space-y-6 mb-8">
+                    <h1 class="text-4xl xl:text-5xl font-black leading-tight text-slate-900">
                         Medicación bajo control
                     </h1>
-                    <p class="max-w-md text-base text-indigo-100 leading-relaxed">
-                        <span class="font-semibold text-white">Porvoz</span> es tu aliado inteligente para el cuidado de la salud. 
-                        Nuestro sistema realiza <span class="text-emerald-300 font-medium">llamadas automatizadas</span> que recuerdan 
+                    <p class="text-base text-slate-600 leading-relaxed">
+                        <span class="font-bold text-slate-900">Porvoz</span> es tu aliado inteligente para el cuidado de la salud. 
+                        Nuestro sistema realiza <span class="text-blue-600 font-semibold">llamadas automatizadas</span> que recuerdan 
                         a tus seres queridos cuándo y cómo tomar sus medicamentos.
                     </p>
-                    <p class="max-w-md text-sm text-indigo-200 leading-relaxed">
-                        💊 <strong>Ellos reciben el aviso</strong> • 🛡️ <strong>Tú la tranquilidad</strong>
-                    </p>
-                    <div class="mt-5 flex flex-wrap gap-3">
-                        <a href="https://www.youtube.com/watch?v=DaOQr-f9_S8" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-400 transition-all hover:scale-105">
-                            <i class="bi bi-play-circle"></i> Quiero ver cómo funciona
+                    
+                    <div class="flex items-center gap-4 text-sm text-slate-600">
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100 text-blue-600">
+                                <i class="bi bi-capsule"></i>
+                            </div>
+                            <span class="font-semibold text-slate-900">Ellos reciben el aviso</span>
+                        </div>
+                        <span class="text-slate-300">•</span>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100 text-blue-600">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <span class="font-semibold text-slate-900">Tú la tranquilidad</span>
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="flex flex-wrap gap-3 pt-2">
+                        <a href="https://www.youtube.com/watch?v=DaOQr-f9_S8" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition-all shadow-sm">
+                            <i class="bi bi-play-circle"></i>
+                            Ver cómo funciona
                         </a>
-                        <a href="{% url 'register' %}" class="inline-flex items-center rounded-xl border border-white/25 px-5 py-2.5 text-sm font-semibold text-white/95 hover:bg-white/10 transition-all hover:scale-105">
-                            Quiero probar la versión beta
+                        <a href="{% url 'plans' %}" class="inline-flex items-center gap-2 rounded-lg border-2 border-blue-600 bg-white text-blue-600 px-5 py-2.5 text-sm font-semibold hover:bg-blue-50 transition-all">
+                            <i class="bi bi-star"></i>
+                            Ver planes y precios
                         </a>
                     </div>
                 </div>
 
-                <div id="como-funciona" class="grid gap-3 md:grid-cols-3">
-                    <article class="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur hover:bg-white/10 transition-all transform hover:scale-105">
-                        <div class="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/40">
-                            <i class="bi bi-telephone-outbound text-xl"></i>
+                <!-- Características -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100 transition-all">
+                        <div class="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                            <i class="bi bi-telephone-outbound"></i>
                         </div>
-                        <h3 class="font-semibold text-base mb-1">Llamadas Automatizadas</h3>
-                        <p class="text-xs text-slate-200 leading-relaxed">Llamadas automáticas y amables en los horarios que definas.</p>
-                    </article>
-                    <article class="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur hover:bg-white/10 transition-all transform hover:scale-105">
-                        <div class="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/40">
-                            <i class="bi bi-graph-up-arrow text-xl"></i>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">Llamadas Automatizadas</h3>
+                        <p class="text-xs text-slate-600 leading-tight">Llamadas automáticas y amables en los horarios que definas.</p>
+                    </div>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100 transition-all">
+                        <div class="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                            <i class="bi bi-graph-up-arrow"></i>
                         </div>
-                        <h3 class="font-semibold text-base mb-1">Seguimiento en Tiempo Real</h3>
-                        <p class="text-xs text-slate-200 leading-relaxed">Visualiza recordatorios atendidos y no atendidos al instante.</p>
-                    </article>
-                    <article class="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur hover:bg-white/10 transition-all transform hover:scale-105">
-                        <div class="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/40">
-                            <i class="bi bi-shield-check text-xl"></i>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">Seguimiento en Tiempo Real</h3>
+                        <p class="text-xs text-slate-600 leading-tight">Visualiza recordatorios atendidos y no atendidos al instante.</p>
+                    </div>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100 transition-all">
+                        <div class="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                            <i class="bi bi-shield-check"></i>
                         </div>
-                        <h3 class="font-semibold text-base mb-1">Tranquilidad Garantizada</h3>
-                        <p class="text-xs text-slate-200 leading-relaxed">Sistema confiable que te da la paz mental que necesitas.</p>
-                    </article>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">Tranquilidad Garantizada</h3>
+                        <p class="text-xs text-slate-600 leading-tight">Sistema confiable que te da la paz mental que necesitas.</p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section class="flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 px-5 py-6 lg:px-10">
+        <!-- Sección derecha - Formulario -->
+        <section class="flex items-center justify-center px-4 sm:px-6 py-10 lg:py-12">
             <div class="relative w-full max-w-md">
                 <!-- Efectos de fondo decorativos -->
-                <div class="absolute -top-10 -right-10 w-40 h-40 bg-indigo-200/20 rounded-full blur-2xl"></div>
-                <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-slate-200/30 rounded-full blur-2xl"></div>
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-200/20 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-slate-200/30 rounded-full blur-2xl pointer-events-none"></div>
                 
-                <div class="relative bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/80 shadow-2xl p-8">
+                <div class="relative bg-white rounded-3xl border border-slate-200 shadow-2xl p-8">
                     <!-- Header del formulario -->
-                    <div class="mb-6">
-                        <h2 class="text-3xl font-black tracking-tight text-slate-900">Bienvenido de nuevo</h2>
+                    <div class="mb-6 text-center">
+                        <div class="flex justify-center mb-4 lg:hidden">
+                            <img
+                                src="{% static 'images/LogoPorvoz.png' %}"
+                                data-logo="1"
+                                data-fallback-src="{% static 'LogoPorvoz.png' %}"
+                                alt="Logo de la marca Porvoz"
+                                class="h-16 w-auto object-contain"
+                            >
+                        </div>
+                        <h2 class="text-3xl font-black tracking-tight text-slate-900">Bienvenido</h2>
                         <p class="mt-1.5 text-sm text-slate-500">Ingresa con tu usuario y contraseña para continuar.</p>
                     </div>
 
-                    {% if messages %}
-                    <div class="mb-5 space-y-2">
-                        {% for message in messages %}
-                            <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
-                                {{ message }}
+                {% if messages %}
+                <div class="mb-5 space-y-2">
+                    {% for message in messages %}
+                        <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Formulario -->
+                <form method="post" class="space-y-5">
+                    {% csrf_token %}
+                    
+                    <!-- Campo Usuario -->
+                    <div class="space-y-1.5">
+                        <label for="username" class="block text-sm font-semibold text-slate-700">
+                            Usuario
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="bi bi-person text-slate-400"></i>
                             </div>
-                        {% endfor %}
+                            <input 
+                                id="username" 
+                                name="username" 
+                                type="text" 
+                                required 
+                                placeholder="Ingresa tu usuario"
+                                class="block w-full pl-10 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm hover:border-slate-400"
+                            >
+                        </div>
                     </div>
-                    {% endif %}
 
-                    <!-- Formulario -->
-                    <form method="post" class="space-y-5">
-                        {% csrf_token %}
-                        
-                        <!-- Campo Usuario -->
-                        <div class="space-y-1.5">
-                            <label for="username" class="block text-sm font-semibold text-slate-700">
-                                Usuario
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="bi bi-person text-slate-400"></i>
-                                </div>
-                                <input 
-                                    id="username" 
-                                    name="username" 
-                                    type="text" 
-                                    required 
-                                    placeholder="Ingresa tu usuario"
-                                    class="block w-full pl-10 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm hover:border-slate-400"
-                                >
+                    <!-- Campo Contraseña -->
+                    <div class="space-y-1.5">
+                        <label for="password" class="block text-sm font-semibold text-slate-700">
+                            Contraseña
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="bi bi-lock text-slate-400"></i>
                             </div>
+                            <input 
+                                id="password" 
+                                name="password" 
+                                type="password" 
+                                required 
+                                placeholder="Ingresa tu contraseña"
+                                class="block w-full pl-10 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm hover:border-slate-400"
+                            >
                         </div>
-
-                        <!-- Campo Contraseña -->
-                        <div class="space-y-1.5">
-                            <label for="password" class="block text-sm font-semibold text-slate-700">
-                                Contraseña
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="bi bi-lock text-slate-400"></i>
-                                </div>
-                                <input 
-                                    id="password" 
-                                    name="password" 
-                                    type="password" 
-                                    required 
-                                    placeholder="Ingresa tu contraseña"
-                                    class="block w-full pl-10 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm hover:border-slate-400"
-                                >
-                            </div>
-                        </div>
-
-                        <!-- Botón Iniciar Sesión -->
-                        <button 
-                            type="submit" 
-                            class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3.5 text-sm font-semibold text-white shadow-lg hover:from-slate-800 hover:to-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-                        >
-                            <i class="bi bi-box-arrow-in-right"></i>
-                            Iniciar sesión
-                        </button>
-
-                        <!-- Divider -->
-                        <div class="relative my-5">
-                            <div class="absolute inset-0 flex items-center">
-                                <div class="w-full border-t border-slate-200"></div>
-                            </div>
-                            <div class="relative flex justify-center text-xs">
-                                <span class="bg-white px-2 text-slate-500">O continúa con</span>
-                            </div>
-                        </div>
-
-                        <!-- Botón Google -->
-                        <button 
-                            type="button" 
-                            class="w-full inline-flex items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-all"
-                        >
-                            <i class="bi bi-google text-red-500"></i>
-                            Continuar con Google
-                        </button>
-                    </form>
-
-                    <!-- Enlaces de ayuda -->
-                    <div class="mt-6 pt-6 border-t border-slate-200 space-y-3">
-                        <p class="text-center text-sm text-slate-600">
-                            ¿Olvidaste tu contraseña?
-                            <a href="{% url 'reset_password' %}" class="ml-1 font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-2 transition-colors">
-                                Recupérala aquí
-                            </a>
-                        </p>
-                        <p class="text-center text-sm text-slate-600">
-                            ¿No tienes cuenta?
-                            <a href="{% url 'register' %}" class="ml-1 font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-2 transition-colors">
-                                Crea una cuenta
-                            </a>
-                        </p>
                     </div>
+
+                    <!-- Botón Iniciar Sesión -->
+                    <button 
+                        type="submit" 
+                        class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3.5 text-sm font-semibold text-white shadow-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Iniciar sesión
+                    </button>
+                </form>
+
+                <!-- Enlaces de ayuda -->
+                <div class="mt-6 pt-6 border-t border-slate-200 space-y-3">
+                    <p class="text-center text-sm text-slate-600">
+                        ¿Olvidaste tu contraseña?
+                        <a href="{% url 'reset_password' %}" class="ml-1 font-semibold text-blue-600 hover:text-blue-700 underline underline-offset-2 transition-colors">
+                            Recupérala aquí
+                        </a>
+                    </p>
+                    <p class="text-center text-sm text-slate-600">
+                        ¿No tienes cuenta?
+                        <a href="{% url 'register' %}" class="ml-1 font-semibold text-blue-600 hover:text-blue-700 underline underline-offset-2 transition-colors">
+                            Crea una cuenta
+                        </a>
+                    </p>
+                </div>
                 </div>
             </div>
         </section>
     </div>
+    {% include "core/footer.html" %}
 </div>
 {% endblock %}
-
-

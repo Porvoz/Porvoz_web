@@ -1,0 +1,133 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-100">
+    {% include "core/sidebar.html" %}
+
+    <main class="flex-1 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
+        <!-- Botón hamburguesa para móvil -->
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
+        </button>
+        
+        <!-- Header mejorado -->
+        <header class="mb-6 mt-12 lg:mt-0">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-amber-600 to-amber-700 text-white shadow-lg">
+                    <i class="bi bi-heart-pulse text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Agregar Condición Médica</h1>
+                    <p class="text-sm text-slate-600 mt-0.5">Registra una condición médica para <strong>{{ paciente.nombre }}</strong></p>
+                </div>
+            </div>
+        </header>
+
+        {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+                <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="max-w-3xl mx-auto">
+            <!-- Card del paciente -->
+            <div class="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-slate-50 border border-amber-200">
+                <div class="flex items-center gap-3">
+                    {% if paciente.foto %}
+                    <img src="{{ paciente.foto.url }}" alt="{{ paciente.nombre }}" class="h-12 w-12 rounded-lg object-cover border-2 border-amber-200">
+                    {% else %}
+                    <div class="h-12 w-12 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold border-2 border-amber-200">
+                        {{ paciente.nombre|slice:":1"|upper }}
+                    </div>
+                    {% endif %}
+                    <div>
+                        <p class="text-sm font-semibold text-slate-600">Paciente</p>
+                        <p class="text-base font-bold text-slate-900">{{ paciente.nombre }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario mejorado -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
+                <form method="post" class="divide-y divide-slate-200">
+                    {% csrf_token %}
+                    
+                    <!-- Sección: Información de la condición -->
+                    <div class="p-6 lg:p-8">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-amber-100 text-amber-600">
+                                <i class="bi bi-heart-pulse text-lg"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-slate-900">Información de la condición</h2>
+                        </div>
+                        
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Nombre de la condición <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <i class="bi bi-heart-pulse absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                    <input 
+                                        name="nombre" 
+                                        type="text" 
+                                        required
+                                        placeholder="Ej: Diabetes tipo 2, Hipertensión, Asma..."
+                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                                    >
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Descripción
+                                </label>
+                                <textarea 
+                                    name="descripcion" 
+                                    rows="4"
+                                    placeholder="Detalles sobre la condición, síntomas, tratamiento actual, observaciones importantes..."
+                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm resize-none"
+                                ></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Fecha de diagnóstico
+                                </label>
+                                <div class="relative">
+                                    <i class="bi bi-calendar3 absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                    <input 
+                                        name="diagnostico_fecha" 
+                                        type="date"
+                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="p-6 lg:p-8 bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                        <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                            <i class="bi bi-arrow-left"></i>
+                            <span>Cancelar</span>
+                        </a>
+                        <button 
+                            type="submit"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 px-8 py-3.5 text-sm font-semibold text-white shadow-lg hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all transform hover:scale-105"
+                        >
+                            <i class="bi bi-check-circle text-lg"></i>
+                            <span>Agregar Condición</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

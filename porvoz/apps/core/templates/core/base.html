@@ -8,8 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
+        /* Desktop sidebar styles */
         .sidebar {
-            transition: width .2s ease;
+            transition: width .2s ease, transform .3s ease;
         }
         .sidebar.collapsed {
             width: 88px !important;
@@ -44,6 +45,33 @@
         .sidebar.collapsed .sidebar-toggle i {
             transform: rotate(180deg);
         }
+
+        /* Mobile sidebar styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px !important;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 15;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .sidebar-overlay.active {
+                display: block;
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -52,9 +80,18 @@
     <script>
         (function () {
             const STORAGE_KEY = "porvoz-sidebar-collapsed";
+            const MOBILE_BREAKPOINT = 768;
+
+            function isMobile() {
+                return window.innerWidth <= MOBILE_BREAKPOINT;
+            }
 
             function applyInitialState() {
-                if (window.innerWidth <= 768) return;
+                if (isMobile()) {
+                    // En móvil, el sidebar está oculto por defecto
+                    return;
+                }
+                // En desktop, aplicar estado colapsado si está guardado
                 const shouldCollapse = window.localStorage.getItem(STORAGE_KEY) === "1";
                 if (!shouldCollapse) return;
                 document.querySelectorAll(".sidebar").forEach(function (sidebar) {
@@ -62,14 +99,15 @@
                 });
             }
 
-            function setupToggle() {
+            function setupDesktopToggle() {
                 document.addEventListener("click", function (event) {
                     const button = event.target.closest("[data-sidebar-toggle]");
                     if (!button) return;
                     event.preventDefault();
                     const sidebar = button.closest(".sidebar");
                     if (!sidebar) return;
-                    if (window.innerWidth <= 768) return;
+                    if (isMobile()) return;
+                    
                     const collapsed = sidebar.classList.toggle("collapsed");
                     try {
                         window.localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
@@ -77,9 +115,83 @@
                 });
             }
 
+            function setupMobileToggle() {
+                // Toggle del botón hamburguesa
+                document.addEventListener("click", function (event) {
+                    const button = event.target.closest("[data-mobile-menu-toggle]");
+                    if (!button) return;
+                    event.preventDefault();
+                    toggleMobileSidebar();
+                });
+
+                // Cerrar al hacer click en overlay
+                document.addEventListener("click", function (event) {
+                    if (event.target.classList.contains("sidebar-overlay")) {
+                        closeMobileSidebar();
+                    }
+                });
+
+                // Cerrar al hacer click en un link del sidebar en móvil
+                document.addEventListener("click", function (event) {
+                    if (!isMobile()) return;
+                    const navLink = event.target.closest(".sidebar .nav-link");
+                    if (navLink) {
+                        // Pequeño delay para que se vea la transición
+                        setTimeout(function() {
+                            closeMobileSidebar();
+                        }, 150);
+                    }
+                });
+            }
+
+            function toggleMobileSidebar() {
+                const sidebar = document.querySelector(".sidebar");
+                const overlay = document.querySelector(".sidebar-overlay");
+                if (!sidebar) return;
+
+                const isOpen = sidebar.classList.contains("mobile-open");
+                if (isOpen) {
+                    closeMobileSidebar();
+                } else {
+                    openMobileSidebar();
+                }
+            }
+
+            function openMobileSidebar() {
+                const sidebar = document.querySelector(".sidebar");
+                const overlay = document.querySelector(".sidebar-overlay");
+                if (sidebar) {
+                    sidebar.classList.add("mobile-open");
+                }
+                if (overlay) {
+                    overlay.classList.add("active");
+                    document.body.style.overflow = "hidden";
+                }
+            }
+
+            function closeMobileSidebar() {
+                const sidebar = document.querySelector(".sidebar");
+                const overlay = document.querySelector(".sidebar-overlay");
+                if (sidebar) {
+                    sidebar.classList.remove("mobile-open");
+                }
+                if (overlay) {
+                    overlay.classList.remove("active");
+                    document.body.style.overflow = "";
+                }
+            }
+
+            // Cerrar sidebar en móvil al redimensionar a desktop
+            window.addEventListener("resize", function() {
+                if (!isMobile()) {
+                    closeMobileSidebar();
+                }
+            });
+
             document.addEventListener("DOMContentLoaded", function () {
                 applyInitialState();
-                setupToggle();
+                setupDesktopToggle();
+                setupMobileToggle();
             });
 
             // Logo fallback: if static/images path fails, try static root path.

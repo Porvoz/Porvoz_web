@@ -1,0 +1,234 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-100 flex-col">
+    {% include "core/sidebar.html" %}
+
+    <main class="flex-1 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
+        <!-- Botón hamburguesa para móvil -->
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
+        </button>
+        
+        <header class="mb-6 flex flex-col sm:flex-row items-start justify-between gap-4 mt-12 lg:mt-0">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Mis Pacientes</h1>
+                <p class="mt-1 text-sm text-slate-600">Gestiona tus pacientes y sus medicamentos</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white text-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-50 transition-colors shadow-sm">
+                    <i class="bi bi-house"></i>
+                    <span class="hidden sm:inline">Panel</span>
+                </a>
+                <a href="{% url 'agregar_paciente' %}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3.5 text-sm font-bold transition-all shadow-lg transform hover:scale-105">
+                    <i class="bi bi-person-plus text-base"></i>
+                    <span class="font-black">Nuevo Paciente</span>
+                </a>
+            </div>
+        </header>
+
+        {% if messages %}
+        <div class="mb-5 space-y-2">
+            {% for message in messages %}
+                <div class="rounded-lg border px-4 py-2.5 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Barra de búsqueda -->
+        <div class="mb-5">
+            <form method="get" class="flex gap-2">
+                <div class="relative flex-1 max-w-md">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="bi bi-search text-slate-400"></i>
+                    </div>
+                    <input 
+                        type="text" 
+                        name="buscar" 
+                        value="{{ buscar }}"
+                        placeholder="Buscar paciente por nombre..."
+                        class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition-all"
+                    >
+                </div>
+                {% if buscar %}
+                <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white text-slate-700 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                    <i class="bi bi-x-circle"></i>
+                    Limpiar
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% if pacientes %}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {% for paciente in pacientes %}
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                <!-- Header con foto y nombre -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-5">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            {% if paciente.foto %}
+                            <img src="{{ paciente.foto.url }}" alt="{{ paciente.nombre }}" class="h-14 w-14 rounded-xl object-cover border-2 border-white/30 shadow-lg flex-shrink-0">
+                            {% else %}
+                            <div class="h-14 w-14 rounded-xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center text-xl font-bold text-white shadow-lg flex-shrink-0">
+                                {{ paciente.nombre|slice:":1"|upper }}
+                            </div>
+                            {% endif %}
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="text-lg font-black text-white truncate">{{ paciente.nombre }}</h3>
+                                    {% if paciente.es_usuario_mismo %}
+                                    <span class="inline-flex items-center rounded-full bg-white/20 backdrop-blur-sm px-2 py-0.5 text-xs font-semibold text-white border border-white/30">
+                                        <i class="bi bi-person-check mr-1"></i>
+                                        Yo
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-sm text-blue-100 flex items-center gap-1.5">
+                                    <i class="bi bi-telephone"></i>
+                                    <span class="truncate">{{ paciente.telefono }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-shrink-0">
+                            <a href="{% url 'editar_paciente' paciente.id %}" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white transition-colors" title="Editar">
+                                <i class="bi bi-pencil text-sm"></i>
+                            </a>
+                            <a href="{% url 'eliminar_paciente' paciente.id %}" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-500/20 hover:bg-red-500/30 backdrop-blur-sm text-white transition-colors" title="Eliminar">
+                                <i class="bi bi-trash text-sm"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% if paciente.descripcion %}
+                    <p class="text-sm text-blue-100 line-clamp-2">{{ paciente.descripcion }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Contenido -->
+                <div class="p-5">
+                    <!-- Medicamentos -->
+                    {% with medicamentos=paciente.medicamentos.all %}
+                    {% if medicamentos %}
+                    <div class="mb-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i class="bi bi-capsule text-blue-600"></i>
+                                Medicamentos ({{ medicamentos.count }})
+                            </h4>
+                            <a href="{% url 'agregar_medicamento' paciente.id %}" class="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                                <i class="bi bi-plus-circle"></i>
+                                Agregar
+                            </a>
+                        </div>
+                        <div class="space-y-2">
+                            {% for medicamento in medicamentos %}
+                            <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors">
+                                <div class="flex items-start justify-between gap-2 mb-1">
+                                    <span class="text-sm font-semibold text-slate-900">{{ medicamento.nombre }}</span>
+                                    <span class="text-xs text-slate-500 flex-shrink-0">
+                                        {% if medicamento.frecuencia_tipo == 'horario' %}
+                                            <i class="bi bi-clock"></i>
+                                            {{ medicamento.horario|time:"H:i" }}
+                                        {% else %}
+                                            <i class="bi bi-arrow-repeat"></i>
+                                            Cada {{ medicamento.cada_x_horas }}h
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-600">{{ medicamento.dosis }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mb-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i class="bi bi-capsule text-blue-600"></i>
+                                Medicamentos
+                            </h4>
+                            <a href="{% url 'agregar_medicamento' paciente.id %}" class="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                                <i class="bi bi-plus-circle"></i>
+                                Agregar
+                            </a>
+                        </div>
+                        <p class="text-sm text-slate-400 text-center py-3">No hay medicamentos registrados</p>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+
+                    <!-- Condiciones médicas -->
+                    {% with enfermedades=paciente.enfermedades.all %}
+                    {% if enfermedades %}
+                    <div class="mb-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i class="bi bi-heart-pulse text-blue-600"></i>
+                                Condiciones ({{ enfermedades.count }})
+                            </h4>
+                            <a href="{% url 'agregar_enfermedad' paciente.id %}" class="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                                <i class="bi bi-plus-circle"></i>
+                                Agregar
+                            </a>
+                        </div>
+                        <div class="space-y-2">
+                            {% for enfermedad in enfermedades %}
+                            <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                                <span class="text-sm font-medium text-slate-900">{{ enfermedad.nombre }}</span>
+                                {% if enfermedad.descripcion %}
+                                <p class="text-xs text-slate-600 mt-1">{{ enfermedad.descripcion }}</p>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mb-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i class="bi bi-heart-pulse text-blue-600"></i>
+                                Condiciones
+                            </h4>
+                            <a href="{% url 'agregar_enfermedad' paciente.id %}" class="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                                <i class="bi bi-plus-circle"></i>
+                                Agregar
+                            </a>
+                        </div>
+                        <p class="text-sm text-slate-400 text-center py-3">No hay condiciones registradas</p>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+
+                    <!-- Botón ver detalles -->
+                    <div class="pt-4 border-t border-slate-200">
+                        <a href="{% url 'editar_paciente' paciente.id %}" class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 text-sm font-semibold transition-colors">
+                            <i class="bi bi-eye"></i>
+                            Ver detalles completos
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
+            <div class="max-w-md mx-auto">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
+                    <i class="bi bi-people text-3xl text-slate-400"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">No hay pacientes registrados</h3>
+                <p class="text-slate-600 mb-6 text-sm">Comienza agregando tu primer paciente</p>
+                <a href="{% url 'agregar_paciente' %}" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-sm font-semibold transition-colors">
+                    <i class="bi bi-person-plus"></i>
+                    Agregar primer paciente
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+    {% include "core/footer.html" %}
+</div>
+{% endblock %}

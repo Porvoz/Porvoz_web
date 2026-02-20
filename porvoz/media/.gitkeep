@@ -1,0 +1,3 @@
+# Este archivo mantiene la carpeta media/ en el repositorio
+# Las fotos subidas por usuarios (profile_images/, pacientes_fotos/) están en .gitignore
+

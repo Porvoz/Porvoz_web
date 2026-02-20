@@ -2,139 +2,216 @@
 {% load static %}
 
 {% block body %}
-<div class="min-h-screen flex bg-slate-100">
-    <aside class="sidebar fixed left-0 top-0 h-screen w-24 lg:w-64 bg-gradient-to-b from-slate-100 via-slate-50 to-white border-r border-slate-300/50 z-20 flex flex-col shadow-lg">
-        <div class="px-5 py-4 border-b border-slate-300/50 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-slate-50 backdrop-blur-sm rounded-br-lg">
-            <div class="user-meta">
-                <div class="flex items-center gap-3">
-                    {% if perfil.profile_image %}
-                    <img src="{{ perfil.profile_image.url }}" alt="Foto de perfil" class="h-10 w-10 rounded-full object-cover border border-slate-200">
-                    {% else %}
-                    <div class="h-10 w-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold">
-                        {{ request.user.first_name|default:request.user.username|slice:":1"|upper }}
-                    </div>
-                    {% endif %}
-                    <div>
-                        <div class="text-sm font-bold text-slate-900 truncate">{{ request.user.first_name|default:request.user.username }}</div>
-                        <div class="text-[11px] text-slate-500">Cuidador</div>
-                    </div>
-                </div>
-            </div>
-            <button type="button" class="sidebar-toggle hidden lg:flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100" data-sidebar-toggle>
-                <i class="bi bi-chevron-left text-slate-600 text-sm"></i>
-            </button>
-        </div>
-        <nav class="px-3 py-4 flex-1 flex flex-col gap-1 text-sm">
-            <div class="px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2 label-text">Principal</div>
-            <a href="{% url 'dashboard' %}" class="nav-link px-3 py-2 rounded-xl bg-slate-900 text-white flex items-center gap-2 font-semibold">
-                <i class="bi bi-house mr-2"></i><span class="label-text">Panel</span>
-            </a>
-            <div class="px-2 mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2 label-text">Gestión</div>
-            <a href="{% url 'caregiver_patients' %}" class="nav-link px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 flex items-center gap-2 font-semibold">
-                <i class="bi bi-people mr-2"></i><span class="label-text">Pacientes</span>
-            </a>
-            <a href="{% url 'notifications' %}" class="nav-link px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 flex items-center gap-2 font-semibold">
-                <i class="bi bi-bell mr-2"></i><span class="label-text">Notificaciones</span>
-            </a>
-            <div class="px-2 mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2 label-text">Cuenta</div>
-            <a href="{% url 'edit_profile' %}" class="nav-link px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 flex items-center gap-2 font-semibold">
-                <i class="bi bi-pencil-square mr-2"></i><span class="label-text">Editar perfil</span>
-            </a>
-        </nav>
-        <div class="px-3 pb-4 mt-auto">
-            <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="logout-btn w-full rounded-xl px-4 py-2.5 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2">
-                    <i class="bi bi-box-arrow-right"></i><span>Cerrar sesión</span>
-                </button>
-            </form>
-        </div>
-    </aside>
+<div class="min-h-screen flex flex-col bg-slate-100">
+    {% include "core/sidebar.html" %}
 
-    <main class="flex-1 lg:ml-64 px-5 py-7 lg:px-10">
-        <header class="mb-6 flex items-start justify-between">
-            <div>
-                <h1 class="text-3xl lg:text-4xl font-black tracking-tight text-slate-900">Hola, {{ request.user.first_name|default:request.user.username|lower }}</h1>
-                <p class="mt-1 text-lg text-slate-600">Tus recordatorios y medicamentos</p>
-            </div>
-            <div class="rounded-2xl bg-white p-2 shadow border border-slate-200">
-                <img src="{% static 'images/LogoPorvoz.jpeg' %}" data-logo="1" data-fallback-src="{% static 'LogoPorvoz.jpeg' %}" alt="Logo de Porvoz" class="h-14 w-48 rounded-xl object-contain">
-                <div class="hidden h-14 w-48 items-center justify-center rounded-xl bg-indigo-600 text-white font-bold">PORVOZ</div>
-            </div>
+    <main class="flex-1 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10 pb-20">
+        <!-- Botón hamburguesa para móvil -->
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
+        </button>
+        
+        <!-- Logo en esquina superior derecha -->
+        <div class="fixed top-4 right-4 z-30 hidden lg:block">
+            <img src="{% static 'images/LogoPorvoz.png' %}" alt="Porvoz" class="h-10 w-auto object-contain">
+        </div>
+        
+        <header class="mb-6 mt-12 lg:mt-0">
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Hola, {{ request.user.first_name|default:request.user.username|lower }}</h1>
+            <p class="mt-1 text-sm text-slate-600">Resumen de tu actividad y recordatorios</p>
         </header>
 
-        <section class="mb-5 rounded-3xl bg-gradient-to-r from-slate-950 to-indigo-950 p-6 text-white shadow-lg">
-            <h2 class="text-3xl lg:text-4xl font-black">Tus Recordatorios</h2>
-            <p class="mt-2 text-base lg:text-lg text-indigo-100">Aquí verás tus próximas llamadas y medicamentos de forma clara y sencilla.</p>
-        </section>
+        <!-- Estadísticas generales -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-600">
+                        <i class="bi bi-people text-lg"></i>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-slate-900">{{ pacientes.count }}</p>
+                <p class="text-sm text-slate-600 mt-1">Pacientes</p>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-600">
+                        <i class="bi bi-capsule text-lg"></i>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-slate-900">{{ total_medicamentos }}</p>
+                <p class="text-sm text-slate-600 mt-1">Medicamentos</p>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-600">
+                        <i class="bi bi-telephone text-lg"></i>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-slate-900">{{ llamadas_hoy|default:"0" }}</p>
+                <p class="text-sm text-slate-600 mt-1">Llamadas hoy</p>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-600">
+                        <i class="bi bi-graph-up-arrow text-lg"></i>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-slate-900">{{ adherencia|default:"0" }}%</p>
+                <p class="text-sm text-slate-600 mt-1">Adherencia</p>
+            </div>
+        </div>
 
-        <section class="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="mb-4 flex items-center justify-between">
-                    <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-900 text-white"><i class="bi bi-clock-history text-2xl"></i></div>
-                    <span class="rounded-lg bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600">Próximo</span>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Próximos recordatorios -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-slate-900">Próximos Recordatorios</h2>
+                        <a href="{% url 'listar_pacientes' %}" class="text-sm font-semibold text-blue-600 hover:text-blue-700">
+                            Ver todos
+                        </a>
+                    </div>
+                    {% if proximos_recordatorios %}
+                    <div class="space-y-3">
+                        {% for recordatorio in proximos_recordatorios %}
+                        <div class="flex items-center gap-4 p-4 rounded-lg border border-slate-200 bg-slate-50">
+                            <div class="flex-shrink-0">
+                                <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 text-blue-600">
+                                    <i class="bi bi-clock text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-semibold text-slate-900">{{ recordatorio.medicamento.nombre }}</p>
+                                <p class="text-sm text-slate-600">{{ recordatorio.medicamento.dosis }}</p>
+                                <p class="text-xs text-slate-500 mt-1">{{ recordatorio.medicamento.paciente.nombre }}</p>
+                            </div>
+                            <div class="flex-shrink-0 text-right">
+                                <p class="text-sm font-bold text-slate-900">{{ recordatorio.horario|time:"H:i" }}</p>
+                                <p class="text-xs text-slate-500">{{ recordatorio.fecha|date:"d/m" }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="bi bi-clock text-4xl text-slate-300 mb-3"></i>
+                        <p class="text-slate-600 text-sm">No hay recordatorios programados</p>
+                        <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-semibold mt-3">
+                            <i class="bi bi-plus-circle"></i>
+                            Agregar medicamento
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
-                <p class="text-3xl font-black text-slate-900">08:30 p.m.</p>
-                <p class="mt-1 text-base text-slate-600">Próxima llamada</p>
-            </article>
-            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="mb-4 flex items-center justify-between">
-                    <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-900 text-white"><i class="bi bi-telephone text-2xl"></i></div>
-                    <span class="rounded-lg bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600">Hoy</span>
-                </div>
-                <p class="text-5xl font-black text-slate-900">3</p>
-                <p class="mt-1 text-base text-slate-600">Llamadas de hoy</p>
-            </article>
-            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="mb-4 flex items-center justify-between">
-                    <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-900 text-white"><i class="bi bi-graph-up-arrow text-2xl"></i></div>
-                    <span class="rounded-lg bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600">Excelente</span>
-                </div>
-                <p class="text-5xl font-black text-slate-900">78%</p>
-                <p class="mt-1 text-base text-slate-600">Adherencia</p>
-            </article>
-        </section>
 
-        <section class="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
-            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 class="text-2xl lg:text-3xl font-black text-slate-900">Próximas Llamadas y Medicamentos</h3>
-                <p class="mt-1 text-sm lg:text-base text-slate-500">Tu agenda de recordatorios programados</p>
-                <div class="mt-4 space-y-3">
-                    <div class="rounded-xl bg-slate-100 p-4">
-                        <p class="text-xl font-bold text-slate-900">08:30 a.m. <span class="ml-2 rounded bg-slate-200 px-2 py-1 text-sm font-semibold">Próximo</span></p>
-                        <p class="text-base text-slate-700">Llamada para recordar <strong>Losartán 50mg</strong></p>
+                <!-- Actividad reciente -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-slate-900 mb-4">Actividad Reciente</h2>
+                    {% if actividad_reciente %}
+                    <div class="space-y-3">
+                        {% for actividad in actividad_reciente %}
+                        <div class="flex items-center gap-3 text-sm">
+                            <div class="flex-shrink-0">
+                                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600">
+                                    <i class="bi bi-{{ actividad.icono }} text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-slate-900">{{ actividad.descripcion }}</p>
+                                <p class="text-xs text-slate-500">{{ actividad.fecha|timesince }} atrás</p>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
-                    <div class="rounded-xl bg-slate-100 p-4">
-                        <p class="text-xl font-bold text-slate-900">02:00 p.m. <span class="ml-2 rounded bg-slate-200 px-2 py-1 text-sm font-semibold">Programado</span></p>
-                        <p class="text-base text-slate-700">Llamada para recordar <strong>Metformina 850mg</strong></p>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="bi bi-activity text-4xl text-slate-300 mb-3"></i>
+                        <p class="text-slate-600 text-sm">No hay actividad reciente</p>
                     </div>
-                    <div class="rounded-xl bg-slate-100 p-4">
-                        <p class="text-xl font-bold text-slate-900">08:30 p.m. <span class="ml-2 rounded bg-slate-200 px-2 py-1 text-sm font-semibold">Programado</span></p>
-                        <p class="text-base text-slate-700">Llamada para recordar <strong>Atorvastatina 20mg</strong></p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Panel lateral -->
+            <div class="space-y-6">
+                <!-- Accesos rápidos -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4">Accesos Rápidos</h3>
+                    <div class="space-y-2">
+                        <a href="{% url 'agregar_paciente' %}" class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100 text-blue-600">
+                                <i class="bi bi-person-plus"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900">Agregar Paciente</p>
+                                <p class="text-xs text-slate-500">Registra un nuevo paciente</p>
+                            </div>
+                        </a>
+                        <a href="{% url 'listar_pacientes' %}" class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-600">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900">Ver Pacientes</p>
+                                <p class="text-xs text-slate-500">Gestiona tus pacientes</p>
+                            </div>
+                        </a>
+                        <a href="{% url 'plans' %}" class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-600">
+                                <i class="bi bi-star"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900">Planes</p>
+                                <p class="text-xs text-slate-500">Ver planes disponibles</p>
+                            </div>
+                        </a>
                     </div>
                 </div>
-            </article>
-            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 class="text-2xl lg:text-3xl font-black text-slate-900">Llamadas Recientes</h3>
-                <p class="mt-1 text-sm lg:text-base text-slate-500">Historial de recordatorios</p>
-                <div class="mt-4 space-y-3">
-                    <div class="rounded-xl bg-slate-100 p-4">
-                        <p class="text-lg font-bold text-slate-900">Ayer • 08:30 p.m.</p>
-                        <p class="text-base text-slate-700">Llamada atendida</p>
+
+                <!-- Resumen de pacientes -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4">Tus Pacientes</h3>
+                    {% if pacientes %}
+                    <div class="space-y-3">
+                        {% for paciente in pacientes|slice:":5" %}
+                        <a href="{% url 'editar_paciente' paciente.id %}" class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                            {% if paciente.foto %}
+                            <img src="{{ paciente.foto.url }}" alt="{{ paciente.nombre }}" class="h-10 w-10 rounded-lg object-cover border border-slate-200">
+                            {% else %}
+                            <div class="h-10 w-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-600">
+                                {{ paciente.nombre|slice:":1"|upper }}
+                            </div>
+                            {% endif %}
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-slate-900 truncate">{{ paciente.nombre }}</p>
+                                <p class="text-xs text-slate-500">{{ paciente.medicamentos.count }} medicamentos</p>
+                            </div>
+                        </a>
+                        {% endfor %}
+                        {% if pacientes.count > 5 %}
+                        <a href="{% url 'listar_pacientes' %}" class="block text-center text-sm font-semibold text-blue-600 hover:text-blue-700 py-2">
+                            Ver todos ({{ pacientes.count }})
+                        </a>
+                        {% endif %}
                     </div>
-                    <div class="rounded-xl bg-slate-100 p-4">
-                        <p class="text-lg font-bold text-slate-900">Ayer • 02:00 p.m.</p>
-                        <p class="text-base text-slate-700">No contestó</p>
+                    {% else %}
+                    <div class="text-center py-6">
+                        <i class="bi bi-people text-3xl text-slate-300 mb-2"></i>
+                        <p class="text-slate-600 text-sm mb-3">No tienes pacientes</p>
+                        <a href="{% url 'agregar_paciente' %}" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-semibold">
+                            <i class="bi bi-plus-circle"></i>
+                            Agregar paciente
+                        </a>
                     </div>
-                    <div class="rounded-xl bg-slate-100 p-4">
-                        <p class="text-lg font-bold text-slate-900">Hace 2 días • 08:30 a.m.</p>
-                        <p class="text-base text-slate-700">Llamada atendida</p>
-                    </div>
+                    {% endif %}
                 </div>
-            </article>
-        </section>
+            </div>
+        </div>
     </main>
+    
+    <!-- Botón flotante de ayuda -->
+    <a href="{% url 'guide' %}" class="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-r from-blue-800 to-blue-900 text-white shadow-2xl hover:from-blue-900 hover:to-blue-950 transition-all transform hover:scale-110 active:scale-95" title="Guía rápida y preguntas frecuentes">
+        <i class="bi bi-question-lg text-2xl"></i>
+    </a>
 </div>
 {% endblock %}
-
-

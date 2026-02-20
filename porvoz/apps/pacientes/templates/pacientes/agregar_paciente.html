@@ -1,0 +1,258 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-100">
+    {% include "core/sidebar.html" %}
+
+    <main class="flex-1 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
+        <!-- Botón hamburguesa para móvil -->
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
+        </button>
+        
+        <!-- Header mejorado -->
+        <header class="mb-6 mt-12 lg:mt-0">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg">
+                    <i class="bi bi-person-plus text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Agregar Paciente</h1>
+                    <p class="text-sm text-slate-600 mt-0.5">Registra un nuevo paciente para gestionar sus medicamentos</p>
+                </div>
+            </div>
+        </header>
+
+        {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+                <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="max-w-4xl mx-auto">
+            <!-- Botón rápido "Agregarme a mí" -->
+            {% if not ya_existe_paciente_mismo %}
+            <div class="mb-6 p-5 rounded-2xl bg-gradient-to-r from-blue-50 to-slate-50 border-2 border-blue-200">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white">
+                            <i class="bi bi-person-check text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 mb-0.5">¿Eres tú el paciente?</h3>
+                            <p class="text-sm text-slate-600">Pre-llena el formulario con tus datos personales</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'agregar_paciente' %}?prefill=me" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 font-semibold transition-all shadow-md transform hover:scale-105">
+                        <i class="bi bi-person-check"></i>
+                        Agregarme a mí
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Formulario principal -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
+                <form method="post" enctype="multipart/form-data" class="divide-y divide-slate-200">
+                    {% csrf_token %}
+                    
+                    <!-- Sección: Foto -->
+                    <div class="p-6 lg:p-8 bg-gradient-to-br from-slate-50 to-white">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                            <div class="relative">
+                                <div id="foto-preview-placeholder" class="h-28 w-28 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 border-3 border-slate-300 flex items-center justify-center shadow-lg {% if prefill and prefill_foto_url %}hidden{% endif %}">
+                                    <i class="bi bi-camera text-3xl text-slate-400"></i>
+                                </div>
+                                <img id="foto-preview" src="{% if prefill and prefill_foto_url %}{{ prefill_foto_url }}{% endif %}" alt="Vista previa" class="h-28 w-28 rounded-2xl object-cover border-3 border-slate-300 shadow-lg {% if not prefill or not prefill_foto_url %}hidden{% endif %}">
+                                <div class="absolute -bottom-2 -right-2 bg-blue-600 text-white rounded-full p-2.5 shadow-lg">
+                                    <i class="bi bi-camera text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold text-slate-900 mb-1">Foto del paciente</h3>
+                                <p class="text-sm text-slate-600 mb-4">Sube una foto para identificar fácilmente al paciente</p>
+                                <label class="inline-flex items-center gap-2 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 px-5 py-2.5 text-sm font-semibold hover:bg-blue-100 cursor-pointer transition-all shadow-sm">
+                                    <i class="bi bi-cloud-upload"></i>
+                                    <span>Seleccionar foto</span>
+                                    <input id="foto-input" name="foto" type="file" accept="image/*" class="hidden">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Información básica -->
+                    <div class="p-6 lg:p-8">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100 text-blue-600">
+                                <i class="bi bi-person text-lg"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-slate-900">Información básica</h2>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Nombre completo <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <i class="bi bi-person absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                    <input 
+                                        name="nombre" 
+                                        type="text" 
+                                        required
+                                        value="{{ prefill_nombre }}"
+                                        placeholder="Nombre completo del paciente"
+                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                                    >
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Teléfono <span class="text-red-500">*</span>
+                                </label>
+                                <div class="grid grid-cols-[120px_1fr] gap-2">
+                                    <select name="phone_country" class="rounded-xl border border-slate-300 text-sm px-3 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white font-medium">
+                                        <option value="+57" {% if prefill_phone_country == "+57" or not prefill %}selected{% endif %}>+57 CO</option>
+                                        <option value="+1" {% if prefill_phone_country == "+1" %}selected{% endif %}>+1 US</option>
+                                        <option value="+34" {% if prefill_phone_country == "+34" %}selected{% endif %}>+34 ES</option>
+                                        <option value="+52" {% if prefill_phone_country == "+52" %}selected{% endif %}>+52 MX</option>
+                                    </select>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span class="text-slate-500 font-medium">+</span>
+                                        </div>
+                                        <input 
+                                            name="phone_number" 
+                                            type="tel" 
+                                            required
+                                            value="{{ prefill_telefono }}"
+                                            placeholder="57 3001234567"
+                                            pattern="[0-9\s]+"
+                                            class="block w-full pl-6 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Fecha de nacimiento
+                                </label>
+                                <div class="relative">
+                                    <i class="bi bi-calendar3 absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                    <input 
+                                        name="fecha_nacimiento" 
+                                        type="date"
+                                        value="{{ prefill_fecha_nacimiento }}"
+                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Información adicional -->
+                    <div class="p-6 lg:p-8 bg-slate-50/50">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-600">
+                                <i class="bi bi-file-text text-lg"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-slate-900">Información adicional</h2>
+                        </div>
+                        
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Descripción
+                                </label>
+                                <textarea 
+                                    name="descripcion" 
+                                    rows="3"
+                                    placeholder="Información general sobre el paciente, relación familiar, etc."
+                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"
+                                >{{ prefill_descripcion }}</textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Notas médicas
+                                </label>
+                                <textarea 
+                                    name="notas" 
+                                    rows="3"
+                                    placeholder="Alergias, observaciones importantes, historial médico relevante..."
+                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"
+                                ></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="p-6 lg:p-8 bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                        <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                            <i class="bi bi-arrow-left"></i>
+                            <span>Volver a pacientes</span>
+                        </a>
+                        <button 
+                            type="submit"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3.5 text-sm font-semibold text-white shadow-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all transform hover:scale-105"
+                        >
+                            <i class="bi bi-check-circle text-lg"></i>
+                            <span>Agregar Paciente</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    (function() {
+        const fotoInput = document.getElementById("foto-input");
+        const fotoPreview = document.getElementById("foto-preview");
+        const fotoPlaceholder = document.getElementById("foto-preview-placeholder");
+        
+        // Si hay una foto pre-cargada (del perfil), mostrarla
+        {% if prefill and prefill_foto_url %}
+        if (fotoPreview && fotoPreview.src && fotoPreview.src.trim() !== '') {
+            fotoPreview.classList.remove("hidden");
+            if (fotoPlaceholder) {
+                fotoPlaceholder.classList.add("hidden");
+            }
+        }
+        {% endif %}
+        
+        if (fotoInput) {
+            fotoInput.addEventListener("change", function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    if (!file.type.startsWith("image/")) {
+                        alert("Por favor selecciona una imagen válida");
+                        return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert("La imagen debe ser menor a 5MB");
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        fotoPreview.src = e.target.result;
+                        fotoPreview.classList.remove("hidden");
+                        if (fotoPlaceholder) {
+                            fotoPlaceholder.classList.add("hidden");
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    })();
+</script>
+{% endblock %}

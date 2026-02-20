@@ -4,6 +4,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from apps.core import views as core_views
+from apps.pacientes import views as pacientes_views
+from apps.medicamentos import views as medicamentos_views
 
 
 urlpatterns = [
@@ -20,11 +22,21 @@ urlpatterns = [
     
     # Dashboards
     path("", core_views.dashboard_router, name="dashboard_router"),
-    path("cuidador/", core_views.caregiver_dashboard, name="dashboard"),
-    path("cuidador/pacientes/", core_views.caregiver_patients_view, name="caregiver_patients"),
-    path("paciente/", core_views.patient_dashboard, name="patient_dashboard"),
-    path("paciente/datos-medicos/", core_views.medical_data_view, name="medical_data"),
+    path("dashboard/", core_views.dashboard_unificado, name="dashboard"),
     path("notificaciones/", core_views.notifications_view, name="notifications"),
+    path("planes/", core_views.plans_view, name="plans"),
+    path("legal/", core_views.legal_info_view, name="legal_info"),
+    path("guia/", core_views.guide_view, name="guide"),
+    
+    # Pacientes
+    path("pacientes/", pacientes_views.listar_pacientes_view, name="listar_pacientes"),
+    path("pacientes/agregar/", pacientes_views.agregar_paciente_view, name="agregar_paciente"),
+    path("pacientes/<int:paciente_id>/editar/", pacientes_views.editar_paciente_view, name="editar_paciente"),
+    path("pacientes/<int:paciente_id>/eliminar/", pacientes_views.eliminar_paciente_view, name="eliminar_paciente"),
+    path("pacientes/<int:paciente_id>/enfermedad/agregar/", pacientes_views.agregar_enfermedad_view, name="agregar_enfermedad"),
+    
+    # Medicamentos
+    path("medicamentos/agregar/<int:paciente_id>/", medicamentos_views.agregar_medicamento_view, name="agregar_medicamento"),
     
     # APIs de microapps (vacías por ahora)
     path("api/cuidadores/", include("apps.cuidadores.urls")),

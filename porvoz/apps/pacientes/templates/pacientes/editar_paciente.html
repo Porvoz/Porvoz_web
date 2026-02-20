@@ -1,0 +1,385 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-100">
+    {% include "core/sidebar.html" %}
+
+    <main class="flex-1 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
+        <!-- Botón hamburguesa para móvil -->
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
+        </button>
+        
+        <!-- Header mejorado -->
+        <header class="mb-6 flex flex-col sm:flex-row items-start justify-between gap-4 mt-12 lg:mt-0">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg">
+                    <i class="bi bi-pencil-square text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Editar Paciente</h1>
+                    <p class="text-sm text-slate-600 mt-0.5">{{ paciente.nombre }}</p>
+                </div>
+            </div>
+            <a href="{% url 'eliminar_paciente' paciente.id %}" class="inline-flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white px-6 py-3 text-sm font-semibold transition-all shadow-lg transform hover:scale-105">
+                <i class="bi bi-trash"></i>
+                <span>Eliminar</span>
+            </a>
+        </header>
+
+        {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+                <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Formulario principal -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Información básica -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
+                    <div class="p-6 bg-gradient-to-r from-blue-50 to-slate-50 border-b border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-600 text-white">
+                                <i class="bi bi-person text-lg"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-slate-900">Información básica</h2>
+                        </div>
+                    </div>
+                    <form method="post" enctype="multipart/form-data" class="p-6 lg:p-8">
+                        {% csrf_token %}
+                        
+                        <!-- Foto -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-semibold text-slate-700 mb-3">
+                                Foto del paciente
+                            </label>
+                            <div class="flex items-center gap-6">
+                                <div class="relative">
+                                    {% if paciente.foto %}
+                                    <img id="foto-preview" src="{{ paciente.foto.url }}" alt="Foto" class="h-28 w-28 rounded-2xl object-cover border-3 border-slate-300 shadow-lg">
+                                    <div id="foto-preview-placeholder" class="hidden"></div>
+                                    {% else %}
+                                    <div id="foto-preview-placeholder" class="h-28 w-28 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 border-3 border-slate-300 flex items-center justify-center shadow-lg">
+                                        <i class="bi bi-camera text-3xl text-slate-400"></i>
+                                    </div>
+                                    <img id="foto-preview" src="" alt="Vista previa" class="hidden h-28 w-28 rounded-2xl object-cover border-3 border-slate-300 shadow-lg">
+                                    {% endif %}
+                                    <div class="absolute -bottom-2 -right-2 bg-blue-600 text-white rounded-full p-2.5 shadow-lg">
+                                        <i class="bi bi-camera text-sm"></i>
+                                    </div>
+                                </div>
+                                <label class="inline-flex items-center gap-2 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 px-5 py-2.5 text-sm font-semibold hover:bg-blue-100 cursor-pointer transition-all shadow-sm">
+                                    <i class="bi bi-cloud-upload"></i>
+                                    <span>Cambiar foto</span>
+                                    <input id="foto-input" name="foto" type="file" accept="image/*" class="hidden">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Nombre completo <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <i class="bi bi-person absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                    <input 
+                                        name="nombre" 
+                                        type="text" 
+                                        required
+                                        value="{{ paciente.nombre }}"
+                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                                    >
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Teléfono <span class="text-red-500">*</span>
+                                </label>
+                                <div class="grid grid-cols-[120px_1fr] gap-2">
+                                    <select name="phone_country" class="rounded-xl border border-slate-300 text-sm px-3 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white font-medium">
+                                        <option value="+57" {% if telefono_pais == "+57" %}selected{% endif %}>+57 CO</option>
+                                        <option value="+1" {% if telefono_pais == "+1" %}selected{% endif %}>+1 US</option>
+                                        <option value="+34" {% if telefono_pais == "+34" %}selected{% endif %}>+34 ES</option>
+                                        <option value="+52" {% if telefono_pais == "+52" %}selected{% endif %}>+52 MX</option>
+                                    </select>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span class="text-slate-500 font-medium">+</span>
+                                        </div>
+                                        <input 
+                                            name="phone_number" 
+                                            type="tel" 
+                                            required
+                                            value="{{ telefono_numero }}"
+                                            placeholder="57 3001234567"
+                                            pattern="[0-9\s]+"
+                                            class="block w-full pl-6 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Fecha de nacimiento
+                                </label>
+                                <div class="relative">
+                                    <i class="bi bi-calendar3 absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                    <input 
+                                        name="fecha_nacimiento" 
+                                        type="date"
+                                        {% if paciente.fecha_nacimiento %}value="{{ paciente.fecha_nacimiento|date:'Y-m-d' }}"{% endif %}
+                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                                    >
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 space-y-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Descripción
+                                </label>
+                                <textarea 
+                                    name="descripcion" 
+                                    rows="3"
+                                    placeholder="Información general sobre el paciente..."
+                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"
+                                >{{ paciente.descripcion }}</textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Notas médicas
+                                </label>
+                                <textarea 
+                                    name="notas" 
+                                    rows="3"
+                                    placeholder="Alergias, observaciones importantes, historial médico relevante..."
+                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"
+                                >{{ paciente.notas }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-6 mt-6 border-t border-slate-200">
+                            <a href="{% url 'listar_pacientes' %}" class="px-6 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                                Cancelar
+                            </a>
+                            <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold transition-all shadow-lg transform hover:scale-105">
+                                Guardar cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Medicamentos -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
+                    <div class="p-6 bg-gradient-to-r from-emerald-50 to-slate-50 border-b border-slate-200 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-600 text-white">
+                                <i class="bi bi-capsule text-lg"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-slate-900">Medicamentos</h2>
+                            <span class="inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 px-3 py-1 text-xs font-semibold">
+                                {{ paciente.medicamentos.count }}
+                            </span>
+                        </div>
+                        <a href="{% url 'agregar_medicamento' paciente.id %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-semibold transition-all shadow-md transform hover:scale-105">
+                            <i class="bi bi-plus-circle"></i>
+                            <span>Agregar</span>
+                        </a>
+                    </div>
+                    <div class="p-6">
+                        {% if paciente.medicamentos.all %}
+                        <div class="space-y-3">
+                            {% for medicamento in paciente.medicamentos.all %}
+                            <div class="rounded-xl border border-slate-200 bg-gradient-to-r from-emerald-50/50 to-white p-4 hover:shadow-md transition-all">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <h3 class="font-bold text-slate-900">{{ medicamento.nombre }}</h3>
+                                            {% if medicamento.activo %}
+                                            <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                                                Activo
+                                            </span>
+                                            {% else %}
+                                            <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
+                                                Inactivo
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-sm text-slate-600 mb-2">Dosis: <strong>{{ medicamento.dosis }}</strong></p>
+                                        {% if medicamento.frecuencia_tipo == 'horario' %}
+                                        <div class="inline-flex items-center gap-1.5 rounded-lg bg-blue-100 text-blue-700 px-3 py-1.5 text-xs font-semibold">
+                                            <i class="bi bi-clock"></i>
+                                            <span>Horario: {{ medicamento.horario|time:"H:i" }}</span>
+                                        </div>
+                                        {% else %}
+                                        <div class="inline-flex items-center gap-1.5 rounded-lg bg-amber-100 text-amber-700 px-3 py-1.5 text-xs font-semibold">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                            <span>Cada {{ medicamento.cada_x_horas }}h desde las {{ medicamento.hora_inicio|time:"H:i" }}</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-12">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
+                                <i class="bi bi-capsule text-3xl text-emerald-600"></i>
+                            </div>
+                            <p class="text-slate-600 font-medium mb-4">No hay medicamentos registrados</p>
+                            <a href="{% url 'agregar_medicamento' paciente.id %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 text-sm font-semibold transition-all">
+                                <i class="bi bi-plus-circle"></i>
+                                <span>Agregar primer medicamento</span>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Enfermedades -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
+                    <div class="p-6 bg-gradient-to-r from-amber-50 to-slate-50 border-b border-slate-200 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-amber-600 text-white">
+                                <i class="bi bi-heart-pulse text-lg"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-slate-900">Condiciones médicas</h2>
+                            <span class="inline-flex items-center rounded-full bg-amber-100 text-amber-700 px-3 py-1 text-xs font-semibold">
+                                {{ paciente.enfermedades.count }}
+                            </span>
+                        </div>
+                        <a href="{% url 'agregar_enfermedad' paciente.id %}" class="inline-flex items-center gap-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 text-sm font-semibold transition-all shadow-md transform hover:scale-105">
+                            <i class="bi bi-plus-circle"></i>
+                            <span>Agregar</span>
+                        </a>
+                    </div>
+                    <div class="p-6">
+                        {% if paciente.enfermedades.all %}
+                        <div class="space-y-3">
+                            {% for enfermedad in paciente.enfermedades.all %}
+                            <div class="rounded-xl border border-slate-200 bg-gradient-to-r from-amber-50/50 to-white p-4 hover:shadow-md transition-all">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <h3 class="font-bold text-slate-900">{{ enfermedad.nombre }}</h3>
+                                            {% if enfermedad.activa %}
+                                            <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+                                                Activa
+                                            </span>
+                                            {% else %}
+                                            <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
+                                                Inactiva
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        {% if enfermedad.descripcion %}
+                                        <p class="text-sm text-slate-600 mb-2">{{ enfermedad.descripcion }}</p>
+                                        {% endif %}
+                                        {% if enfermedad.diagnostico_fecha %}
+                                        <div class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-700 px-3 py-1.5 text-xs font-semibold">
+                                            <i class="bi bi-calendar3"></i>
+                                            <span>Diagnosticado: {{ enfermedad.diagnostico_fecha|date:"d/m/Y" }}</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-12">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 mb-4">
+                                <i class="bi bi-heart-pulse text-3xl text-amber-600"></i>
+                            </div>
+                            <p class="text-slate-600 font-medium mb-4">No hay condiciones médicas registradas</p>
+                            <a href="{% url 'agregar_enfermedad' paciente.id %}" class="inline-flex items-center gap-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 text-sm font-semibold transition-all">
+                                <i class="bi bi-plus-circle"></i>
+                                <span>Agregar primera condición</span>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen lateral mejorado -->
+            <div class="space-y-6">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
+                    <div class="p-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                        <h3 class="text-lg font-black">Resumen</h3>
+                    </div>
+                    <div class="p-6 space-y-5">
+                        <div class="rounded-xl bg-slate-50 p-4">
+                            <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Teléfono</p>
+                            <p class="text-base font-bold text-slate-900">{{ paciente.telefono }}</p>
+                        </div>
+                        {% if paciente.fecha_nacimiento %}
+                        <div class="rounded-xl bg-slate-50 p-4">
+                            <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Fecha de nacimiento</p>
+                            <p class="text-base font-bold text-slate-900">{{ paciente.fecha_nacimiento|date:"d/m/Y" }}</p>
+                        </div>
+                        {% endif %}
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-center">
+                                <i class="bi bi-capsule text-2xl text-emerald-600 mb-2"></i>
+                                <p class="text-2xl font-black text-emerald-700">{{ paciente.medicamentos.count }}</p>
+                                <p class="text-xs font-semibold text-emerald-600 mt-1">Medicamentos</p>
+                            </div>
+                            <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-center">
+                                <i class="bi bi-heart-pulse text-2xl text-amber-600 mb-2"></i>
+                                <p class="text-2xl font-black text-amber-700">{{ paciente.enfermedades.count }}</p>
+                                <p class="text-xs font-semibold text-amber-600 mt-1">Condiciones</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    (function() {
+        const fotoInput = document.getElementById("foto-input");
+        const fotoPreview = document.getElementById("foto-preview");
+        const fotoPlaceholder = document.getElementById("foto-preview-placeholder");
+        
+        if (fotoInput) {
+            fotoInput.addEventListener("change", function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    if (!file.type.startsWith("image/")) {
+                        alert("Por favor selecciona una imagen válida");
+                        return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert("La imagen debe ser menor a 5MB");
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        fotoPreview.src = e.target.result;
+                        fotoPreview.classList.remove("hidden");
+                        if (fotoPlaceholder) {
+                            fotoPlaceholder.classList.add("hidden");
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    })();
+</script>
+{% endblock %}

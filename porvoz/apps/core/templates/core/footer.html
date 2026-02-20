@@ -1,0 +1,23 @@
+{% load static %}
+<footer class="mt-auto border-t border-slate-200 bg-white py-4 px-4 sm:px-6 lg:px-10">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+        <div class="flex items-center gap-2 text-slate-600">
+            <span class="font-semibold text-slate-900">Porvoz</span>
+            <span class="text-slate-400">•</span>
+            <span>© 2026</span>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-4 text-slate-600">
+            <a href="{% url 'legal_info' %}" class="hover:text-blue-600 transition-colors">
+                Términos y Condiciones
+            </a>
+            <span class="text-slate-300">•</span>
+            <a href="{% url 'legal_info' %}#privacidad" class="hover:text-blue-600 transition-colors">
+                Política de Privacidad
+            </a>
+            <span class="text-slate-300">•</span>
+            <a href="{% url 'legal_info' %}#contacto" class="hover:text-blue-600 transition-colors">
+                Contacto
+            </a>
+        </div>
+    </div>
+</footer>
