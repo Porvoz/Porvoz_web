@@ -73,18 +73,24 @@
                     </p>
                 </div>
 
-                <!-- Precio compacto -->
+                <!-- Precio compacto (COP) -->
                 <div class="px-4 py-4 {% if plan.destacado %}bg-blue-50{% else %}bg-white{% endif %}">
+                    {% if plan.precio_cop %}
+                    <div class="flex items-baseline gap-1.5 mb-0.5">
+                        <span class="text-3xl font-black {% if plan.destacado %}text-blue-600{% else %}text-slate-900{% endif %}">
+                            ${{ plan.precio_cop }}
+                        </span>
+                        <span class="text-xs text-slate-600">COP{% if plan.precio_mensual > 0 %}/mes{% endif %}</span>
+                    </div>
+                    {% else %}
                     <div class="flex items-baseline gap-1.5 mb-1.5">
                         <span class="text-3xl font-black {% if plan.destacado %}text-blue-600{% else %}text-slate-900{% endif %}">
-                            {{ plan.precio }}
+                            Gratis
                         </span>
-                        {% if plan.precio_mensual > 0 %}
-                        <span class="text-xs text-slate-600">/mes</span>
-                        {% endif %}
                     </div>
+                    {% endif %}
                     {% if plan.ahorro %}
-                    <div>
+                    <div class="mt-1">
                         <span class="inline-flex items-center rounded-md bg-blue-100 text-blue-700 px-2.5 py-1 text-xs font-semibold">
                             {{ plan.ahorro }}
                         </span>

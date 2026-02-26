@@ -40,6 +40,13 @@ class Medicamento(models.Model):
         null=True,
         help_text="Hora de inicio para 'Cada X horas' (ej: 08:00)"
     )
+    # Duración: null = indefinido, número = cantidad de días
+    duracion_dias = models.PositiveIntegerField(
+        "Duración en días",
+        blank=True,
+        null=True,
+        help_text="Dejar vacío para tratamiento indefinido; o indicar cantidad de días (ej: 7, 30)"
+    )
     activo = models.BooleanField("Activo", default=True)
     creado_en = models.DateTimeField("Fecha de creación", auto_now_add=True)
     actualizado_en = models.DateTimeField("Fecha de actualización", auto_now=True)

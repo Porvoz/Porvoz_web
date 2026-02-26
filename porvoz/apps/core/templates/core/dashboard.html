@@ -83,7 +83,7 @@
                             <div class="flex-1 min-w-0">
                                 <p class="font-semibold text-slate-900">{{ recordatorio.medicamento.nombre }}</p>
                                 <p class="text-sm text-slate-600">{{ recordatorio.medicamento.dosis }}</p>
-                                <p class="text-xs text-slate-500 mt-1">{{ recordatorio.medicamento.paciente.nombre }}</p>
+                                <p class="text-xs text-slate-500 mt-1">{{ recordatorio.medicamento.paciente.get_display_nombre }}</p>
                             </div>
                             <div class="flex-shrink-0 text-right">
                                 <p class="text-sm font-bold text-slate-900">{{ recordatorio.horario|time:"H:i" }}</p>
@@ -175,15 +175,15 @@
                     <div class="space-y-3">
                         {% for paciente in pacientes|slice:":5" %}
                         <a href="{% url 'editar_paciente' paciente.id %}" class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors">
-                            {% if paciente.foto %}
-                            <img src="{{ paciente.foto.url }}" alt="{{ paciente.nombre }}" class="h-10 w-10 rounded-lg object-cover border border-slate-200">
+                            {% if paciente.get_display_foto %}
+                            <img src="{{ paciente.get_display_foto.url }}" alt="{{ paciente.get_display_nombre }}" class="h-10 w-10 rounded-lg object-cover border border-slate-200">
                             {% else %}
                             <div class="h-10 w-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-600">
-                                {{ paciente.nombre|slice:":1"|upper }}
+                                {{ paciente.get_display_nombre|slice:":1"|upper }}
                             </div>
                             {% endif %}
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold text-slate-900 truncate">{{ paciente.nombre }}</p>
+                                <p class="text-sm font-semibold text-slate-900 truncate">{{ paciente.get_display_nombre }}</p>
                                 <p class="text-xs text-slate-500">{{ paciente.medicamentos.count }} medicamentos</p>
                             </div>
                         </a>

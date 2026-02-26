@@ -124,43 +124,54 @@ def editar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
     
     if request.method == "POST":
-        nombre = request.POST.get("nombre", "").strip()
-        phone_country = request.POST.get("phone_country", "+57").strip()
-        phone_number = request.POST.get("phone_number", "").strip()
-        telefono = f"{phone_country} {phone_number}".strip() if phone_number else ""
-        fecha_nacimiento = request.POST.get("fecha_nacimiento", "").strip() or None
         descripcion = request.POST.get("descripcion", "").strip()
         notas = request.POST.get("notas", "").strip()
-        
-        if not nombre or not telefono:
-            messages.error(request, "El nombre y teléfono son obligatorios.")
+
+        # Si es autogestionado (el usuario mismo), solo se permiten descripción y notas
+        if paciente.es_usuario_mismo:
+            paciente.descripcion = descripcion
+            paciente.notas = notas
+            try:
+                paciente.save()
+                messages.success(request, "Datos actualizados correctamente.")
+                return redirect("listar_pacientes")
+            except Exception as e:
+                messages.error(request, f"Error al actualizar: {str(e)}")
         else:
-            # Verificar si el teléfono ya existe en otro paciente del mismo usuario
-            paciente_existente = Paciente.objects.filter(
-                usuario=request.user,
-                telefono=telefono,
-                activo=True
-            ).exclude(id=paciente.id).first()
-            
-            if paciente_existente:
-                messages.error(request, f"Ya existe otro paciente con el número de teléfono {telefono}. Por favor, usa un número diferente.")
+            nombre = request.POST.get("nombre", "").strip()
+            phone_country = request.POST.get("phone_country", "+57").strip()
+            phone_number = request.POST.get("phone_number", "").strip()
+            telefono = f"{phone_country} {phone_number}".strip() if phone_number else ""
+            fecha_nacimiento = request.POST.get("fecha_nacimiento", "").strip() or None
+
+            if not nombre or not telefono:
+                messages.error(request, "El nombre y teléfono son obligatorios.")
             else:
-                paciente.nombre = nombre
-                paciente.telefono = telefono
-                paciente.fecha_nacimiento = fecha_nacimiento
-                paciente.descripcion = descripcion
-                paciente.notas = notas
-                
-                foto = request.FILES.get("foto")
-                if foto:
-                    paciente.foto = foto
-                
-                try:
-                    paciente.save()
-                    messages.success(request, f"Paciente '{paciente.nombre}' actualizado correctamente.")
-                    return redirect("listar_pacientes")
-                except Exception as e:
-                    messages.error(request, f"Error al actualizar el paciente: {str(e)}")
+                paciente_existente = Paciente.objects.filter(
+                    usuario=request.user,
+                    telefono=telefono,
+                    activo=True
+                ).exclude(id=paciente.id).first()
+
+                if paciente_existente:
+                    messages.error(request, f"Ya existe otro paciente con el número de teléfono {telefono}. Por favor, usa un número diferente.")
+                else:
+                    paciente.nombre = nombre
+                    paciente.telefono = telefono
+                    paciente.fecha_nacimiento = fecha_nacimiento
+                    paciente.descripcion = descripcion
+                    paciente.notas = notas
+
+                    foto = request.FILES.get("foto")
+                    if foto:
+                        paciente.foto = foto
+
+                    try:
+                        paciente.save()
+                        messages.success(request, f"Paciente '{paciente.nombre}' actualizado correctamente.")
+                        return redirect("listar_pacientes")
+                    except Exception as e:
+                        messages.error(request, f"Error al actualizar el paciente: {str(e)}")
     
     # Parsear teléfono para mostrar en el formulario
     telefono_pais = "+57"
@@ -199,13 +210,13 @@ def eliminar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpRespon
     
     if request.method == "POST":
         confirm_name = request.POST.get("confirm_name", "").strip()
-        
-        if confirm_name != paciente.nombre:
-            messages.error(request, f"El nombre no coincide. Debes escribir exactamente: {paciente.nombre}")
+        nombre_mostrado = paciente.get_display_nombre()
+        acepta = confirm_name == paciente.nombre or confirm_name == nombre_mostrado
+        if not acepta:
+            messages.error(request, f"El nombre no coincide. Debes escribir exactamente: {nombre_mostrado}")
         else:
-            nombre = paciente.nombre
             paciente.delete()
-            messages.success(request, f"Paciente '{nombre}' eliminado correctamente.")
+            messages.success(request, f"Paciente '{nombre_mostrado}' eliminado correctamente.")
             return redirect("listar_pacientes")
     
     context = {
@@ -245,10 +256,40 @@ def agregar_enfermedad_view(request: HttpRequest, paciente_id: int) -> HttpRespo
 
 
 @login_required
+def editar_enfermedad_view(request: HttpRequest, paciente_id: int, enfermedad_id: int) -> HttpResponse:
+    """Vista para editar una condición/enfermedad de un paciente."""
+    perfil, _ = Perfil.objects.get_or_create(user=request.user)
+    paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
+    enfermedad = get_object_or_404(Enfermedad, id=enfermedad_id, paciente=paciente)
+
+    if request.method == "POST":
+        nombre = request.POST.get("nombre", "").strip()
+        descripcion = request.POST.get("descripcion", "").strip()
+        diagnostico_fecha = request.POST.get("diagnostico_fecha", "").strip()
+
+        if not nombre:
+            messages.error(request, "El nombre de la condición es obligatorio.")
+        else:
+            enfermedad.nombre = nombre
+            enfermedad.descripcion = descripcion
+            enfermedad.diagnostico_fecha = diagnostico_fecha or None
+            enfermedad.save()
+            messages.success(request, f"Condición '{nombre}' actualizada correctamente.")
+            return redirect("editar_paciente", paciente_id=paciente.id)
+
+    context = {
+        "perfil": perfil,
+        "paciente": paciente,
+        "enfermedad": enfermedad,
+    }
+    return render(request, "pacientes/editar_enfermedad.html", context)
+
+
+@login_required
 def listar_pacientes_view(request: HttpRequest) -> HttpResponse:
     """Vista para listar todos los pacientes del usuario."""
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
-    pacientes = Paciente.objects.filter(usuario=request.user, activo=True).order_by("-es_usuario_mismo", "-creado_en")
+    pacientes = Paciente.objects.filter(usuario=request.user, activo=True).select_related("usuario", "usuario__perfil").order_by("-es_usuario_mismo", "-creado_en")
     
     # Filtro de búsqueda por nombre
     buscar = request.GET.get("buscar", "").strip()

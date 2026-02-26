@@ -70,16 +70,16 @@
                 <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-5">
                     <div class="flex items-start justify-between gap-3 mb-3">
                         <div class="flex items-center gap-3 flex-1 min-w-0">
-                            {% if paciente.foto %}
-                            <img src="{{ paciente.foto.url }}" alt="{{ paciente.nombre }}" class="h-14 w-14 rounded-xl object-cover border-2 border-white/30 shadow-lg flex-shrink-0">
+                            {% if paciente.get_display_foto %}
+                            <img src="{{ paciente.get_display_foto.url }}" alt="{{ paciente.get_display_nombre }}" class="h-14 w-14 rounded-xl object-cover border-2 border-white/30 shadow-lg flex-shrink-0">
                             {% else %}
                             <div class="h-14 w-14 rounded-xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center text-xl font-bold text-white shadow-lg flex-shrink-0">
-                                {{ paciente.nombre|slice:":1"|upper }}
+                                {{ paciente.get_display_nombre|slice:":1"|upper }}
                             </div>
                             {% endif %}
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <h3 class="text-lg font-black text-white truncate">{{ paciente.nombre }}</h3>
+                                    <h3 class="text-lg font-black text-white truncate">{{ paciente.get_display_nombre }}</h3>
                                     {% if paciente.es_usuario_mismo %}
                                     <span class="inline-flex items-center rounded-full bg-white/20 backdrop-blur-sm px-2 py-0.5 text-xs font-semibold text-white border border-white/30">
                                         <i class="bi bi-person-check mr-1"></i>
@@ -89,7 +89,7 @@
                                 </div>
                                 <p class="text-sm text-blue-100 flex items-center gap-1.5">
                                     <i class="bi bi-telephone"></i>
-                                    <span class="truncate">{{ paciente.telefono }}</span>
+                                    <span class="truncate">{{ paciente.get_display_telefono }}</span>
                                 </p>
                             </div>
                         </div>
@@ -128,17 +128,26 @@
                             <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors">
                                 <div class="flex items-start justify-between gap-2 mb-1">
                                     <span class="text-sm font-semibold text-slate-900">{{ medicamento.nombre }}</span>
-                                    <span class="text-xs text-slate-500 flex-shrink-0">
-                                        {% if medicamento.frecuencia_tipo == 'horario' %}
-                                            <i class="bi bi-clock"></i>
-                                            {{ medicamento.horario|time:"H:i" }}
-                                        {% else %}
-                                            <i class="bi bi-arrow-repeat"></i>
-                                            Cada {{ medicamento.cada_x_horas }}h
-                                        {% endif %}
+                                    <span class="flex items-center gap-1.5 flex-shrink-0">
+                                        <span class="text-xs text-slate-500">
+                                            {% if medicamento.frecuencia_tipo == 'horario' %}
+                                                <i class="bi bi-clock"></i>
+                                                {{ medicamento.horario|time:"H:i" }}
+                                            {% else %}
+                                                <i class="bi bi-arrow-repeat"></i>
+                                                Cada {{ medicamento.cada_x_horas }}h
+                                            {% endif %}
+                                        </span>
+                                        <a href="{% url 'editar_medicamento' paciente.id medicamento.id %}" class="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 px-2 py-1 text-xs font-semibold hover:bg-blue-100 transition-colors" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                            Editar
+                                        </a>
                                     </span>
                                 </div>
                                 <p class="text-xs text-slate-600">{{ medicamento.dosis }}</p>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    {% if medicamento.duracion_dias %}{{ medicamento.duracion_dias }} días{% else %}Indefinido{% endif %}
+                                </p>
                             </div>
                             {% endfor %}
                         </div>
@@ -176,11 +185,19 @@
                         </div>
                         <div class="space-y-2">
                             {% for enfermedad in enfermedades %}
-                            <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                                <span class="text-sm font-medium text-slate-900">{{ enfermedad.nombre }}</span>
-                                {% if enfermedad.descripcion %}
-                                <p class="text-xs text-slate-600 mt-1">{{ enfermedad.descripcion }}</p>
-                                {% endif %}
+                            <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <span class="text-sm font-medium text-slate-900">{{ enfermedad.nombre }}</span>
+                                        {% if enfermedad.descripcion %}
+                                        <p class="text-xs text-slate-600 mt-1">{{ enfermedad.descripcion }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{% url 'editar_enfermedad' paciente.id enfermedad.id %}" class="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 px-2 py-1 text-xs font-semibold hover:bg-amber-100 transition-colors flex-shrink-0" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                        Editar
+                                    </a>
+                                </div>
                             </div>
                             {% endfor %}
                         </div>

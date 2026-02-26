@@ -297,11 +297,9 @@
             {% if tab_activo == 'planes' %}
             <!-- TAB PLANES -->
             <div class="space-y-6 flex-1">
-                <!-- Planes disponibles -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                     {% for plan in planes %}
                     <div class="relative bg-white rounded-xl border-2 {% if plan.es_plan_actual %}border-blue-800 shadow-lg{% elif plan.destacado %}border-blue-800 shadow-md{% else %}border-slate-200 shadow-sm{% endif %} overflow-hidden flex flex-col">
-                        <!-- Badge de plan actual -->
                         {% if plan.es_plan_actual %}
                         <div class="absolute top-3 right-3 z-10">
                             <span class="inline-flex items-center gap-1 rounded-full bg-blue-800 text-white px-3 py-1 text-xs font-semibold">
@@ -311,16 +309,19 @@
                         </div>
                         {% endif %}
 
-                        <!-- Header del plan -->
                         <div class="p-5 {% if plan.destacado %}bg-blue-200{% else %}bg-slate-50{% endif %} border-b border-slate-200">
                             <h3 class="text-xl font-black text-slate-900 mb-1">{{ plan.nombre }}</h3>
                             <p class="text-xs text-slate-600 mb-3">{{ plan.tagline }}</p>
+                            {% if plan.precio_cop %}
                             <div class="flex items-baseline gap-1">
-                                <span class="text-3xl font-black text-slate-900">{{ plan.precio }}</span>
-                                {% if plan.precio_mensual > 0 %}
-                                <span class="text-sm text-slate-600">/mes</span>
-                                {% endif %}
+                                <span class="text-3xl font-black text-slate-900">${{ plan.precio_cop }}</span>
+                                <span class="text-sm text-slate-600">COP{% if plan.precio_mensual > 0 %}/mes{% endif %}</span>
                             </div>
+                            {% else %}
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-3xl font-black text-slate-900">Gratis</span>
+                            </div>
+                            {% endif %}
                             {% if plan.ahorro %}
                             <p class="text-xs text-emerald-600 font-semibold mt-2">{{ plan.ahorro }}</p>
                             {% endif %}
@@ -365,34 +366,21 @@
                         <div>
                             <p class="text-sm text-blue-200 mb-1">Plan actual</p>
                             <h2 class="text-2xl font-black mb-2">
-                                {% if perfil.plan == perfil.PLAN_FREEMIUM %}
-                                    Plan Freemium
-                                {% elif perfil.plan == perfil.PLAN_GROWTH %}
-                                    Growth Plan
-                                {% elif perfil.plan == perfil.PLAN_MULTI_BUSINESS %}
-                                    Multi-cuidador
-                                {% endif %}
+                                {% if perfil.plan == perfil.PLAN_FREEMIUM %}Plan Freemium{% elif perfil.plan == perfil.PLAN_GROWTH %}Growth Plan{% elif perfil.plan == perfil.PLAN_MULTI_BUSINESS %}Multi-cuidador{% endif %}
                             </h2>
                             <p class="text-sm text-blue-200">
-                                {% if perfil.plan == perfil.PLAN_FREEMIUM %}
-                                    Acceso gratuito a funcionalidades básicas
-                                {% elif perfil.plan == perfil.PLAN_GROWTH %}
-                                    Plan premium con todas las funcionalidades
-                                {% elif perfil.plan == perfil.PLAN_MULTI_BUSINESS %}
-                                    Plan para múltiples cuidadores
-                                {% endif %}
+                                {% if perfil.plan == perfil.PLAN_FREEMIUM %}Acceso gratuito a funcionalidades básicas{% elif perfil.plan == perfil.PLAN_GROWTH %}Plan premium con todas las funcionalidades{% elif perfil.plan == perfil.PLAN_MULTI_BUSINESS %}Plan para múltiples cuidadores{% endif %}
                             </p>
                         </div>
                         <div class="text-left sm:text-right">
                             {% if perfil.plan == perfil.PLAN_FREEMIUM %}
-                                <div class="text-3xl font-black">$0</div>
-                                <div class="text-sm text-blue-200">/mes</div>
+                                <div class="text-3xl font-black">Gratis</div>
                             {% elif perfil.plan == perfil.PLAN_GROWTH %}
-                                <div class="text-3xl font-black">$19</div>
-                                <div class="text-sm text-blue-200">/mes</div>
+                                <div class="text-3xl font-black">$59.900</div>
+                                <div class="text-sm text-blue-200">COP/mes</div>
                             {% elif perfil.plan == perfil.PLAN_MULTI_BUSINESS %}
-                                <div class="text-3xl font-black">+$15</div>
-                                <div class="text-sm text-blue-200">/cuidador</div>
+                                <div class="text-3xl font-black">$79.900</div>
+                                <div class="text-sm text-blue-200">COP/cuidador</div>
                             {% endif %}
                         </div>
                     </div>

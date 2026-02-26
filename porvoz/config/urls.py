@@ -34,9 +34,11 @@ urlpatterns = [
     path("pacientes/<int:paciente_id>/editar/", pacientes_views.editar_paciente_view, name="editar_paciente"),
     path("pacientes/<int:paciente_id>/eliminar/", pacientes_views.eliminar_paciente_view, name="eliminar_paciente"),
     path("pacientes/<int:paciente_id>/enfermedad/agregar/", pacientes_views.agregar_enfermedad_view, name="agregar_enfermedad"),
+    path("pacientes/<int:paciente_id>/enfermedad/<int:enfermedad_id>/editar/", pacientes_views.editar_enfermedad_view, name="editar_enfermedad"),
     
     # Medicamentos
     path("medicamentos/agregar/<int:paciente_id>/", medicamentos_views.agregar_medicamento_view, name="agregar_medicamento"),
+    path("pacientes/<int:paciente_id>/medicamentos/<int:medicamento_id>/editar/", medicamentos_views.editar_medicamento_view, name="editar_medicamento"),
     
     # APIs de microapps (vacías por ahora)
     path("api/cuidadores/", include("apps.cuidadores.urls")),

@@ -22,7 +22,7 @@
                     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
                         <i class="bi bi-exclamation-triangle text-3xl text-red-600"></i>
                     </div>
-                    <h2 class="text-2xl font-bold text-slate-900 mb-2">{{ paciente.nombre }}</h2>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">{{ paciente.get_display_nombre }}</h2>
                     <p class="text-slate-600">Esta acción no se puede deshacer. Se eliminarán todos los datos asociados:</p>
                 </div>
 
@@ -48,7 +48,7 @@
                     
                     <div class="bg-slate-50 rounded-xl border border-slate-200 p-4">
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            Para confirmar, escribe el nombre del paciente: <span class="text-red-600 font-bold">{{ paciente.nombre }}</span>
+                            Para confirmar, escribe el nombre del paciente: <span class="text-red-600 font-bold">{{ paciente.get_display_nombre }}</span>
                         </label>
                         <input 
                             type="text" 
@@ -89,7 +89,7 @@
     (function() {
         const confirmInput = document.getElementById("confirm-name");
         const deleteButton = document.getElementById("delete-button");
-        const pacienteNombre = "{{ paciente.nombre }}";
+        const pacienteNombre = "{{ paciente.get_display_nombre|escapejs }}";
         
         if (confirmInput && deleteButton) {
             confirmInput.addEventListener("input", function(e) {

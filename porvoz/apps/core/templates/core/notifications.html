@@ -71,7 +71,7 @@
                         <option value="">Todos los pacientes</option>
                         {% for paciente in pacientes %}
                         <option value="{{ paciente.id }}" {% if paciente_seleccionado == paciente.id|stringformat:"s" %}selected{% endif %}>
-                            {{ paciente.nombre }}
+                            {{ paciente.get_display_nombre }}
                         </option>
                         {% endfor %}
                     </select>
@@ -171,7 +171,7 @@
                                     {% if notificacion.paciente %}
                                     <span class="flex items-center gap-1">
                                         <i class="bi bi-person text-xs"></i>
-                                        {{ notificacion.paciente.nombre }}
+                                        {{ notificacion.paciente.get_display_nombre }}
                                     </span>
                                     {% endif %}
                                     {% if notificacion.medicamento %}

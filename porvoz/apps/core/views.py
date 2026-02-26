@@ -236,6 +236,7 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
             "nombre": "Freemium",
             "tagline": "Accede a recordatorios de medicamentos completamente gratis",
             "precio": "$0",
+            "precio_cop": None,
             "precio_mensual": 0,
             "destacado": False,
             "caracteristicas": [
@@ -255,9 +256,10 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
             "nombre": "Growth Plan",
             "tagline": "Ideal para familias que necesitan seguimiento completo",
             "precio": "$19",
+            "precio_cop": "59.900",
             "precio_mensual": 19,
             "destacado": True,
-            "ahorro": "Ahorra $60 al año",
+            "ahorro": "Ahorra en el año",
             "caracteristicas": [
                 "1 Cuidador",
                 "Pacientes ilimitados",
@@ -277,12 +279,13 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
             "nombre": "Multi-cuidador",
             "tagline": "Para instituciones y múltiples cuidadores",
             "precio": "+ $15",
+            "precio_cop": "79.900",
             "precio_mensual": 15,
             "destacado": False,
             "caracteristicas": [
                 "Todo lo del Growth Plan:",
                 "2-10 cuidadores",
-                "$15 por cuidador adicional",
+                "79.900 COP por cuidador adicional",
                 "Gestión centralizada",
                 "Reportes consolidados",
                 "Soporte prioritario",
@@ -325,11 +328,11 @@ def dashboard_unificado(request: HttpRequest) -> HttpResponse:
     
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     
-    # Obtener pacientes
+    # Obtener pacientes (select_related para get_display_* en templates)
     pacientes = Paciente.objects.filter(
         usuario=request.user,
         activo=True
-    ).prefetch_related('medicamentos', 'enfermedades').order_by("-es_usuario_mismo", "-creado_en")
+    ).select_related("usuario", "usuario__perfil").prefetch_related('medicamentos', 'enfermedades').order_by("-es_usuario_mismo", "-creado_en")
     
     # Calcular estadísticas
     total_medicamentos = Medicamento.objects.filter(
@@ -337,31 +340,28 @@ def dashboard_unificado(request: HttpRequest) -> HttpResponse:
         activo=True
     ).count()
     
-    # Próximos recordatorios (simulado - en producción vendría de un modelo de recordatorios)
-    medicamentos = Medicamento.objects.filter(
+    # Próximos recordatorios: medicamentos del usuario con horario fijo, ordenados por hora (máx. 5)
+    medicamentos_con_horario = Medicamento.objects.filter(
         paciente__usuario=request.user,
-        activo=True
+        activo=True,
+        frecuencia_tipo=Medicamento.FRECUENCIA_HORARIO,
+        horario__isnull=False
     ).select_related('paciente').order_by('horario')[:5]
     
-    proximos_recordatorios = []
     hoy = datetime.now().date()
-    for med in medicamentos:
-        if med.frecuencia_tipo == 'horario' and med.horario:
-            proximos_recordatorios.append({
-                'medicamento': med,
-                'horario': med.horario,
-                'fecha': hoy
-            })
+    proximos_recordatorios = [
+        {'medicamento': med, 'horario': med.horario, 'fecha': hoy}
+        for med in medicamentos_con_horario
+    ]
     
-    # Actividad reciente (simulado)
+    # Actividad reciente: últimas acciones (pacientes y medicamentos agregados) ordenadas por fecha
     actividad_reciente = []
-    if pacientes.exists():
-        ultimo_paciente = pacientes.first()
-        actividad_reciente.append({
-            'icono': 'person-plus',
-            'descripcion': f'Paciente "{ultimo_paciente.nombre}" agregado',
-            'fecha': ultimo_paciente.creado_en
-        })
+    for p in Paciente.objects.filter(usuario=request.user, activo=True).select_related("usuario", "usuario__perfil").order_by('-creado_en')[:5]:
+        actividad_reciente.append({'icono': 'person-plus', 'descripcion': f'Paciente "{p.get_display_nombre()}" agregado', 'fecha': p.creado_en})
+    for m in Medicamento.objects.filter(paciente__usuario=request.user, activo=True).select_related('paciente', 'paciente__usuario', 'paciente__usuario__perfil').order_by('-creado_en')[:10]:
+        actividad_reciente.append({'icono': 'capsule', 'descripcion': f'Medicamento "{m.nombre}" agregado para {m.paciente.get_display_nombre()}', 'fecha': m.creado_en})
+    actividad_reciente.sort(key=lambda x: x['fecha'], reverse=True)
+    actividad_reciente = actividad_reciente[:5]
     
     context = {
         "perfil": perfil,
@@ -463,10 +463,10 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
             Q(mensaje__icontains=buscar)
         )
     
-    notificaciones = notificaciones.select_related("paciente", "medicamento").order_by("-creado_en")
+    notificaciones = notificaciones.select_related("paciente", "paciente__usuario", "paciente__usuario__perfil", "medicamento").order_by("-creado_en")
     
-    # Obtener pacientes para el filtro
-    pacientes = Paciente.objects.filter(usuario=request.user, activo=True).order_by("nombre")
+    # Obtener pacientes para el filtro (select_related para get_display_nombre)
+    pacientes = Paciente.objects.filter(usuario=request.user, activo=True).select_related("usuario", "usuario__perfil").order_by("nombre")
     
     # Estadísticas
     total_notificaciones = Notificacion.objects.filter(usuario=request.user).count()
@@ -523,6 +523,7 @@ def plans_view(request: HttpRequest) -> HttpResponse:
             "nombre": "Freemium",
             "tagline": "Accede a recordatorios de medicamentos completamente gratis",
             "precio": "$0",
+            "precio_cop": None,
             "precio_mensual": 0,
             "destacado": False,
             "caracteristicas": [
@@ -542,9 +543,10 @@ def plans_view(request: HttpRequest) -> HttpResponse:
             "nombre": "Growth Plan",
             "tagline": "Ideal para familias que necesitan seguimiento completo",
             "precio": "$19",
+            "precio_cop": "59.900",
             "precio_mensual": 19,
             "destacado": True,
-            "ahorro": "Ahorra $60 al año",
+            "ahorro": "Ahorra en el año",
             "caracteristicas": [
                 "1 Cuidador",
                 "Pacientes ilimitados",
@@ -564,12 +566,13 @@ def plans_view(request: HttpRequest) -> HttpResponse:
             "nombre": "Multi-cuidador",
             "tagline": "Para instituciones y múltiples cuidadores",
             "precio": "+ $15",
+            "precio_cop": "79.900",
             "precio_mensual": 15,
             "destacado": False,
             "caracteristicas": [
                 "Todo lo del Growth Plan:",
                 "2-10 cuidadores",
-                "$15 por cuidador adicional",
+                "79.900 COP por cuidador adicional",
                 "Gestión centralizada",
                 "Reportes consolidados",
                 "Soporte prioritario",

@@ -2,6 +2,14 @@ from django.conf import settings
 from django.db import models
 
 
+def _get_perfil_for_user(user):
+    """Obtiene el perfil del usuario si existe (evita import circular)."""
+    try:
+        return user.perfil
+    except Exception:
+        return None
+
+
 class Paciente(models.Model):
     """
     Modelo para representar un paciente.
@@ -39,6 +47,45 @@ class Paciente(models.Model):
     def __str__(self) -> str:
         tipo = "Yo" if self.es_usuario_mismo else "Otro"
         return f"{self.nombre} ({tipo}) - {self.usuario.username}"
+
+    def get_display_nombre(self):
+        """Nombre a mostrar: del perfil cuando es el usuario mismo, sino el del paciente."""
+        if not self.es_usuario_mismo:
+            return self.nombre
+        perfil = _get_perfil_for_user(self.usuario)
+        if perfil:
+            name = f"{perfil.first_name or ''} {perfil.last_name or ''}".strip()
+            if name:
+                return name
+        name = f"{self.usuario.first_name or ''} {self.usuario.last_name or ''}".strip()
+        return name or self.nombre
+
+    def get_display_foto(self):
+        """Foto a mostrar: del perfil cuando es el usuario mismo, sino la del paciente."""
+        if not self.es_usuario_mismo:
+            return self.foto
+        perfil = _get_perfil_for_user(self.usuario)
+        if perfil and perfil.profile_image:
+            return perfil.profile_image
+        return self.foto
+
+    def get_display_telefono(self):
+        """Teléfono a mostrar: del perfil cuando es el usuario mismo, sino el del paciente."""
+        if not self.es_usuario_mismo:
+            return self.telefono
+        perfil = _get_perfil_for_user(self.usuario)
+        if perfil and perfil.phone:
+            return perfil.phone
+        return self.telefono
+
+    def get_display_fecha_nacimiento(self):
+        """Fecha de nacimiento a mostrar: del perfil cuando es el usuario mismo."""
+        if not self.es_usuario_mismo:
+            return self.fecha_nacimiento
+        perfil = _get_perfil_for_user(self.usuario)
+        if perfil and perfil.date_of_birth:
+            return perfil.date_of_birth
+        return self.fecha_nacimiento
 
 
 class Enfermedad(models.Model):
