@@ -1,108 +1,96 @@
-# Porvoz - Sistema de Recordatorios de Medicamentos
+# Porvoz
 
-Sistema web profesional para gestión de recordatorios de medicamentos mediante llamadas automatizadas, diseñado para cuidadores y pacientes.
+Porvoz es una aplicación web para la gestión de recordatorios de medicamentos. Permite a cuidadores y pacientes registrar medicamentos, horarios de toma y condiciones de salud, con un dashboard unificado, sistema de notificaciones y preparación para llamadas automatizadas.
 
-## 🏗️ Estructura del Proyecto
+---
+
+## Cómo ejecutar el proyecto
+
+1. Clonar el repositorio y entrar a la carpeta del proyecto (donde está `manage.py`).
+
+2. Crear y activar el entorno virtual:
+
+   * **Windows:**
+
+     ```
+     venv\Scripts\activate
+     ```
+
+   * **Linux/macOS:**
+
+     ```
+     source venv/bin/activate
+     ```
+
+3. Instalar dependencias:
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. Aplicar migraciones:
+
+   ```
+   python manage.py migrate
+   ```
+
+5. (Opcional) Crear superusuario:
+
+   ```
+   python manage.py createsuperuser
+   ```
+
+6. Levantar el servidor:
+
+   ```
+   python manage.py runserver
+   ```
+
+---
+
+## Tecnologías utilizadas
+
+* **Backend:** Django 5.x, Django REST Framework
+* **Frontend:** HTML, Tailwind CSS, Bootstrap Icons
+* **Base de datos:** SQLite (entorno de desarrollo)
+* **Autenticación:** Django Auth
+* **Control de versiones:** Git / GitHub
+
+---
+
+## Estructura del proyecto
 
 ```
 proyecto 2/
-├── porvoz/                    # Django project
-│   ├── apps/                  # Microapps
-│   │   ├── porvoz/           # Core: autenticación, perfiles, dashboards
-│   │   ├── cuidadores/       # Gestión de cuidadores
-│   │   ├── pacientes/        # Gestión de pacientes
-│   │   ├── medicamentos/     # Gestión de medicamentos
-│   │   ├── recordatorios/    # Sistema de recordatorios
-│   │   └── llamadas/         # Sistema de llamadas automatizadas
-│   ├── config/               # Configuración Django
-│   │   ├── settings/
-│   │   │   ├── base.py
-│   │   │   └── development.py
-│   │   ├── urls.py
-│   │   └── wsgi.py
-│   ├── static/               # Archivos estáticos (CSS, JS, imágenes)
-│   ├── media/                # Archivos subidos por usuarios
+├── porvoz/
+│   ├── apps/
+│   │   ├── core/           # Autenticación, perfil, dashboard, notificaciones, legal
+│   │   ├── cuidadores/     # Gestión de cuidadores
+│   │   ├── pacientes/      # Pacientes y condiciones
+│   │   ├── medicamentos/   # Medicamentos y horarios
+│   │   ├── recordatorios/  # Sistema de recordatorios
+│   │   └── llamadas/       # Llamadas automatizadas
+│   ├── config/             # Settings Django, urls, wsgi
+│   ├── static/
+│   ├── media/
 │   ├── manage.py
 │   └── requirements.txt
-└── venv/                     # Entorno virtual (no se sube a Git)
+└── venv/
 ```
 
-## 🚀 Instalación y Configuración
+---
 
-### 1. Activar el entorno virtual
+## Integrantes del equipo
 
-```powershell
-.\venv\Scripts\Activate.ps1
-```
+* Luis Alfonso Agudelo Ramírez
+* Julián Lara Aristizabal
+* Matías Martínez Moreno
+* Nathalia Cardoza
+* Samuel Samper
 
-### 2. Instalar dependencias
+---
 
-```powershell
-cd porvoz
-pip install -r requirements.txt
-```
+## Product Owners
 
-### 3. Ejecutar migraciones
-
-```powershell
-python manage.py makemigrations
-python manage.py migrate
-```
-
-### 4. Crear superusuario (opcional)
-
-```powershell
-python manage.py createsuperuser
-```
-
-### 5. Ejecutar el servidor
-
-```powershell
-python manage.py runserver
-```
-
-El proyecto estará disponible en: `http://127.0.0.1:8000/`
-
-## 🎨 Tecnologías
-
-- **Backend**: Django 5.2
-- **Frontend**: Tailwind CSS
-- **Base de datos**: SQLite (desarrollo)
-- **Autenticación**: Django Auth
-- **APIs**: Django REST Framework
-
-## 📱 Flujo de Usuario
-
-1. **Registro**: El usuario se registra eligiendo su rol (Paciente o Cuidador)
-2. **Login**: Inicia sesión con sus credenciales
-3. **Completar perfil**: Completa información personal (nombre, ciudad, teléfono)
-4. **Dashboard**: Accede a su panel según su rol
-   - **Cuidadores**: Gestión de pacientes, medicamentos y recordatorios
-   - **Pacientes**: Visualización de medicamentos y recordatorios
-
-## 🔧 Comandos Útiles
-
-```powershell
-# Crear una nueva migración
-python manage.py makemigrations
-
-# Aplicar migraciones
-python manage.py migrate
-
-# Crear superusuario
-python manage.py createsuperuser
-
-# Ejecutar servidor de desarrollo
-python manage.py runserver
-
-# Recolectar archivos estáticos
-python manage.py collectstatic
-```
-
-## 📝 Notas
-
-- El proyecto usa una arquitectura de **microapps** para mejor organización
-- Cada app tiene su propia responsabilidad y puede desarrollarse independientemente
-- Los templates usan **Tailwind CSS** para un diseño moderno y profesional
-- El sidebar es **plegable** y guarda su estado en localStorage
-
+* Mateo Zacar
+* Styven Bedoya
