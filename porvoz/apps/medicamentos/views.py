@@ -45,7 +45,7 @@ def agregar_medicamento_view(request: HttpRequest, paciente_id: int) -> HttpResp
                 duracion_dias=duracion_dias,
             )
             messages.success(request, f"Medicamento '{nombre}' agregado correctamente.")
-            return redirect("listar_pacientes")
+            return redirect("editar_paciente", paciente_id=paciente.id)
     
     context = {
         "perfil": perfil,

@@ -1,12 +1,24 @@
 import os
+import unicodedata
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.files import File
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
 
 from .models import Paciente, Enfermedad
 from apps.core.models import Perfil
+
+
+def _normalize_search(s):
+    """Minúsculas y sin tildes para búsqueda insensible."""
+    if not s:
+        return ""
+    s = s.lower().strip()
+    nfd = unicodedata.normalize("NFD", s)
+    return "".join(c for c in nfd if unicodedata.category(c) != "Mn")
 
 
 @login_required
@@ -134,7 +146,7 @@ def editar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse
             try:
                 paciente.save()
                 messages.success(request, "Datos actualizados correctamente.")
-                return redirect("listar_pacientes")
+                return redirect("editar_paciente", paciente_id=paciente.id)
             except Exception as e:
                 messages.error(request, f"Error al actualizar: {str(e)}")
         else:
@@ -166,12 +178,12 @@ def editar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse
                     if foto:
                         paciente.foto = foto
 
-                    try:
-                        paciente.save()
-                        messages.success(request, f"Paciente '{paciente.nombre}' actualizado correctamente.")
-                        return redirect("listar_pacientes")
-                    except Exception as e:
-                        messages.error(request, f"Error al actualizar el paciente: {str(e)}")
+                try:
+                    paciente.save()
+                    messages.success(request, f"Paciente actualizado correctamente.")
+                    return redirect("editar_paciente", paciente_id=paciente.id)
+                except Exception as e:
+                    messages.error(request, f"Error al actualizar el paciente: {str(e)}")
     
     # Parsear teléfono para mostrar en el formulario
     telefono_pais = "+57"
@@ -246,7 +258,7 @@ def agregar_enfermedad_view(request: HttpRequest, paciente_id: int) -> HttpRespo
                 diagnostico_fecha=diagnostico_fecha or None,
             )
             messages.success(request, f"Enfermedad '{nombre}' agregada correctamente.")
-            return redirect("listar_pacientes")
+            return redirect("editar_paciente", paciente_id=paciente.id)
     
     context = {
         "perfil": perfil,
@@ -291,10 +303,11 @@ def listar_pacientes_view(request: HttpRequest) -> HttpResponse:
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     pacientes = Paciente.objects.filter(usuario=request.user, activo=True).select_related("usuario", "usuario__perfil").order_by("-es_usuario_mismo", "-creado_en")
     
-    # Filtro de búsqueda por nombre
+    # Filtro de búsqueda: insensible a tildes y mayúsculas; incluye nombre de perfil cuando es "tú"
     buscar = request.GET.get("buscar", "").strip()
     if buscar:
-        pacientes = pacientes.filter(nombre__icontains=buscar)
+        buscar_norm = _normalize_search(buscar)
+        pacientes = [p for p in pacientes if buscar_norm in _normalize_search(p.get_display_nombre())]
     
     context = {
         "perfil": perfil,

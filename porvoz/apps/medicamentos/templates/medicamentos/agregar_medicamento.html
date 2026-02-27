@@ -230,7 +230,7 @@
 
                     <!-- Botones de acción -->
                     <div class="p-6 lg:p-8 bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                        <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                        <a href="{% url 'editar_paciente' paciente.id %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
                             <i class="bi bi-arrow-left"></i>
                             <span>Cancelar</span>
                         </a>
