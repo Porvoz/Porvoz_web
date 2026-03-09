@@ -3,52 +3,68 @@
 <!-- Overlay para móvil -->
 <div class="sidebar-overlay"></div>
 
-<aside class="sidebar fixed left-0 top-0 h-screen w-24 lg:w-64 bg-gradient-to-b from-slate-100 via-slate-50 to-white border-r border-slate-300/50 z-20 flex flex-col shadow-lg">
-    <div class="px-5 py-4 border-b border-slate-300/50 flex items-center justify-between bg-gradient-to-r from-blue-50 to-slate-50 backdrop-blur-sm rounded-br-lg">
-        <div class="user-meta">
-            <div class="flex items-center gap-3">
-                {% if perfil.profile_image %}
-                <img src="{{ perfil.profile_image.url }}" alt="Foto de perfil" class="h-10 w-10 rounded-full object-cover border border-slate-200">
-                {% else %}
-                <div class="h-10 w-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold">
-                    {{ request.user.first_name|default:request.user.username|slice:":1"|upper }}
-                </div>
-                {% endif %}
-                <div>
-                    <div class="text-sm font-bold text-slate-900 truncate">{{ request.user.first_name|default:request.user.username }}</div>
-                </div>
-            </div>
-        </div>
-        <button type="button" class="sidebar-toggle hidden lg:flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100" data-sidebar-toggle>
-            <i class="bi bi-chevron-left text-slate-600 text-sm"></i>
-        </button>
-        <!-- Botón cerrar para móvil -->
-        <button type="button" class="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600" data-mobile-menu-toggle>
+<aside class="sidebar fixed left-0 top-0 h-screen w-64 bg-white border-r border-slate-200 z-20 flex flex-col shadow-sm">
+    <!-- Botón pegar/despegar: mitad sidebar, mitad contenido (solo desktop) -->
+    <button type="button" class="sidebar-toggle hidden lg:flex absolute top-5 -right-[1.25rem] z-30 items-center justify-center w-10 h-10 rounded-full border-2 border-slate-200 bg-white shadow-md hover:bg-slate-50 hover:border-slate-300 text-slate-600 transition-all" data-sidebar-toggle aria-label="Colapsar o expandir menú">
+        <i class="bi bi-chevron-left text-sm"></i>
+    </button>
+    <!-- Logo arriba: dos imágenes (expandido / colapsado) se muestran u ocultan por CSS para que siempre se vean -->
+    <div class="sidebar-header flex items-center justify-between flex-shrink-0 gap-3 px-3 py-5 lg:px-4 border-b border-slate-200">
+        <a href="{% url 'dashboard' %}" class="sidebar-logo flex items-center justify-center min-w-0 flex-1 min-h-[2.5rem] -ml-2">
+            <img src="{% static 'images/LogoPorvoz.png' %}" alt="Porvoz" class="sidebar-logo-expanded h-10 w-auto max-w-full object-contain">
+            <img src="{% static 'images/LogoPorvoz_sidebar.png' %}" alt="Porvoz" class="sidebar-logo-collapsed hidden h-10 w-10 object-contain">
+        </a>
+        <button type="button" class="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 touch-manipulation" data-mobile-menu-toggle aria-label="Cerrar menú">
             <i class="bi bi-x-lg text-lg"></i>
         </button>
     </div>
-    <nav class="px-3 py-4 flex-1 flex flex-col gap-1 text-sm">
+
+    <nav class="px-3 py-4 flex-1 flex flex-col gap-0.5 text-sm overflow-y-auto">
         <div class="px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2 label-text">Principal</div>
-        <a href="{% url 'dashboard' %}" class="nav-link px-3 py-2 rounded-xl {% if request.resolver_match.url_name == 'dashboard' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
-            <i class="bi bi-house mr-2"></i><span class="label-text">Panel</span>
+        <a href="{% url 'dashboard' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'dashboard' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
+            <i class="bi bi-file-earmark-check mr-2"></i><span class="label-text">Panel principal</span>
         </a>
-        <div class="px-2 mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2 label-text">Gestión</div>
-        <a href="{% url 'listar_pacientes' %}" class="nav-link px-3 py-2 rounded-xl {% if request.resolver_match.url_name == 'listar_pacientes' or request.resolver_match.url_name == 'agregar_paciente' or request.resolver_match.url_name == 'agregar_medicamento' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
+        <a href="{% url 'listar_pacientes' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'listar_pacientes' or request.resolver_match.url_name == 'agregar_paciente' or request.resolver_match.url_name == 'agregar_medicamento' or request.resolver_match.url_name == 'editar_paciente' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
             <i class="bi bi-people mr-2"></i><span class="label-text">Pacientes</span>
         </a>
-        <a href="{% url 'notifications' %}" class="nav-link px-3 py-2 rounded-xl {% if request.resolver_match.url_name == 'notifications' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
-            <i class="bi bi-bell mr-2"></i><span class="label-text">Notificaciones</span>
+        <a href="{% url 'notifications' %}" class="nav-link nav-link-notif px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'notifications' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold relative">
+            <i class="bi bi-bell mr-2"></i>
+            <span class="label-text">Notificaciones</span>
+            {% if no_leidas_notificaciones %}
+            <span class="nav-notif-badge flex items-center justify-center rounded-full bg-red-500 text-white font-bold shadow-sm flex-shrink-0">{% if no_leidas_notificaciones > 99 %}99+{% else %}{{ no_leidas_notificaciones }}{% endif %}</span>
+            {% endif %}
         </a>
         <div class="px-2 mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2 label-text">Cuenta</div>
-        <a href="{% url 'edit_profile' %}" class="nav-link px-3 py-2 rounded-xl {% if request.resolver_match.url_name == 'edit_profile' or request.resolver_match.url_name == 'change_password' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
-            <i class="bi bi-person mr-2"></i><span class="label-text">Perfil</span>
+        <a href="{% url 'edit_profile' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'edit_profile' or request.resolver_match.url_name == 'change_password' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
+            <i class="bi bi-gear mr-2"></i><span class="label-text">Mi cuenta</span>
+        </a>
+        <div class="px-2 mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2 label-text">General</div>
+        <a href="{% url 'guide' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'guide' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
+            <i class="bi bi-question-circle mr-2"></i><span class="label-text">Ayuda</span>
         </a>
     </nav>
-    <div class="px-3 pb-4 mt-auto">
+
+    <!-- Usuario y cerrar sesión abajo -->
+    <div class="px-3 py-4 border-t border-slate-200 flex-shrink-0 space-y-3">
+        <div class="user-meta px-2.5 py-3 rounded-lg bg-slate-50">
+            <div class="flex items-center gap-2">
+                {% if perfil.profile_image %}
+                <img src="{{ perfil.profile_image.url }}" alt="" class="h-8 w-8 rounded-full object-cover border border-slate-200">
+                {% else %}
+                <div class="h-8 w-8 rounded-full bg-slate-600 text-white flex items-center justify-center text-xs font-bold">
+                    {{ request.user.first_name|default:request.user.username|slice:":1"|upper }}
+                </div>
+                {% endif %}
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-semibold text-slate-900 truncate">{{ perfil.first_name|default:request.user.first_name|default:request.user.username }}</p>
+                    <p class="text-[10px] text-slate-500 truncate">{{ request.user.email|default:"" }}</p>
+                </div>
+            </div>
+        </div>
         <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
-            <button type="submit" class="logout-btn w-full rounded-xl px-4 py-2.5 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2">
-                <i class="bi bi-box-arrow-right"></i><span>Cerrar sesión</span>
+            <button type="submit" class="logout-btn w-full rounded-xl px-4 py-2.5 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2 transition-colors">
+                <i class="bi bi-box-arrow-right"></i><span class="label-text">Cerrar sesión</span>
             </button>
         </form>
     </div>

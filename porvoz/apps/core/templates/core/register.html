@@ -2,11 +2,11 @@
 {% load static %}
 
 {% block body %}
-<div class="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-    <div class="flex-1 flex items-center justify-center py-8 px-4 min-h-[calc(100vh-80px)]">
-        <div class="relative w-full max-w-5xl">
+<div class="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-slate-100 w-full max-w-full overflow-x-hidden">
+    <div class="flex flex-1 items-center justify-center py-8 px-4 min-w-0 w-full overflow-x-hidden">
+        <div class="relative w-full max-w-5xl min-w-0">
         <!-- Efectos de fondo decorativos -->
-        <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-200/20 rounded-full blur-2xl"></div>
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-slate-200/30 rounded-full blur-2xl"></div>
         <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-slate-200/30 rounded-full blur-2xl"></div>
         
         <div class="relative bg-white rounded-2xl border border-slate-200 shadow-xl p-6 lg:p-8">
@@ -24,7 +24,7 @@
             {% if messages %}
             <div class="mb-5 space-y-2">
                 {% for message in messages %}
-                    <div class="rounded-lg border px-4 py-2.5 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
+                    <div class="rounded-lg border px-4 py-2.5 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -37,7 +37,7 @@
                 <!-- Sección 1: Información de acceso -->
                 <div class="bg-slate-50 rounded-lg p-5 border border-slate-200">
                     <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
-                        <i class="bi bi-shield-lock text-blue-600"></i>
+                        <i class="bi bi-shield-lock text-slate-600"></i>
                         Información de acceso
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -54,7 +54,7 @@
                                     type="text" 
                                     required
                                     placeholder="nombre_usuario"
-                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                 >
                             </div>
                         </div>
@@ -71,7 +71,7 @@
                                     type="email" 
                                     required
                                     placeholder="correo@ejemplo.com"
-                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                 >
                             </div>
                         </div>
@@ -88,7 +88,7 @@
                                     type="password" 
                                     required
                                     placeholder="Mínimo 8 caracteres"
-                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                 >
                             </div>
                         </div>
@@ -105,7 +105,7 @@
                                     type="password" 
                                     required
                                     placeholder="Repite tu contraseña"
-                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                 >
                             </div>
                         </div>
@@ -115,7 +115,7 @@
                 <!-- Sección 2: Información personal -->
                 <div class="bg-slate-50 rounded-lg p-5 border border-slate-200">
                     <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
-                        <i class="bi bi-person text-blue-600"></i>
+                        <i class="bi bi-person text-slate-600"></i>
                         Información personal
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -132,7 +132,7 @@
                                     type="text" 
                                     required
                                     placeholder="Tu nombre"
-                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                 >
                             </div>
                         </div>
@@ -149,7 +149,7 @@
                                     type="text" 
                                     required
                                     placeholder="Tu apellido"
-                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                 >
                             </div>
                         </div>
@@ -165,7 +165,7 @@
                                     name="date_of_birth" 
                                     type="date" 
                                     required
-                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                 >
                             </div>
                         </div>
@@ -182,7 +182,7 @@
                                     type="text" 
                                     required
                                     placeholder="Tu ciudad"
-                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                 >
                             </div>
                         </div>
@@ -192,7 +192,7 @@
                 <!-- Sección 3: Información de contacto -->
                 <div class="bg-slate-50 rounded-lg p-5 border border-slate-200">
                     <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
-                        <i class="bi bi-telephone text-blue-600"></i>
+                        <i class="bi bi-telephone text-slate-600"></i>
                         Información de contacto
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -201,7 +201,7 @@
                                 Teléfono <span class="text-red-500">*</span>
                             </label>
                             <div class="grid grid-cols-[120px_1fr] gap-2">
-                                <select name="phone_country" class="rounded-lg border border-slate-300 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white font-medium">
+                                <select name="phone_country" class="rounded-lg border border-slate-300 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 bg-white font-medium">
                                     <option value="+57">+57 CO</option>
                                     <option value="+1">+1 US</option>
                                     <option value="+34">+34 ES</option>
@@ -217,7 +217,7 @@
                                         required
                                         placeholder="57 3001234567"
                                         pattern="[0-9\s]+"
-                                        class="block w-full pl-6 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                        class="block w-full pl-6 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                     >
                                 </div>
                             </div>
@@ -227,7 +227,7 @@
                                 Documento de identidad <span class="text-red-500">*</span>
                             </label>
                             <div class="grid grid-cols-[140px_1fr] gap-2">
-                                <select name="document_type" class="rounded-lg border border-slate-300 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                                <select name="document_type" class="rounded-lg border border-slate-300 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 bg-white">
                                     <option value="cc">Cédula</option>
                                     <option value="ce">Cédula extranjería</option>
                                     <option value="ti">Tarjeta identidad</option>
@@ -242,7 +242,7 @@
                                         type="text" 
                                         required
                                         placeholder="Número de documento"
-                                        class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                        class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                     >
                                 </div>
                             </div>
@@ -253,7 +253,7 @@
                 <!-- Sección 4: Contacto de emergencia -->
                 <div class="bg-slate-50 rounded-lg p-5 border border-slate-200">
                     <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
-                        <i class="bi bi-shield-exclamation text-blue-600"></i>
+                        <i class="bi bi-shield-exclamation text-slate-600"></i>
                         Contacto de emergencia
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -270,7 +270,7 @@
                                     type="text" 
                                     required
                                     placeholder="Nombre completo"
-                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                 >
                             </div>
                         </div>
@@ -279,7 +279,7 @@
                                 Teléfono del contacto <span class="text-red-500">*</span>
                             </label>
                             <div class="grid grid-cols-[120px_1fr] gap-2">
-                                <select name="emergency_contact_phone_country" class="rounded-lg border border-slate-300 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white font-medium">
+                                <select name="emergency_contact_phone_country" class="rounded-lg border border-slate-300 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 bg-white font-medium">
                                     <option value="+57">+57 CO</option>
                                     <option value="+1">+1 US</option>
                                     <option value="+34">+34 ES</option>
@@ -295,7 +295,7 @@
                                         required
                                         placeholder="57 3001234567"
                                         pattern="[0-9\s]+"
-                                        class="block w-full pl-6 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                        class="block w-full pl-6 pr-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all"
                                     >
                                 </div>
                             </div>
@@ -311,7 +311,7 @@
                     </a>
                     <button 
                         type="submit"
-                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3 text-sm font-semibold text-white shadow-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl rounded-xl bg-slate-900 hover:bg-slate-800 px-8 py-3 text-sm font-semibold text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-colors"
                     >
                         <i class="bi bi-person-plus"></i>
                         Crear cuenta

@@ -3,278 +3,53 @@
 
 {% block body %}
 <div class="min-h-screen flex flex-col bg-slate-100">
-    {% if user.is_authenticated %}
-        {% include "core/sidebar.html" %}
-    {% endif %}
+    {% if user.is_authenticated %}{% include "core/sidebar.html" %}{% endif %}
 
-    <main class="flex-1 {% if user.is_authenticated %}lg:ml-64{% endif %} px-4 py-5 sm:px-5 sm:py-7 lg:px-10 pb-20">
+    <main class="main-content-responsive flex-1 {% if user.is_authenticated %}lg:ml-64{% endif %} px-4 py-5 sm:px-6 sm:py-6 lg:px-10 pb-12">
         {% if user.is_authenticated %}
-        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
-            <i class="bi bi-list text-xl"></i>
-        </button>
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle><i class="bi bi-list text-xl"></i></button>
         {% endif %}
 
-        <div class="w-full max-w-5xl mx-auto">
-            <header class="mb-8 {% if user.is_authenticated %}mt-12 lg:mt-0{% endif %}">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-800 to-blue-900 text-white shadow-lg">
-                            <i class="bi bi-file-text text-xl"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Información Legal</h1>
-                            <p class="text-sm text-slate-600 mt-0.5">Términos y Condiciones · Política de Privacidad · Contacto</p>
-                        </div>
-                    </div>
-                    {% if not user.is_authenticated %}
-                    <a href="{% url 'login' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 text-sm font-semibold shadow-lg transition-colors flex-shrink-0">
-                        <i class="bi bi-box-arrow-in-right"></i>
-                        Iniciar sesión
-                    </a>
-                    {% endif %}
-                </div>
-                <p class="text-sm text-slate-600 mt-2 max-w-2xl">
-                    Los presentes documentos rigen el uso del servicio Porvoz en Colombia y se encuentran alineados con la legislación colombiana en materia de protección de datos personales y comercio electrónico.
-                </p>
+        <div class="max-w-2xl mx-auto {% if user.is_authenticated %}mt-12 lg:mt-0{% endif %}">
+            <header class="mb-8 text-center sm:text-left">
+                <h1 class="text-xl font-black text-slate-900">Información legal</h1>
+                <p class="text-sm text-slate-600 mt-1">Términos, privacidad y contacto de Porvoz.</p>
+                {% if not user.is_authenticated %}
+                <a href="{% url 'login' %}" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 text-sm font-semibold mt-4 transition-colors">
+                    <i class="bi bi-box-arrow-in-right"></i>Iniciar sesión
+                </a>
+                {% endif %}
             </header>
 
-            <div class="mb-8 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sticky top-4 z-10">
-                <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-sm">
-                    <a href="#terminos" class="text-slate-600 hover:text-blue-800 font-semibold transition-colors px-2 py-1 rounded-lg hover:bg-blue-50">Términos y Condiciones</a>
-                    <span class="text-slate-300 hidden sm:inline">·</span>
-                    <a href="#privacidad" class="text-slate-600 hover:text-blue-800 font-semibold transition-colors px-2 py-1 rounded-lg hover:bg-blue-50">Política de Privacidad</a>
-                    <span class="text-slate-300 hidden sm:inline">·</span>
-                    <a href="#contacto" class="text-slate-600 hover:text-blue-800 font-semibold transition-colors px-2 py-1 rounded-lg hover:bg-blue-50">Contacto</a>
-                </div>
-            </div>
-
-            <!-- Términos y Condiciones -->
-            <section id="terminos" class="mb-12 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="bg-gradient-to-r from-blue-800 to-blue-900 px-6 py-5">
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm text-white">
-                            <i class="bi bi-file-earmark-text text-lg"></i>
-                        </div>
-                        <h2 class="text-2xl font-black text-white">Términos y Condiciones</h2>
+            <nav class="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Enlaces legales">
+                <a href="{% url 'terms' %}" class="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition-all group">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-file-earmark-text"></i>
                     </div>
-                </div>
-                <div class="p-6 lg:p-8">
-                    <p class="text-xs text-slate-500 mb-6 flex items-center gap-2">
-                        <i class="bi bi-calendar3"></i>
-                        Última actualización: {% now "d/m/Y" %}
-                    </p>
-                    <div class="space-y-6">
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">1. Objeto y ámbito de aplicación</h3>
-                            <p class="text-sm leading-relaxed text-slate-700">Los presentes Términos y Condiciones regulan el acceso y uso del sitio web y del servicio <strong>Porvoz</strong> (“el Servicio”), ofrecido a usuarios en territorio colombiano. El uso del Servicio implica la aceptación íntegra de estos términos. Si no está de acuerdo con alguna de sus disposiciones, debe abstenerse de utilizar el Servicio. La utilización continuada del mismo tras cualquier modificación constituye la aceptación de los nuevos términos.</p>
-                            <p class="text-sm leading-relaxed text-slate-700 mt-2">En lo no previsto en estos términos, serán de aplicación las normas del ordenamiento jurídico colombiano, en especial la <strong>Ley 527 de 1999</strong> (por la cual se definen y reglamentan el acceso y uso de los mensajes de datos, el comercio electrónico y las firmas digitales), en cuanto al valor y efectos jurídicos de los actos realizados por medios electrónicos.</p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">2. Descripción del Servicio</h3>
-                            <p class="text-sm leading-relaxed text-slate-700">Porvoz es una plataforma web que permite a los usuarios (cuidadores) gestionar recordatorios de medicación para uno o varios pacientes, mediante llamadas automatizadas con tecnología de voz. El Servicio está diseñado como apoyo a la adherencia al tratamiento médico y al seguimiento de medicamentos. <strong>No constituye un servicio de salud ni sustituye en ningún caso la prescripción, supervisión o consejo de un profesional de la salud.</strong></p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">3. Uso lícito y obligaciones del usuario</h3>
-                            <p class="text-sm leading-relaxed text-slate-700 mb-2">El usuario se compromete a utilizar el Servicio de forma responsable, respetando la ley y los derechos de terceros. En particular, queda prohibido:</p>
-                            <ul class="text-sm text-slate-700 space-y-1 ml-4 list-disc">
-                                <li>Utilizar el Servicio para fines ilícitos o no autorizados</li>
-                                <li>Intentar acceder a sistemas, cuentas o datos ajenos sin autorización</li>
-                                <li>Interferir o alterar el funcionamiento normal del Servicio o de las redes asociadas</li>
-                                <li>Suplantar identidad de otra persona o entidad</li>
-                            </ul>
-                            <p class="text-sm leading-relaxed text-slate-700 mt-2">El incumplimiento de estas obligaciones puede dar lugar a la terminación del acceso al Servicio y, en su caso, a las responsabilidades que correspondan conforme a la legislación colombiana (incluida la <strong>Ley 1273 de 2009</strong>, en lo relativo a la protección de la información y de los datos).</p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">4. Naturaleza del Servicio y limitación de responsabilidad</h3>
-                            <p class="text-sm leading-relaxed text-slate-700 mb-2">Porvoz es únicamente un <strong>facilitador tecnológico</strong>: proporciona una plataforma para que el usuario (cuidador o responsable) programe recordatorios de medicación. <strong>Porvoz no es un servicio de salud, no prescribe ni recomienda tratamientos, y no asume ninguna responsabilidad sobre las decisiones médicas ni sobre la correcta toma de medicamentos.</strong></p>
-                            <p class="text-sm leading-relaxed text-slate-700 mb-2">El usuario es el único responsable de:</p>
-                            <ul class="text-sm text-slate-700 space-y-1 ml-4 list-disc">
-                                <li>La exactitud de los datos que ingresa (nombres de medicamentos, dosis, horarios, duración y cualquier información de pacientes)</li>
-                                <li>Haber consultado y seguir las indicaciones de un profesional de la salud antes de programar cualquier recordatorio</li>
-                                <li>Verificar con el médico tratante las dosis, horarios y condiciones de cada medicamento</li>
-                                <li>La supervisión del paciente y de que el medicamento se tome correctamente</li>
-                                <li>Mantener la confidencialidad de sus credenciales de acceso</li>
-                                <li>Reportar cualquier fallo o incidencia técnica que observe en el Servicio</li>
-                            </ul>
-                            <p class="text-sm leading-relaxed text-slate-700 mt-2"><strong>Exención de responsabilidad por uso del Servicio y por consecuencias de la medicación:</strong> Porvoz no será responsable, y el usuario exonera y mantiene indemne a Porvoz frente a cualquier reclamación, demanda, daño o perjuicio (incluidos daños a la salud, intoxicaciones, efectos adversos o fallecimiento) que derive o pueda derivar de: (i) el uso del Servicio o de la información en él registrada; (ii) errores u omisiones en los datos introducidos por el usuario; (iii) la toma incorrecta, en dosis equivocada, en horario distinto al indicado por el médico, o el no seguimiento del tratamiento por parte del paciente; (iv) la falta de supervisión médica adecuada. El usuario reconoce que programa los recordatorios por su propia cuenta y riesgo y que Porvoz se limita a enviar recordatorios con la información que el usuario ha cargado, sin validar ni avalar su contenido médico.</p>
-                            <p class="text-sm leading-relaxed text-slate-700 mt-2">En la medida permitida por la ley aplicable, Porvoz no será responsable por daños indirectos, consecuentes, punitivos o especiales derivados del uso o la imposibilidad de uso del Servicio.</p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">5. Propiedad intelectual</h3>
-                            <p class="text-sm leading-relaxed text-slate-700">Todo el contenido del sitio y del Servicio (diseño, marcas, textos, software, bases de datos y demás elementos) es propiedad de Porvoz o de sus licenciantes. Queda prohibida la reproducción, distribución, transformación o uso comercial no autorizado. El uso del Servicio no confiere al usuario ningún derecho sobre dichos activos.</p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">6. Modificación y vigencia</h3>
-                            <p class="text-sm leading-relaxed text-slate-700">Porvoz se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento. Los cambios entrarán en vigor desde su publicación en esta página. Corresponderá al usuario revisar periódicamente este documento. El uso del Servicio con posterioridad a la publicación de cambios implica la aceptación de los nuevos términos.</p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">7. Terminación del acceso</h3>
-                            <p class="text-sm leading-relaxed text-slate-700">Porvoz podrá suspender o dar por terminado el acceso al Servicio a un usuario cuando exista incumplimiento de estos términos, uso fraudulento, o por razones operativas o legales, con o sin previo aviso, sin que ello genere responsabilidad adicional frente al usuario.</p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">8. Ley aplicable y jurisdicción</h3>
-                            <p class="text-sm leading-relaxed text-slate-700">Para todo lo relacionado con la interpretación y cumplimiento de estos Términos y Condiciones será aplicable la ley de la República de Colombia. Las controversias que no puedan resolverse de mutuo acuerdo serán sometidas a los jueces y tribunales competentes en la República de Colombia.</p>
-                        </div>
+                    <div>
+                        <h2 class="font-bold text-slate-900 text-sm group-hover:text-slate-800">Términos y Condiciones</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Uso del servicio y condiciones generales</p>
                     </div>
-                </div>
-            </section>
-
-            <!-- Política de Privacidad -->
-            <section id="privacidad" class="mb-12 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="bg-gradient-to-r from-blue-800 to-blue-900 px-6 py-5">
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm text-white">
-                            <i class="bi bi-shield-lock text-lg"></i>
-                        </div>
-                        <h2 class="text-2xl font-black text-white">Política de Privacidad</h2>
+                </a>
+                <a href="{% url 'privacy' %}" class="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition-all group">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-shield-lock"></i>
                     </div>
-                </div>
-                <div class="p-6 lg:p-8">
-                    <p class="text-xs text-slate-500 mb-6 flex items-center gap-2">
-                        <i class="bi bi-calendar3"></i>
-                        Última actualización: {% now "d/m/Y" %}
-                    </p>
-                    <div class="rounded-xl bg-blue-50 border border-blue-200 p-4 mb-6">
-                        <p class="text-sm text-slate-800 leading-relaxed">
-                            <i class="bi bi-info-circle text-blue-800 mr-1"></i>
-                            Esta Política de Privacidad se rige por la <strong>Ley Estatutaria 1581 de 2012</strong> (por la cual se dictan disposiciones generales para la protección de datos personales en Colombia), por el <strong>Decreto 1377 de 2013</strong> que la reglamenta, y por el derecho fundamental al habeas data reconocido en los <strong>artículos 15 y 20 de la Constitución Política de Colombia</strong>. Porvoz actúa como <strong>Responsable del Tratamiento</strong> de los datos personales que usted nos proporciona.
-                        </p>
+                    <div>
+                        <h2 class="font-bold text-slate-900 text-sm group-hover:text-slate-800">Política de Privacidad</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Datos personales y tratamiento</p>
                     </div>
-                    <div class="space-y-6">
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">1. Responsable del tratamiento</h3>
-                            <p class="text-sm leading-relaxed text-slate-700">El responsable del tratamiento de los datos personales recabados a través del Servicio Porvoz es la entidad que opera la plataforma Porvoz. Para ejercer sus derechos como titular de los datos puede dirigirse a la sección de <a href="#contacto" class="text-blue-800 hover:text-blue-900 font-semibold underline">Contacto</a> de esta página.</p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">2. Datos personales que recopilamos</h3>
-                            <p class="text-sm leading-relaxed text-slate-700 mb-2">En cumplimiento del principio de legalidad (Ley 1581 de 2012), solo tratamos datos personales cuya recolección esté permitida por la ley o cuente con su autorización. Recopilamos, entre otros, los siguientes datos:</p>
-                            <ul class="text-sm text-slate-700 space-y-1 ml-4 list-disc">
-                                <li><strong>Datos de registro y cuenta:</strong> nombre, correo electrónico, contraseña (almacenada de forma cifrada), número de teléfono, tipo y número de documento de identidad</li>
-                                <li><strong>Datos de perfil:</strong> fecha de nacimiento, ciudad, contacto de emergencia (nombre y teléfono)</li>
-                                <li><strong>Datos de pacientes y tratamiento:</strong> nombre del paciente, teléfono donde recibe las llamadas, medicamentos, dosis, horarios y frecuencia de toma, y en su caso condiciones o enfermedades que usted decida registrar</li>
-                                <li><strong>Datos de uso del Servicio:</strong> registros de llamadas realizadas, historial de recordatorios, estado de atención de las llamadas y actividad asociada a su cuenta</li>
-                            </ul>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">3. Finalidades del tratamiento</h3>
-                            <p class="text-sm leading-relaxed text-slate-700 mb-2">Sus datos personales son tratados para las siguientes finalidades, conforme al principio de finalidad de la Ley 1581 de 2012:</p>
-                            <ul class="text-sm text-slate-700 space-y-1 ml-4 list-disc">
-                                <li>Prestar el Servicio de recordatorios de medicación y realizar las llamadas automatizadas en los horarios configurados</li>
-                                <li>Gestionar su cuenta, autenticación y soporte al usuario</li>
-                                <li>Comunicarnos con usted sobre el Servicio, actualizaciones o cambios legales relevantes</li>
-                                <li>Garantizar la seguridad del Servicio, prevenir usos indebidos y cumplir obligaciones legales y regulatorias</li>
-                            </ul>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">4. Principios y medidas de seguridad</h3>
-                            <p class="text-sm leading-relaxed text-slate-700">Tratamos sus datos con sujeción a los principios de legalidad, finalidad, libertad, veracidad, transparencia, acceso y circulación restringida, seguridad y confidencialidad previstos en la Ley 1581 de 2012. Implementamos medidas técnicas y organizativas razonables para proteger la información personal frente a acceso no autorizado, alteración, pérdida o destrucción, incluyendo el cifrado de contraseñas, controles de acceso y prácticas seguras en el manejo de la información.</p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">5. Cesión y transmisión de datos</h3>
-                            <p class="text-sm leading-relaxed text-slate-700 mb-2"><strong>No vendemos ni alquilamos sus datos personales.</strong> Solo compartimos información con terceros en los siguientes supuestos:</p>
-                            <ul class="text-sm text-slate-700 space-y-1 ml-4 list-disc">
-                                <li>Proveedores que nos ayudan a prestar el Servicio (por ejemplo, proveedores de telecomunicaciones para las llamadas), bajo obligaciones de confidencialidad y tratamiento conforme a esta política</li>
-                                <li>Cumplimiento de leyes o requerimientos de autoridades competentes</li>
-                                <li>Protección de derechos, bienes o seguridad de Porvoz, de los usuarios o de terceros, en los límites permitidos por la ley</li>
-                                <li>Con su consentimiento previo, libre e informado en otros casos</li>
-                            </ul>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">6. Conservación y supresión</h3>
-                            <p class="text-sm leading-relaxed text-slate-700">Conservamos sus datos personales durante el tiempo necesario para cumplir las finalidades descritas y las obligaciones legales o contractuales. Cuando solicite la eliminación de su cuenta, procederemos a suprimir o anonimizar sus datos personales, salvo que la ley exija o permita su conservación (por ejemplo, para el ejercicio o defensa de reclamaciones).</p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">7. Derechos del titular (Ley 1581 de 2012)</h3>
-                            <p class="text-sm leading-relaxed text-slate-700 mb-2">Como titular de sus datos personales, usted tiene derecho a:</p>
-                            <ul class="text-sm text-slate-700 space-y-1 ml-4 list-disc">
-                                <li><strong>Conocer</strong> la información que repose en nuestras bases de datos sobre usted</li>
-                                <li><strong>Actualizar y rectificar</strong> sus datos cuando sean inexactos o incompletos</li>
-                                <li><strong>Solicitar la supresión</strong> de sus datos cuando no deban ser tratados, salvo los casos en que la ley exija su conservación</li>
-                                <li><strong>Revocar</strong> la autorización otorgada para el tratamiento, cuando la ley no exija que el tratamiento continúe</li>
-                                <li><strong>Solicitar prueba de la autorización</strong> otorgada como titular, salvo cuando exceptuada por ley</li>
-                            </ul>
-                            <p class="text-sm leading-relaxed text-slate-700 mt-2">Para ejercer cualquiera de estos derechos, diríjase a nosotros a través de los canales indicados en la sección de <a href="#contacto" class="text-blue-800 hover:text-blue-900 font-semibold underline">Contacto</a>. Atenderemos su solicitud en los plazos y condiciones previstos en la normativa vigente.</p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">8. Cookies y tecnologías similares</h3>
-                            <p class="text-sm leading-relaxed text-slate-700">Utilizamos cookies y tecnologías similares para el correcto funcionamiento del sitio, la sesión de usuario y la mejora de la experiencia. Puede gestionar o desactivar cookies desde la configuración de su navegador; tenga en cuenta que ello puede afectar algunas funcionalidades del Servicio.</p>
-                        </div>
-                        <div class="border-l-4 border-blue-800 pl-4">
-                            <h3 class="font-bold text-slate-900 mb-2 text-base">9. Modificaciones de esta política</h3>
-                            <p class="text-sm leading-relaxed text-slate-700">Nos reservamos el derecho de actualizar esta Política de Privacidad. Los cambios serán publicados en esta página con la nueva fecha de “Última actualización”. Le recomendamos revisarla periódicamente. El uso continuado del Servicio tras la publicación de cambios implica la aceptación de la política modificada, en la medida permitida por la ley.</p>
-                        </div>
+                </a>
+                <a href="{% url 'contact' %}" class="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition-all group" id="contacto">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-envelope"></i>
                     </div>
-                </div>
-            </section>
-
-            <!-- Contacto -->
-            <section id="contacto" class="mb-12 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="bg-gradient-to-r from-blue-800 to-blue-900 px-6 py-5">
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm text-white">
-                            <i class="bi bi-envelope text-lg"></i>
-                        </div>
-                        <h2 class="text-2xl font-black text-white">Contacto</h2>
+                    <div>
+                        <h2 class="font-bold text-slate-900 text-sm group-hover:text-slate-800">Contacto</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Correo, teléfono y horarios</p>
                     </div>
-                </div>
-                <div class="p-6 lg:p-8">
-                    <div class="mb-6">
-                        <h3 class="font-bold text-slate-900 mb-2 text-lg">¿Necesitas ayuda?</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">Para consultas generales, soporte técnico o para ejercer tus derechos como titular de datos personales (acceso, corrección, supresión, revocación o quejas en materia de protección de datos), puedes contactarnos por los siguientes medios.</p>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                        <div class="rounded-xl bg-gradient-to-br from-blue-50 to-slate-50 border-2 border-blue-200 p-5 hover:shadow-md transition-shadow">
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-800 text-white">
-                                    <i class="bi bi-envelope text-xl"></i>
-                                </div>
-                                <h4 class="font-bold text-slate-900">Correo electrónico</h4>
-                            </div>
-                            <a href="mailto:contacto@porvoz.com" class="text-sm text-blue-800 hover:text-blue-900 font-semibold break-all">
-                                contacto@porvoz.com
-                            </a>
-                            <p class="text-xs text-slate-600 mt-2">Respuesta en 24-48 horas hábiles</p>
-                        </div>
-                        <div class="rounded-xl bg-gradient-to-br from-blue-50 to-slate-50 border-2 border-blue-200 p-5 hover:shadow-md transition-shadow">
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-800 text-white">
-                                    <i class="bi bi-telephone text-xl"></i>
-                                </div>
-                                <h4 class="font-bold text-slate-900">Teléfono</h4>
-                            </div>
-                            <a href="tel:+573001234567" class="text-sm text-blue-800 hover:text-blue-900 font-semibold">
-                                +57 300 123 4567
-                            </a>
-                            <p class="text-xs text-slate-600 mt-2">Lunes a viernes, 9:00 a. m. – 6:00 p. m. (hora Colombia, UTC-5)</p>
-                        </div>
-                    </div>
-                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-5">
-                        <div class="flex items-start gap-3">
-                            <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-800 flex-shrink-0">
-                                <i class="bi bi-info-circle text-lg"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold text-slate-900 mb-1">Horario de atención</h4>
-                                <p class="text-sm text-slate-700 mb-2">
-                                    <strong>Lunes a viernes:</strong> 9:00 a. m. – 6:00 p. m. (hora Colombia, UTC-5)
-                                </p>
-                                <p class="text-sm text-slate-700">
-                                    <strong>Sábados, domingos y festivos:</strong> cerrado. Los mensajes recibidos serán atendidos el siguiente día hábil.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-6 rounded-xl bg-slate-50 border border-slate-200 p-5">
-                        <h4 class="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                            <i class="bi bi-question-circle text-blue-800"></i>
-                            Guía de uso
-                        </h4>
-                        <p class="text-sm text-slate-700">
-                            Para preguntas sobre el uso del Servicio, consulta nuestra <a href="{% url 'guide' %}" class="text-blue-800 hover:text-blue-900 font-semibold underline">Guía rápida</a>, donde encontrarás tutoriales y respuestas frecuentes.
-                        </p>
-                    </div>
-                </div>
-            </section>
+                </a>
+            </nav>
         </div>
     </main>
     {% include "core/footer.html" %}

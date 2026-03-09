@@ -2,146 +2,92 @@
 {% load static %}
 
 {% block body %}
-<div class="min-h-screen flex flex-col bg-slate-100">
+<div class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100 w-full max-w-full overflow-x-hidden">
     {% if user.is_authenticated %}
         {% include "core/sidebar.html" %}
     {% endif %}
 
-    <main class="flex-1 {% if user.is_authenticated %}lg:ml-64{% endif %} px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
+    <main class="{% if user.is_authenticated %}main-content-responsive {% endif %}flex-1 min-w-0 {% if user.is_authenticated %}lg:ml-64{% endif %} flex flex-col w-full">
         {% if user.is_authenticated %}
-        <!-- Botón hamburguesa para móvil -->
         <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
             <i class="bi bi-list text-xl"></i>
         </button>
         {% endif %}
 
-        <!-- Header compacto -->
-        <section class="mb-6 {% if user.is_authenticated %}mt-12 lg:mt-0{% endif %} rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 p-5 sm:p-6 text-white shadow-lg">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div class="flex-1">
-                    <h1 class="text-xl sm:text-2xl font-black mb-1">Maximiza la adherencia al tratamiento</h1>
-                    <p class="text-sm text-blue-100">Elige el plan que mejor se adapte a tus necesidades</p>
+        <div class="w-full max-w-6xl min-w-0 mx-auto px-4 sm:px-6 lg:px-10 py-10 sm:py-14 {% if user.is_authenticated %}mt-12 lg:mt-0{% endif %}">
+            <header class="text-center mb-12">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200/80 text-slate-600 text-xs font-semibold mb-4">
+                    <i class="bi bi-star"></i> Planes y precios
                 </div>
-                <div class="flex items-center gap-2">
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-lg bg-white/20 backdrop-blur-sm text-white px-4 py-2 text-sm font-semibold hover:bg-white/30 transition-colors">
-                        <i class="bi bi-house"></i>
-                        <span class="hidden sm:inline">Panel</span>
-                    </a>
-                    {% endif %}
+                <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Elige el plan ideal</h1>
+                <p class="text-slate-600 mt-1 text-base max-w-xl mx-auto">Precios en COP (pesos colombianos). Sin compromisos. Cancela cuando quieras.</p>
+                <div class="flex flex-wrap justify-center gap-3 mt-6">
                     {% if not user.is_authenticated %}
-                    <a href="{% url 'register' %}" class="inline-flex items-center gap-2 rounded-lg bg-white text-blue-600 px-5 py-2.5 text-sm font-semibold hover:bg-blue-50 transition-colors shadow-md">
-                        <i class="bi bi-person-plus"></i>
-                        Crear cuenta
+                    <a href="{% url 'register' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white px-5 py-2.5 text-sm font-semibold transition-colors shadow-lg">
+                        <i class="bi bi-person-plus"></i>Crear cuenta gratis
+                    </a>
+                    <a href="{% url 'login' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 px-5 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                        <i class="bi bi-box-arrow-in-right"></i>Iniciar sesión
                     </a>
                     {% endif %}
                 </div>
-            </div>
-        </section>
+            </header>
 
-        {% if messages %}
-        <div class="mb-5 space-y-2">
-            {% for message in messages %}
-                <div class="rounded-lg border px-4 py-2.5 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
+            {% if messages %}
+            <div class="mb-6 max-w-xl mx-auto space-y-2">
+                {% for message in messages %}
+                <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
                     {{ message }}
                 </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
 
-        <!-- Planes compactos -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {% for plan in planes %}
-            <div class="relative bg-white rounded-xl border-2 {% if plan.destacado %}border-blue-600 shadow-lg{% elif plan.es_plan_actual %}border-blue-400 shadow-md{% else %}border-slate-200 shadow-sm{% endif %} overflow-hidden flex flex-col">
-                <!-- Badge de plan actual -->
-                {% if plan.es_plan_actual %}
-                <div class="absolute top-3 right-3 z-10">
-                    <span class="inline-flex items-center gap-1 rounded-full bg-blue-600 text-white px-2.5 py-1 text-xs font-semibold">
-                        <i class="bi bi-check-circle text-xs"></i>
-                        Actual
-                    </span>
-                </div>
-                {% endif %}
-
-                <!-- Header del plan compacto -->
-                <div class="{% if plan.destacado %}bg-gradient-to-r from-blue-600 to-blue-700 text-white{% else %}bg-gradient-to-r from-blue-50 to-slate-50{% endif %} px-4 py-3.5 border-b border-slate-200">
-                    <h3 class="text-lg font-black mb-0.5 {% if plan.destacado %}text-white{% else %}text-blue-600{% endif %}">
-                        {{ plan.nombre }}
-                    </h3>
-                    <p class="text-xs {% if plan.destacado %}text-blue-100{% else %}text-slate-600{% endif %}">
-                        {{ plan.tagline }}
-                    </p>
-                </div>
-
-                <!-- Precio compacto (COP) -->
-                <div class="px-4 py-4 {% if plan.destacado %}bg-blue-50{% else %}bg-white{% endif %}">
-                    {% if plan.precio_cop %}
-                    <div class="flex items-baseline gap-1.5 mb-0.5">
-                        <span class="text-3xl font-black {% if plan.destacado %}text-blue-600{% else %}text-slate-900{% endif %}">
-                            ${{ plan.precio_cop }}
-                        </span>
-                        <span class="text-xs text-slate-600">COP{% if plan.precio_mensual > 0 %}/mes{% endif %}</span>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                {% for plan in planes %}
+                <article class="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 {% if plan.destacado %}ring-2 ring-slate-600 ring-offset-4 shadow-xl z-10 bg-white{% else %}bg-white border border-slate-200 shadow-sm hover:shadow-lg hover:border-slate-300{% endif %}">
+                    {% if plan.destacado %}
+                    <div class="absolute top-0 left-0 right-0 bg-slate-600 text-white text-center py-2 text-xs font-bold uppercase tracking-wider">Más popular</div>
+                    <div class="flex-1 flex flex-col bg-slate-600 text-white pt-8 pb-8">
                     {% else %}
-                    <div class="flex items-baseline gap-1.5 mb-1.5">
-                        <span class="text-3xl font-black {% if plan.destacado %}text-blue-600{% else %}text-slate-900{% endif %}">
-                            Gratis
-                        </span>
-                    </div>
+                    <div class="flex-1 flex flex-col bg-white pt-8 pb-6">
                     {% endif %}
-                    {% if plan.ahorro %}
-                    <div class="mt-1">
-                        <span class="inline-flex items-center rounded-md bg-blue-100 text-blue-700 px-2.5 py-1 text-xs font-semibold">
-                            {{ plan.ahorro }}
-                        </span>
+                        <div class="px-6 sm:px-8">
+                            <h2 class="text-xl font-bold {% if plan.destacado %}text-white{% else %}text-slate-900{% endif %}">{{ plan.nombre }}</h2>
+                            <p class="text-sm {% if plan.destacado %}text-slate-300{% else %}text-slate-600{% endif %} mt-2 leading-relaxed">{{ plan.tagline }}</p>
+                            <div class="mt-6 flex items-baseline gap-1">
+                                {% if plan.precio_cop %}
+                                <span class="text-3xl font-black {% if plan.destacado %}text-white{% else %}text-slate-900{% endif %}">${{ plan.precio_cop }}</span>
+                                <span class="text-sm {% if plan.destacado %}text-slate-400{% else %}text-slate-500{% endif %}">/mes</span>
+                                {% else %}
+                                <span class="text-3xl font-black {% if plan.destacado %}text-white{% else %}text-slate-900{% endif %}">$0</span>
+                                <span class="text-sm {% if plan.destacado %}text-slate-400{% else %}text-slate-500{% endif %}">/mes</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs {% if plan.destacado %}text-slate-400{% else %}text-slate-500{% endif %} mt-1">Precios en COP</p>
+                        </div>
                     </div>
-                    {% endif %}
-                </div>
-
-                <!-- Características compactas -->
-                <div class="px-4 py-4 flex-1 {% if plan.destacado %}bg-blue-50/50{% else %}bg-white{% endif %}">
-                    <ul class="space-y-2">
-                        {% for caracteristica in plan.caracteristicas %}
-                        <li class="flex items-start gap-2">
-                            <i class="bi bi-check-circle-fill text-blue-600 mt-0.5 flex-shrink-0 text-xs"></i>
-                            <span class="text-xs text-slate-700 leading-relaxed">{{ caracteristica }}</span>
+                    <ul class="px-6 sm:px-8 py-6 space-y-6 bg-white border-t border-slate-100">
+                        {% for c in plan.caracteristicas %}
+                        <li class="flex items-start gap-3 text-sm text-slate-700">
+                            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                <i class="bi bi-check2 text-xs font-bold"></i>
+                            </span>
+                            <span>{{ c }}</span>
                         </li>
                         {% endfor %}
                     </ul>
-                </div>
-
-                <!-- Botón compacto -->
-                <div class="px-4 py-4 border-t border-slate-200 {% if plan.destacado %}bg-blue-50/50{% else %}bg-white{% endif %}">
-                    {% if user.is_authenticated %}
-                        {% if plan.es_plan_actual %}
-                        <button type="button" disabled class="w-full rounded-lg px-4 py-2.5 text-xs font-semibold bg-slate-200 text-slate-500 cursor-not-allowed flex items-center justify-center gap-1.5">
-                            <i class="bi bi-check-circle text-sm"></i>
-                            Plan actual
-                        </button>
-                        {% else %}
-                        <form method="post" class="w-full">
-                            {% csrf_token %}
-                            <input type="hidden" name="plan" value="{{ plan.plan_key }}">
-                            <button type="submit" class="w-full rounded-lg px-4 py-2.5 text-xs font-semibold border-2 {{ plan.boton_estilo }} transition-all flex items-center justify-center gap-1.5">
-                                {{ plan.boton_texto }}
-                            </button>
-                        </form>
-                        {% endif %}
-                    {% else %}
-                        <a href="{% url 'register' %}" class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-xs font-semibold border-2 {{ plan.boton_estilo }} transition-all">
+                    <div class="p-6 sm:px-8 pt-0">
+                        <a href="{% url 'register' %}" class="block w-full text-center rounded-xl py-3.5 text-sm font-bold transition-all {{ plan.boton_estilo }} {% if plan.destacado %}ring-2 ring-white/30{% endif %}">
                             {{ plan.boton_texto }}
                         </a>
-                    {% endif %}
-                </div>
+                    </div>
+                </article>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
 
-        <!-- Nota al pie compacta -->
-        <div class="text-center text-xs text-slate-500 mb-6">
-            <p>Los planes pueden cambiar sin previo aviso. Consulta nuestros términos y condiciones.</p>
+            <p class="text-center text-sm text-slate-500 mt-10">Todos los planes incluyen soporte por correo. <a href="{% url 'contact' %}" class="text-slate-700 font-medium hover:text-slate-900 underline">Contáctanos</a> para dudas.</p>
         </div>
     </main>
-    {% include "core/footer.html" %}
 </div>
 {% endblock %}

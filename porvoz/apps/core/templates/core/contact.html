@@ -1,0 +1,91 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100">
+    {% if user.is_authenticated %}
+    {% include "core/sidebar.html" %}
+    <main class="main-content-responsive flex-1 lg:ml-64 px-4 py-5 sm:px-6 sm:py-6 lg:px-10 pb-12 flex flex-col">
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle><i class="bi bi-list text-xl"></i></button>
+        <div class="max-w-3xl mx-auto w-full mt-12 lg:mt-0">
+    {% else %}
+    <div class="grid lg:grid-cols-[16rem_1fr] flex-1 min-w-0 w-full">
+        {% include "core/guest_left_panel.html" %}
+        <section class="flex flex-col px-4 py-5 sm:px-6 sm:py-6 lg:px-10 pb-12 overflow-y-auto min-h-0">
+        <div class="flex justify-center lg:hidden mb-6">
+            <a href="{% url 'login' %}"><img src="{% static 'images/LogoPorvoz.png' %}" alt="Porvoz" class="h-16 w-auto"></a>
+        </div>
+        <div class="max-w-3xl mx-auto w-full">
+    {% endif %}
+            <nav class="mb-6">
+                <a href="javascript:void(0)" onclick="history.back()" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="bi bi-arrow-left"></i>Volver</a>
+            </nav>
+
+            <header class="mb-8">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200/80 text-slate-600 text-xs font-semibold mb-4">
+                    <i class="bi bi-chat-dots"></i> Atención al usuario
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">Contacto</h1>
+                <p class="text-base text-slate-600 mt-2">Consultas, soporte técnico o ejercicio de derechos sobre tus datos personales (Ley 1581 de 2012).</p>
+            </header>
+
+            <div class="space-y-4">
+                <a href="mailto:contacto@porvoz.com" class="block bg-white rounded-2xl border border-slate-200 shadow-sm p-6 hover:shadow-md hover:border-slate-300 transition-all group">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors">
+                            <i class="bi bi-envelope text-xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h2 class="font-bold text-slate-900 mb-1">Correo electrónico</h2>
+                            <p class="text-slate-800 font-semibold break-all">contacto@porvoz.com</p>
+                            <p class="text-sm text-slate-500 mt-1">Respuesta en 24-48 horas hábiles</p>
+                        </div>
+                        <i class="bi bi-chevron-right text-slate-300 group-hover:text-slate-500 flex-shrink-0"></i>
+                    </div>
+                </a>
+
+                <a href="tel:+573001234567" class="block bg-white rounded-2xl border border-slate-200 shadow-sm p-6 hover:shadow-md hover:border-slate-300 transition-all group">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors">
+                            <i class="bi bi-telephone text-xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h2 class="font-bold text-slate-900 mb-1">Teléfono</h2>
+                            <p class="text-slate-800 font-semibold">+57 300 123 4567</p>
+                            <p class="text-sm text-slate-500 mt-1">Lunes a viernes, 9:00 a. m. – 6:00 p. m. (Colombia, UTC-5)</p>
+                        </div>
+                        <i class="bi bi-chevron-right text-slate-300 group-hover:text-slate-500 flex-shrink-0"></i>
+                    </div>
+                </a>
+
+                <div class="rounded-2xl bg-slate-50 border border-slate-200 p-6">
+                    <h3 class="font-bold text-slate-900 mb-2 flex items-center gap-2"><i class="bi bi-clock text-slate-600"></i>Horario de atención</h3>
+                    <p class="text-slate-700"><strong>Lunes a viernes:</strong> 9:00 a. m. – 6:00 p. m. (Colombia)</p>
+                    <p class="text-slate-700 mt-1"><strong>Sábados, domingos y festivos:</strong> cerrado. Mensajes atendidos el siguiente día hábil.</p>
+                </div>
+
+                <div class="rounded-2xl bg-amber-50 border border-amber-200/80 p-6">
+                    <h3 class="font-bold text-slate-900 mb-2 flex items-center gap-2"><i class="bi bi-shield-check text-amber-600"></i>Ejercicio de derechos (Ley 1581 de 2012)</h3>
+                    <p class="text-slate-700 text-sm">Para conocer, actualizar, rectificar o solicitar supresión de sus datos personales, escriba a <a href="mailto:contacto@porvoz.com" class="text-slate-800 hover:text-slate-900 font-semibold underline">contacto@porvoz.com</a>. También puede presentar quejas ante la <strong>Superintendencia de Industria y Comercio (SIC)</strong>.</p>
+                </div>
+
+                <div class="rounded-2xl bg-slate-50 border border-slate-200 p-6">
+                    <h3 class="font-bold text-slate-900 mb-2 flex items-center gap-2"><i class="bi bi-question-circle text-slate-600"></i>Guía de uso</h3>
+                    <p class="text-slate-700">Para preguntas sobre el uso del Servicio, consulta la <a href="{% url 'guide' %}" class="text-slate-800 hover:text-slate-900 font-semibold underline underline-offset-2">Guía rápida</a>.</p>
+                </div>
+            </div>
+
+            <nav class="mt-8 pt-6 border-t border-slate-200 flex flex-wrap justify-center gap-4 text-sm">
+                <a href="{% url 'terms' %}" class="text-slate-600 hover:text-slate-900 font-medium">Términos y Condiciones</a>
+                <a href="{% url 'privacy' %}" class="text-slate-600 hover:text-slate-900 font-medium">Política de Privacidad</a>
+            </nav>
+        </div>
+    {% if user.is_authenticated %}
+    </main>
+    {% else %}
+        </section>
+    </div>
+    {% endif %}
+    {% include "core/footer.html" %}
+</div>
+{% endblock %}

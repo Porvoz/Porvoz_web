@@ -1,0 +1,107 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-100 flex-col">
+    {% include "core/sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
+        </button>
+
+        <div class="mt-12 lg:mt-0 mb-6">
+            <a href="{% url 'detalle_paciente' paciente.id %}" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                <i class="bi bi-arrow-left"></i>
+                Volver a {{ paciente.get_display_nombre }}
+            </a>
+        </div>
+
+        <header class="mb-8">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-100 text-blue-600">
+                    <i class="bi bi-telephone-outbound text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Historial de llamadas</h1>
+                    <p class="text-sm text-slate-600 mt-0.5">{{ paciente.get_display_nombre }}</p>
+                </div>
+            </div>
+        </header>
+
+        {% if llamadas %}
+        <div class="space-y-4">
+            {% for item in llamadas %}
+            <article class="bg-white rounded-2xl border-l-4 shadow-sm overflow-hidden transition-shadow hover:shadow-md
+                {% if item.tipo == 'llamada' %}border-l-blue-500
+                {% elif item.tipo == 'recordatorio' %}border-l-amber-500
+                {% elif item.tipo == 'alerta' %}border-l-rose-500
+                {% else %}border-l-slate-400{% endif %}">
+                <div class="p-5 sm:p-6">
+                    <div class="flex gap-4 sm:gap-5">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center
+                            {% if item.tipo == 'llamada' %}bg-blue-100 text-blue-600
+                            {% elif item.tipo == 'recordatorio' %}bg-amber-100 text-amber-600
+                            {% elif item.tipo == 'alerta' %}bg-rose-100 text-rose-600
+                            {% else %}bg-slate-100 text-slate-500{% endif %}">
+                            {% if item.tipo == 'llamada' %}
+                            <i class="bi bi-telephone-outbound text-xl"></i>
+                            {% elif item.tipo == 'recordatorio' %}
+                            <i class="bi bi-clock-history text-xl"></i>
+                            {% elif item.tipo == 'alerta' %}
+                            <i class="bi bi-exclamation-triangle text-xl"></i>
+                            {% else %}
+                            <i class="bi bi-bell text-xl"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                <div>
+                                    <h3 class="font-semibold text-slate-900">{{ item.titulo }}</h3>
+                                    {% if item.mensaje %}
+                                    <p class="text-sm text-slate-600 mt-1.5 leading-relaxed">{{ item.mensaje }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
+                                    <span class="inline-flex items-center gap-1.5 text-sm font-mono font-semibold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg">
+                                        <i class="bi bi-clock text-slate-500"></i>
+                                        {{ item.creado_en|date:"d/m/Y" }} · {{ item.creado_en|time:"H:i" }}
+                                    </span>
+                                    {% if item.estado != 'pendiente' %}
+                                    <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold
+                                        {% if item.estado == 'atendida' %}bg-emerald-100 text-emerald-700
+                                        {% elif item.estado == 'no_atendida' %}bg-amber-100 text-amber-700
+                                        {% elif item.estado == 'fallida' %}bg-slate-100 text-slate-600
+                                        {% elif item.estado == 'enviada' %}bg-blue-100 text-blue-700
+                                        {% else %}bg-slate-100 text-slate-600{% endif %}">
+                                        {{ item.get_estado_display }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if item.medicamento %}
+                            <p class="text-xs text-slate-500 mt-3 flex items-center gap-1.5">
+                                <i class="bi bi-capsule text-slate-400"></i>{{ item.medicamento.nombre }}{% if item.medicamento.dosis %} {{ item.medicamento.dosis }}{% endif %}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 sm:p-20 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-slate-100 mb-6">
+                <i class="bi bi-telephone text-4xl text-slate-400"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-2">No hay historial de llamadas</h3>
+            <p class="text-slate-600 text-sm mb-8 max-w-sm mx-auto">Las llamadas y recordatorios para {{ paciente.get_display_nombre }} aparecerán aquí cuando se realicen.</p>
+            <a href="{% url 'detalle_paciente' paciente.id %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 text-sm font-semibold shadow-md transition-colors">
+                <i class="bi bi-arrow-left"></i> Volver al detalle
+            </a>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

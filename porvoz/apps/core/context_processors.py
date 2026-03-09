@@ -8,11 +8,12 @@ from .models import Perfil
 
 def perfil_sidebar(request):
     """
-    Añade `perfil` al contexto cuando el usuario está autenticado.
-    Así el sidebar muestra siempre la foto y el nombre en todas las páginas
-    (guía, legal, planes, etc.) sin que cada vista tenga que pasarlo.
+    Añade `perfil` y `no_leidas_notificaciones` al contexto cuando el usuario está autenticado.
+    Así el sidebar muestra siempre la foto, el nombre y el badge de notificaciones no leídas.
     """
     if request.user.is_authenticated:
         perfil, _ = Perfil.objects.get_or_create(user=request.user)
-        return {"perfil": perfil}
-    return {"perfil": None}
+        from apps.llamadas.models import Notificacion
+        no_leidas = Notificacion.objects.filter(usuario=request.user, leida=False).count()
+        return {"perfil": perfil, "no_leidas_notificaciones": no_leidas}
+    return {"perfil": None, "no_leidas_notificaciones": 0}

@@ -5,7 +5,7 @@
 <div class="min-h-screen flex bg-slate-100">
     {% include "core/sidebar.html" %}
 
-    <main class="flex-1 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
         <!-- Botón hamburguesa para móvil -->
         <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
             <i class="bi bi-list text-xl"></i>
@@ -18,8 +18,8 @@
                     <i class="bi bi-capsule text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Agregar Medicamento</h1>
-                    <p class="text-sm text-slate-600 mt-0.5">Registra un medicamento para <strong>{{ paciente.get_display_nombre }}</strong></p>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Agregar recordatorio</h1>
+                    <p class="text-sm text-slate-600 mt-0.5">Configura un recordatorio de medicamento para <strong>{{ paciente.get_display_nombre }}</strong></p>
                 </div>
             </div>
         </header>
@@ -52,19 +52,20 @@
                 </div>
             </div>
 
-            <!-- Formulario mejorado -->
+            <!-- Formulario -->
             <div class="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
                 <form method="post" class="divide-y divide-slate-200">
                     {% csrf_token %}
                     
                     <!-- Sección: Información del medicamento -->
                     <div class="p-6 lg:p-8">
-                        <div class="flex items-center gap-3 mb-6">
+                        <div class="flex items-center gap-3 mb-2">
                             <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600">
                                 <i class="bi bi-capsule text-lg"></i>
                             </div>
                             <h2 class="text-xl font-black text-slate-900">Información del medicamento</h2>
                         </div>
+                        <p class="text-sm text-slate-500 mb-6">Nombre, dosis y duración del tratamiento</p>
                         
                         <div class="space-y-5">
                             <div>
@@ -132,12 +133,13 @@
 
                     <!-- Sección: Frecuencia -->
                     <div class="p-6 lg:p-8 bg-slate-50/50">
-                        <div class="flex items-center gap-3 mb-6">
+                        <div class="flex items-center gap-3 mb-2">
                             <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600">
                                 <i class="bi bi-clock text-lg"></i>
                             </div>
                             <h2 class="text-xl font-black text-slate-900">Frecuencia de toma</h2>
                         </div>
+                        <p class="text-sm text-slate-500 mb-6">Define cuándo debe tomar el medicamento</p>
                         
                         <div class="space-y-5">
                             <div>
@@ -175,20 +177,28 @@
                                 </div>
                             </div>
 
-                            <!-- Campos para horario específico -->
+                            <!-- Campos para horario específico (múltiples) -->
                             <div id="horario-container">
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                    Horario de toma <span class="text-red-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <i class="bi bi-clock absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                                    <input 
-                                        name="horario" 
-                                        type="time" 
-                                        id="horario-input"
-                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
-                                    >
+                                <div class="flex items-center justify-between gap-4 mb-2">
+                                    <label class="block text-sm font-semibold text-slate-700">
+                                        Horarios de toma <span class="text-red-500">*</span>
+                                    </label>
+                                    <button type="button" id="btn-agregar-horario" class="inline-flex items-center gap-2 rounded-xl border-2 border-dashed border-indigo-400 text-indigo-600 hover:border-indigo-600 hover:text-indigo-800 px-3 py-2 text-xs font-semibold transition-colors">
+                                        <i class="bi bi-plus-lg"></i>Agregar otro horario
+                                    </button>
                                 </div>
+                                <div id="horarios-list" class="space-y-3">
+                                    <div class="horario-row flex gap-2 items-center">
+                                        <div class="relative flex-1">
+                                            <i class="bi bi-clock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                            <input name="horario" type="time" class="horario-input block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" required>
+                                        </div>
+                                        <button type="button" class="horario-remove hidden p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Quitar horario">
+                                            <i class="bi bi-x-lg text-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-2">Ej: 8:00, 14:00, 20:00 para varias tomas al día</p>
                             </div>
 
                             <!-- Campos para cada X horas -->
@@ -224,22 +234,59 @@
                                         >
                                     </div>
                                 </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Fecha de inicio del tratamiento</label>
+                                    <div class="relative">
+                                        <i class="bi bi-calendar3 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                        <input name="fecha_inicio_tratamiento" type="date" id="fecha-inicio-input"
+                                            class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm">
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1">Opcional. Para calcular correctamente las tomas desde una fecha.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Llamada con IA -->
+                    <div class="p-6 lg:p-8 bg-indigo-50/30">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600">
+                                <i class="bi bi-robot text-lg"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-slate-900">Configuración para la llamada</h2>
+                        </div>
+                        <p class="text-sm text-slate-500 mb-6">Instrucciones y preferencias para cuando la IA realice la llamada de recordatorio</p>
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Instrucciones para la IA</label>
+                                <textarea name="instrucciones_llamada" rows="3" placeholder="Ej: Recordar con el desayuno, Preguntar si tuvo efectos secundarios, Hablar despacio..."
+                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Llamar X minutos antes</label>
+                                <div class="relative max-w-[180px]">
+                                    <i class="bi bi-clock-history absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input name="minutos_antes_llamada" type="number" min="0" max="120" value="0"
+                                        placeholder="0"
+                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                                </div>
+                                <p class="text-xs text-slate-500 mt-1">Minutos antes de la hora de toma para realizar la llamada (ej: 15)</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Botones de acción -->
                     <div class="p-6 lg:p-8 bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                        <a href="{% url 'editar_paciente' paciente.id %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                        <a href="{% url 'detalle_paciente' paciente.id %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
                             <i class="bi bi-arrow-left"></i>
                             <span>Cancelar</span>
                         </a>
                         <button 
                             type="submit"
-                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-3.5 text-sm font-semibold text-white shadow-lg hover:from-emerald-700 hover:to-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all transform hover:scale-105"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-3.5 text-sm font-semibold text-white shadow-lg hover:from-emerald-700 hover:to-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all"
                         >
                             <i class="bi bi-check-circle text-lg"></i>
-                            <span>Agregar Medicamento</span>
+                            <span>Crear recordatorio</span>
                         </button>
                     </div>
                 </form>
@@ -254,21 +301,28 @@
         const frecuenciaCadaX = document.getElementById("frecuencia_cada_x");
         const horarioContainer = document.getElementById("horario-container");
         const cadaXHorasContainer = document.getElementById("cada-x-horas-container");
-        const horarioInput = document.getElementById("horario-input");
+        const horariosList = document.getElementById("horarios-list");
         const cadaXHorasInput = document.getElementById("cada-x-horas-input");
         const horaInicioInput = document.getElementById("hora-inicio-input");
 
+        function setHorariosRequired(required) {
+            horariosList.querySelectorAll(".horario-input").forEach(function(inp) {
+                if (required) inp.setAttribute("required", "required");
+                else inp.removeAttribute("required");
+            });
+        }
+
         function toggleFrecuencia() {
-            if (frecuenciaCadaX.checked) {
+            if (frecuenciaCadaX && frecuenciaCadaX.checked) {
                 horarioContainer.classList.add("hidden");
                 cadaXHorasContainer.classList.remove("hidden");
-                horarioInput.removeAttribute("required");
+                setHorariosRequired(false);
                 cadaXHorasInput.setAttribute("required", "required");
                 horaInicioInput.setAttribute("required", "required");
             } else {
                 horarioContainer.classList.remove("hidden");
                 cadaXHorasContainer.classList.add("hidden");
-                horarioInput.setAttribute("required", "required");
+                setHorariosRequired(true);
                 cadaXHorasInput.removeAttribute("required");
                 horaInicioInput.removeAttribute("required");
             }
@@ -277,7 +331,34 @@
         if (frecuenciaHorario && frecuenciaCadaX) {
             frecuenciaHorario.addEventListener("change", toggleFrecuencia);
             frecuenciaCadaX.addEventListener("change", toggleFrecuencia);
-            toggleFrecuencia(); // Inicializar
+            toggleFrecuencia();
+        }
+
+        // Múltiples horarios: agregar / quitar
+        const btnAgregarHorario = document.getElementById("btn-agregar-horario");
+        if (btnAgregarHorario && horariosList) {
+            const firstRow = horariosList.querySelector(".horario-row");
+            if (firstRow) {
+                const template = firstRow.cloneNode(true);
+                template.querySelector("input").value = "";
+                template.querySelector("input").removeAttribute("required");
+                template.querySelector(".horario-remove").classList.remove("hidden");
+                btnAgregarHorario.addEventListener("click", function() {
+                    const row = template.cloneNode(true);
+                    row.querySelector("input").value = "";
+                    horariosList.appendChild(row);
+                    horariosList.querySelector(".horario-row .horario-remove")?.classList.remove("hidden");
+                });
+                horariosList.addEventListener("click", function(e) {
+                    const btn = e.target.closest(".horario-remove");
+                    if (btn && horariosList.querySelectorAll(".horario-row").length > 1) {
+                        btn.closest(".horario-row").remove();
+                        if (horariosList.querySelectorAll(".horario-row").length === 1) {
+                            horariosList.querySelector(".horario-remove")?.classList.add("hidden");
+                        }
+                    }
+                });
+            }
         }
 
         // Duración: indefinido vs X días

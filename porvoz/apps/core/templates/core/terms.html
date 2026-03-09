@@ -1,0 +1,132 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100">
+    {% if user.is_authenticated %}
+    {% include "core/sidebar.html" %}
+    <main class="main-content-responsive flex-1 lg:ml-64 px-4 py-5 sm:px-6 sm:py-6 lg:px-10 pb-12 flex flex-col">
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle><i class="bi bi-list text-xl"></i></button>
+        <div class="max-w-3xl mx-auto w-full mt-12 lg:mt-0">
+    {% else %}
+    <div class="grid lg:grid-cols-[16rem_1fr] flex-1 min-w-0 w-full">
+        {% include "core/guest_left_panel.html" %}
+        <section class="flex flex-col px-4 py-5 sm:px-6 sm:py-6 lg:px-10 pb-12 overflow-y-auto min-h-0">
+        <div class="flex justify-center lg:hidden mb-6">
+            <a href="{% url 'login' %}"><img src="{% static 'images/LogoPorvoz.png' %}" alt="Porvoz" class="h-16 w-auto"></a>
+        </div>
+        <div class="max-w-3xl mx-auto w-full">
+    {% endif %}
+            <nav class="mb-6">
+                <a href="javascript:void(0)" onclick="history.back()" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="bi bi-arrow-left"></i>Volver</a>
+            </nav>
+
+            <header class="mb-8">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200/80 text-slate-600 text-xs font-semibold mb-4">
+                    <i class="bi bi-shield-check"></i> Documento legal
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">Términos y Condiciones</h1>
+                <p class="text-sm text-slate-500 mt-2 flex items-center gap-2">
+                    <i class="bi bi-calendar3"></i>Última actualización: {% now "d/m/Y" %}
+                    <span class="text-slate-300">·</span>
+                    <i class="bi bi-geo-alt"></i>Vigente en Colombia
+                </p>
+            </header>
+
+            <div class="rounded-xl bg-amber-50 border border-amber-200/80 p-4 mb-8">
+                <p class="text-sm text-amber-900 mb-1 font-semibold"><i class="bi bi-info-circle mr-1"></i>Marco jurídico</p>
+                <p class="text-xs text-amber-800/90 leading-relaxed">Estos términos se rigen por la <strong>Ley 527 de 1999</strong> (comercio electrónico y mensajes de datos), la <strong>Ley 1273 de 2009</strong> (protección de datos e información) y el ordenamiento jurídico colombiano.</p>
+            </div>
+
+            <article class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 sm:p-8 space-y-8 text-base leading-relaxed">
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">1</span>
+                            Objeto y ámbito de aplicación
+                        </h2>
+                        <p class="text-slate-700 mb-3">Los presentes Términos y Condiciones regulan el acceso y uso del sitio web y del servicio <strong>Porvoz</strong> (“el Servicio”), ofrecido a usuarios en territorio colombiano. El uso del Servicio implica la aceptación íntegra de estos términos. Si no está de acuerdo con alguna de sus disposiciones, debe abstenerse de utilizar el Servicio. La utilización continuada del mismo tras cualquier modificación constituye la aceptación de los nuevos términos.</p>
+                        <p class="text-slate-700">En lo no previsto en estos términos, serán de aplicación las normas del ordenamiento jurídico colombiano, en especial la <strong>Ley 527 de 1999</strong> (por la cual se definen y reglamentan el acceso y uso de los mensajes de datos, el comercio electrónico y las firmas digitales), en cuanto al valor y efectos jurídicos de los actos realizados por medios electrónicos.</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">2</span>
+                            Descripción del Servicio
+                        </h2>
+                        <p class="text-slate-700">Porvoz es una plataforma web que permite a los usuarios (cuidadores) gestionar recordatorios de medicación para uno o varios pacientes, mediante llamadas automatizadas con tecnología de voz. El Servicio está diseñado como apoyo a la adherencia al tratamiento médico y al seguimiento de medicamentos. <strong class="text-slate-800">No constituye un servicio de salud ni sustituye en ningún caso la prescripción, supervisión o consejo de un profesional de la salud.</strong></p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">3</span>
+                            Uso lícito y obligaciones del usuario
+                        </h2>
+                        <p class="text-slate-700 mb-3">El usuario se compromete a utilizar el Servicio de forma responsable, respetando la ley y los derechos de terceros. En particular, queda prohibido:</p>
+                        <ul class="text-slate-700 space-y-2 ml-4 list-disc pl-2">
+                            <li>Utilizar el Servicio para fines ilícitos o no autorizados</li>
+                            <li>Intentar acceder a sistemas, cuentas o datos ajenos sin autorización</li>
+                            <li>Interferir o alterar el funcionamiento normal del Servicio o de las redes asociadas</li>
+                            <li>Suplantar identidad de otra persona o entidad</li>
+                        </ul>
+                        <p class="text-slate-700 mt-3">El incumplimiento de estas obligaciones puede dar lugar a la terminación del acceso al Servicio y, en su caso, a las responsabilidades que correspondan conforme a la legislación colombiana (incluida la <strong>Ley 1273 de 2009</strong>, en lo relativo a la protección de la información y de los datos).</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">4</span>
+                            Naturaleza del Servicio y limitación de responsabilidad
+                        </h2>
+                        <p class="text-slate-700 mb-3">Porvoz es únicamente un <strong>facilitador tecnológico</strong>: proporciona una plataforma para que el usuario (cuidador o responsable) programe recordatorios de medicación. <strong>Porvoz no es un servicio de salud, no prescribe ni recomienda tratamientos, y no asume ninguna responsabilidad sobre las decisiones médicas ni sobre la correcta toma de medicamentos.</strong></p>
+                        <p class="text-slate-700 mb-3">El usuario es el único responsable de: la exactitud de los datos que ingresa; haber consultado y seguir las indicaciones de un profesional de la salud; verificar con el médico tratante las dosis, horarios y condiciones; la supervisión del paciente; mantener la confidencialidad de sus credenciales; reportar fallos o incidencias técnicas.</p>
+                        <p class="text-slate-700"><strong>Exención de responsabilidad:</strong> Porvoz no será responsable frente a reclamaciones, daños o perjuicios que deriven del uso del Servicio, errores en los datos introducidos, la toma incorrecta de medicamentos o la falta de supervisión médica. En la medida permitida por la ley, Porvoz no será responsable por daños indirectos, consecuentes o especiales.</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">5</span>
+                            Propiedad intelectual
+                        </h2>
+                        <p class="text-slate-700">Todo el contenido del sitio y del Servicio es propiedad de Porvoz o de sus licenciantes. Queda prohibida la reproducción, distribución, transformación o uso comercial no autorizado, conforme a la <strong>Ley 23 de 1982</strong> y normas sobre propiedad intelectual en Colombia.</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">6</span>
+                            Modificación y vigencia
+                        </h2>
+                        <p class="text-slate-700">Porvoz se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento. Los cambios entrarán en vigor desde su publicación. El uso del Servicio con posterioridad a la publicación implica la aceptación de los nuevos términos.</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">7</span>
+                            Terminación del acceso
+                        </h2>
+                        <p class="text-slate-700">Porvoz podrá suspender o dar por terminado el acceso al Servicio por incumplimiento de estos términos, uso fraudulento, o por razones operativas o legales, con o sin previo aviso.</p>
+                    </section>
+
+                    <section class="pb-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">8</span>
+                            Ley aplicable y jurisdicción
+                        </h2>
+                        <p class="text-slate-700">Será aplicable la ley de la República de Colombia. Las controversias serán sometidas a los jueces y tribunales competentes en Colombia.</p>
+                    </section>
+                </div>
+            </article>
+
+            <nav class="mt-8 pt-6 border-t border-slate-200 flex flex-wrap justify-center gap-4 text-sm">
+                <a href="{% url 'privacy' %}" class="text-slate-600 hover:text-slate-900 font-medium">Política de Privacidad</a>
+                <a href="{% url 'contact' %}" class="text-slate-600 hover:text-slate-900 font-medium">Contacto</a>
+            </nav>
+        </div>
+    {% if user.is_authenticated %}
+    </main>
+    {% else %}
+        </section>
+    </div>
+    {% endif %}
+    {% include "core/footer.html" %}
+</div>
+{% endblock %}

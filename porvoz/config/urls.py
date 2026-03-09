@@ -26,11 +26,16 @@ urlpatterns = [
     path("notificaciones/", core_views.notifications_view, name="notifications"),
     path("planes/", core_views.plans_view, name="plans"),
     path("legal/", core_views.legal_info_view, name="legal_info"),
+    path("legal/terminos/", core_views.terms_view, name="terms"),
+    path("legal/privacidad/", core_views.privacy_view, name="privacy"),
+    path("contacto/", core_views.contact_view, name="contact"),
     path("guia/", core_views.guide_view, name="guide"),
     
     # Pacientes
     path("pacientes/", pacientes_views.listar_pacientes_view, name="listar_pacientes"),
     path("pacientes/agregar/", pacientes_views.agregar_paciente_view, name="agregar_paciente"),
+    path("pacientes/<int:paciente_id>/", pacientes_views.detalle_paciente_view, name="detalle_paciente"),
+    path("pacientes/<int:paciente_id>/historial-llamadas/", pacientes_views.historial_llamadas_paciente_view, name="historial_llamadas_paciente"),
     path("pacientes/<int:paciente_id>/editar/", pacientes_views.editar_paciente_view, name="editar_paciente"),
     path("pacientes/<int:paciente_id>/eliminar/", pacientes_views.eliminar_paciente_view, name="eliminar_paciente"),
     path("pacientes/<int:paciente_id>/enfermedad/agregar/", pacientes_views.agregar_enfermedad_view, name="agregar_enfermedad"),
@@ -39,6 +44,8 @@ urlpatterns = [
     # Medicamentos
     path("medicamentos/agregar/<int:paciente_id>/", medicamentos_views.agregar_medicamento_view, name="agregar_medicamento"),
     path("pacientes/<int:paciente_id>/medicamentos/<int:medicamento_id>/editar/", medicamentos_views.editar_medicamento_view, name="editar_medicamento"),
+    path("pacientes/<int:paciente_id>/medicamentos/<int:medicamento_id>/toggle/", medicamentos_views.toggle_medicamento_view, name="toggle_medicamento"),
+    path("pacientes/<int:paciente_id>/medicamentos/<int:medicamento_id>/eliminar/", medicamentos_views.eliminar_medicamento_view, name="eliminar_medicamento"),
     
     # APIs de microapps (vacías por ahora)
     path("api/cuidadores/", include("apps.cuidadores.urls")),
@@ -50,4 +57,4 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    # No servir STATIC desde STATIC_ROOT en desarrollo: Django sirve desde STATICFILES_DIRS (carpeta static/)

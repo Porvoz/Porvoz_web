@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import Perfil
 
@@ -68,29 +69,39 @@ def register_view(request: HttpRequest) -> HttpResponse:
             except ValueError:
                 messages.error(request, "Fecha de nacimiento inválida.")
                 return render(request, "core/register.html")
-        else:
-            user = User.objects.create_user(username=username, email=email, password=password)
-            user.first_name = first_name
-            user.last_name = last_name
-            user.save(update_fields=["first_name", "last_name"])
 
-            full_phone = f"{phone_country} {phone_number}".strip()
-            emergency_phone = f"{emergency_contact_phone_country} {emergency_contact_phone_number}".strip()
-            Perfil.objects.create(
-                user=user,
-                first_name=first_name,
-                last_name=last_name,
-                phone=full_phone,
-                document_type=document_type,
-                document_number=document_number,
-                date_of_birth=date_of_birth or None,
-                city=city,
-                emergency_contact_name=emergency_contact_name,
-                emergency_contact_phone=emergency_phone,
-                profile_completed=True,
-            )
-            messages.success(request, "Cuenta creada. Inicia sesión para continuar.")
-            return redirect("login")
+        # Todas las validaciones pasaron: crear usuario y perfil
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.first_name = first_name
+        user.last_name = last_name
+        user.save(update_fields=["first_name", "last_name"])
+
+        birth_date_obj = None
+        if date_of_birth:
+            try:
+                birth_date_obj = datetime.strptime(date_of_birth, "%Y-%m-%d").date()
+            except ValueError:
+                pass
+
+        full_phone = f"{phone_country} {phone_number}".strip()
+        emergency_phone = f"{emergency_contact_phone_country} {emergency_contact_phone_number}".strip()
+        plan_expiration = date.today() + timedelta(days=365)
+        Perfil.objects.create(
+            user=user,
+            first_name=first_name,
+            last_name=last_name,
+            phone=full_phone,
+            document_type=document_type or "",
+            document_number=document_number,
+            date_of_birth=birth_date_obj,
+            city=city,
+            emergency_contact_name=emergency_contact_name,
+            emergency_contact_phone=emergency_phone,
+            profile_completed=True,
+            plan_expiration=plan_expiration,
+        )
+        messages.success(request, "Cuenta creada. Inicia sesión para continuar.")
+        return redirect("login")
 
     return render(request, "core/register.html")
 
@@ -117,6 +128,7 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
         nuevo_plan = request.POST.get("plan", "").strip()
         if nuevo_plan in [Perfil.PLAN_FREEMIUM, Perfil.PLAN_GROWTH, Perfil.PLAN_MULTI_BUSINESS]:
             perfil.plan = nuevo_plan
+            perfil.plan_expiration = date.today() + timedelta(days=365)
             perfil.save()
             messages.success(request, f"Plan actualizado a {perfil.get_plan_display()}.")
             return redirect(f"{reverse('edit_profile')}?tab=planes")
@@ -230,34 +242,32 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
             emergency_phone_country = "+57"
             emergency_phone_number = emergency_clean
 
-    # Preparar datos de planes
+    # Planes (mismos datos que en plans_view)
     planes_data = {
         Perfil.PLAN_FREEMIUM: {
-            "nombre": "Freemium",
-            "tagline": "Accede a recordatorios de medicamentos completamente gratis",
+            "nombre": "Prueba",
+            "tagline": "Prueba el servicio con límites.",
             "precio": "$0",
             "precio_cop": None,
             "precio_mensual": 0,
             "destacado": False,
             "caracteristicas": [
                 "1 Cuidador",
-                "Hasta 2 pacientes",
-                "Hasta 5 medicamentos",
-                "30 llamadas automatizadas/mes",
-                "Recordatorios básicos",
-                "Dashboard de seguimiento",
-                "Historial de 3 meses",
-                "Llamadas con IA en español",
+                "1 paciente",
+                "Hasta 3 medicamentos",
+                "10 llamadas/mes",
+                "Dashboard básico",
+                "Historial 1 mes",
             ],
-            "boton_texto": "Usar gratis",
-            "boton_estilo": "border-blue-800 text-blue-800 hover:bg-blue-100",
+            "boton_texto": "Empezar prueba",
+            "boton_estilo": "border-slate-700 text-slate-700 hover:bg-slate-50",
         },
         Perfil.PLAN_GROWTH: {
-            "nombre": "Growth Plan",
-            "tagline": "Ideal para familias que necesitan seguimiento completo",
-            "precio": "$19",
-            "precio_cop": "59.900",
-            "precio_mensual": 19,
+            "nombre": "Growth",
+            "tagline": "Para familias. Llamadas ilimitadas.",
+            "precio": "$79.900",
+            "precio_cop": "79.900",
+            "precio_mensual": 79900,
             "destacado": True,
             "ahorro": "Ahorra en el año",
             "caracteristicas": [
@@ -265,36 +275,33 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
                 "Pacientes ilimitados",
                 "Medicamentos ilimitados",
                 "Llamadas ilimitadas",
-                "Recordatorios avanzados",
                 "Dashboard completo",
-                "Historial completo",
-                "Llamadas con IA personalizadas",
+                "Historial 12 meses",
                 "Alertas de adherencia",
-                "Reportes de seguimiento",
+                "Soporte por correo",
             ],
-            "boton_texto": "Hazte Premium",
-            "boton_estilo": "bg-blue-800 text-white hover:bg-blue-900",
+            "boton_texto": "Contratar Growth",
+            "boton_estilo": "bg-slate-800 text-white hover:bg-slate-700",
         },
         Perfil.PLAN_MULTI_BUSINESS: {
             "nombre": "Multi-cuidador",
-            "tagline": "Para instituciones y múltiples cuidadores",
-            "precio": "+ $15",
-            "precio_cop": "79.900",
-            "precio_mensual": 15,
+            "tagline": "Instituciones y equipos.",
+            "precio": "$99.900",
+            "precio_cop": "99.900",
+            "precio_mensual": 99900,
             "destacado": False,
             "caracteristicas": [
-                "Todo lo del Growth Plan:",
-                "2-10 cuidadores",
-                "79.900 COP por cuidador adicional",
+                "Todo lo de Growth",
+                "2 a 10 cuidadores",
+                "99.900 COP/cuidador/mes",
                 "Gestión centralizada",
-                "Reportes consolidados",
                 "Soporte prioritario",
             ],
-            "boton_texto": "Contactar",
-            "boton_estilo": "border-blue-800 text-blue-800 hover:bg-blue-100",
+            "boton_texto": "Contactar ventas",
+            "boton_estilo": "border-slate-800 text-slate-800 hover:bg-slate-100",
         },
     }
-    
+
     planes = [
         {**planes_data[Perfil.PLAN_FREEMIUM], "plan_key": Perfil.PLAN_FREEMIUM},
         {**planes_data[Perfil.PLAN_GROWTH], "plan_key": Perfil.PLAN_GROWTH},
@@ -319,20 +326,72 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
     return render(request, "core/edit_profile.html", context)
 
 
+def _icono_para_notificacion(notif):
+    """Mapea tipo/título de notificación a icono para actividad reciente."""
+    if notif.tipo == "alerta":
+        return "exclamation-triangle"
+    if notif.tipo == "llamada":
+        return "telephone"
+    if notif.tipo == "recordatorio":
+        return "bell"
+    # Sistema: inferir por título
+    tit = notif.titulo or ""
+    if "Paciente" in tit:
+        return "person-plus"
+    if "Medicamento" in tit:
+        return "capsule"
+    if "Condición" in tit:
+        return "heart-pulse"
+    return "info-circle"
+
+
 @login_required
 def dashboard_unificado(request: HttpRequest) -> HttpResponse:
     """Dashboard con estadísticas y resumen del usuario."""
     from apps.pacientes.models import Paciente
     from apps.medicamentos.models import Medicamento
+    from apps.llamadas.models import Notificacion
     from datetime import datetime, timedelta
     
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     
-    # Obtener pacientes (select_related para get_display_* en templates)
-    pacientes = Paciente.objects.filter(
-        usuario=request.user,
-        activo=True
-    ).select_related("usuario", "usuario__perfil").prefetch_related('medicamentos', 'enfermedades').order_by("-es_usuario_mismo", "-creado_en")
+    # Obtener pacientes con orden configurable
+    ordenar = request.GET.get("ordenar", "recientes")
+    base_qs = Paciente.objects.filter(usuario=request.user, activo=True).select_related(
+        "usuario", "usuario__perfil"
+    ).prefetch_related('medicamentos', 'enfermedades')
+    if ordenar == "nombre_asc":
+        pacientes = list(base_qs.order_by("nombre"))
+    elif ordenar == "nombre_desc":
+        pacientes = list(base_qs.order_by("-nombre"))
+    elif ordenar in ("medicamentos", "inicio", "edad_asc", "edad_desc", "condicion"):
+        base_list = list(base_qs)
+        if ordenar == "medicamentos":
+            pacientes = sorted(base_list, key=lambda p: p.medicamentos.count(), reverse=True)
+        elif ordenar == "inicio":
+            def _inicio(p):
+                m = p.medicamentos.filter(activo=True).order_by("creado_en").first()
+                return m.creado_en if m else p.creado_en
+            pacientes = sorted(base_list, key=_inicio, reverse=True)
+        elif ordenar == "edad_asc":
+            def _edad_asc(p):
+                edad = p.get_edad_display()
+                return (edad if edad is not None else 999, p.nombre)
+            pacientes = sorted(base_list, key=_edad_asc)
+        elif ordenar == "edad_desc":
+            def _edad_desc(p):
+                edad = p.get_edad_display()
+                return (-(edad if edad is not None else 999), p.nombre)
+            pacientes = sorted(base_list, key=_edad_desc)
+        elif ordenar == "condicion":
+            pacientes = sorted(
+                base_list,
+                key=lambda p: ((p.get_primera_condicion() or "zzz").lower(), p.nombre),
+            )
+        else:
+            pacientes = list(base_qs.order_by("-es_usuario_mismo", "-creado_en"))
+    else:
+        pacientes = list(base_qs.order_by("-es_usuario_mismo", "-creado_en"))
     
     # Calcular estadísticas
     total_medicamentos = Medicamento.objects.filter(
@@ -340,39 +399,102 @@ def dashboard_unificado(request: HttpRequest) -> HttpResponse:
         activo=True
     ).count()
     
-    # Próximos recordatorios: medicamentos del usuario con horario fijo, ordenados por hora (máx. 5)
+    # Próximos recordatorios: medicamentos con horario fijo, expandiendo múltiples horarios (máx. 5)
     medicamentos_con_horario = Medicamento.objects.filter(
         paciente__usuario=request.user,
         activo=True,
         frecuencia_tipo=Medicamento.FRECUENCIA_HORARIO,
-        horario__isnull=False
-    ).select_related('paciente').order_by('horario')[:5]
+    ).prefetch_related('horarios').select_related('paciente')
     
     hoy = datetime.now().date()
-    proximos_recordatorios = [
-        {'medicamento': med, 'horario': med.horario, 'fecha': hoy}
-        for med in medicamentos_con_horario
+    items = []
+    for med in medicamentos_con_horario:
+        horarios = med.get_horarios_ordenados()
+        if not horarios:
+            continue
+        for h in horarios:
+            items.append({'medicamento': med, 'horario': h.hora, 'fecha': hoy})
+    items.sort(key=lambda x: x['horario'])
+    proximos_recordatorios = items[:5]
+    
+    # Actividad reciente: desde Notificaciones (incluye sistema + llamadas/alertas futuras)
+    notificaciones = Notificacion.objects.filter(usuario=request.user).select_related(
+        "paciente", "medicamento"
+    ).order_by("-creado_en")[:10]
+    actividad_reciente = [
+        {
+            "icono": _icono_para_notificacion(n),
+            "descripcion": n.titulo,
+            "fecha": n.creado_en,
+        }
+        for n in notificaciones
+    ][:5]
+    
+    # Días restantes del plan (calculado desde plan_expiration o 365 por defecto)
+    dias_restantes_plan = perfil.get_dias_restantes_plan()
+    nombre_plan = perfil.get_plan_display()
+
+    # Llamadas esta semana (últimos 7 días) y adherencia
+    desde_semana = timezone.now() - timedelta(days=7)
+    llamadas_semana = Notificacion.objects.filter(
+        usuario=request.user,
+        tipo=Notificacion.TIPO_LLAMADA,
+        creado_en__gte=desde_semana,
+    ).count()
+    llamadas_atendidas_semana = Notificacion.objects.filter(
+        usuario=request.user,
+        tipo=Notificacion.TIPO_LLAMADA,
+        estado=Notificacion.ESTADO_ATENDIDA,
+        creado_en__gte=desde_semana,
+    ).count()
+    adherencia_semana = round((llamadas_atendidas_semana / llamadas_semana * 100)) if llamadas_semana else 0
+
+    opciones_ordenar = [
+        ("recientes", "Más recientes"),
+        ("nombre_asc", "Nombre A-Z"),
+        ("nombre_desc", "Nombre Z-A"),
+        ("edad_desc", "Mayores primero"),
+        ("edad_asc", "Menores primero"),
+        ("condicion", "Por condición"),
+        ("medicamentos", "Más medicamentos"),
+        ("inicio", "Inicio tratamiento"),
     ]
-    
-    # Actividad reciente: últimas acciones (pacientes y medicamentos agregados) ordenadas por fecha
-    actividad_reciente = []
-    for p in Paciente.objects.filter(usuario=request.user, activo=True).select_related("usuario", "usuario__perfil").order_by('-creado_en')[:5]:
-        actividad_reciente.append({'icono': 'person-plus', 'descripcion': f'Paciente "{p.get_display_nombre()}" agregado', 'fecha': p.creado_en})
-    for m in Medicamento.objects.filter(paciente__usuario=request.user, activo=True).select_related('paciente', 'paciente__usuario', 'paciente__usuario__perfil').order_by('-creado_en')[:10]:
-        actividad_reciente.append({'icono': 'capsule', 'descripcion': f'Medicamento "{m.nombre}" agregado para {m.paciente.get_display_nombre()}', 'fecha': m.creado_en})
-    actividad_reciente.sort(key=lambda x: x['fecha'], reverse=True)
-    actividad_reciente = actividad_reciente[:5]
-    
     context = {
         "perfil": perfil,
         "pacientes": pacientes,
         "total_medicamentos": total_medicamentos,
-        "llamadas_hoy": 0,  # Placeholder
-        "adherencia": 85,  # Placeholder
         "proximos_recordatorios": proximos_recordatorios[:5],
-        "actividad_reciente": actividad_reciente[:5],
+        "actividad_reciente": actividad_reciente,
+        "dias_restantes_plan": dias_restantes_plan,
+        "nombre_plan": nombre_plan,
+        "ordenar_actual": ordenar,
+        "opciones_ordenar": opciones_ordenar,
+        "llamadas_semana": llamadas_semana,
+        "llamadas_atendidas_semana": llamadas_atendidas_semana,
+        "adherencia_semana": adherencia_semana,
     }
     return render(request, "core/dashboard.html", context)
+
+
+def _notifications_redirect_url(request):
+    """Construye la URL de notificaciones preservando filtros (GET o POST desde formularios)."""
+    from urllib.parse import urlencode
+    source = request.POST if request.method == "POST" else request.GET
+    params = {}
+    t = source.get("tipo") or source.get("redirect_tipo")
+    if t and t != "None":
+        params["tipo"] = t
+    p = source.get("paciente") or source.get("redirect_paciente")
+    if p and p != "None":
+        params["paciente"] = p
+    if source.get("solo_no_leidas") == "1" or source.get("redirect_solo_no_leidas") == "1":
+        params["solo_no_leidas"] = "1"
+    b = source.get("buscar") or source.get("redirect_buscar")
+    if b:
+        params["buscar"] = b
+    qs = urlencode(params) if params else ""
+    base = reverse("notifications")
+    return f"{base}?{qs}" if qs else base
 
 
 @login_required
@@ -383,8 +505,9 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
     from datetime import datetime, timedelta
     
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
+    redirect_url = _notifications_redirect_url(request)
     
-    # Manejar eliminación
+    # Manejar acciones POST
     if request.method == "POST":
         action = request.POST.get("action")
         
@@ -396,7 +519,7 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
                     usuario=request.user
                 ).delete()
                 messages.success(request, f"{len(notificacion_ids)} notificación(es) eliminada(s).")
-                return redirect("notifications")
+                return redirect(redirect_url)
         
         elif action == "delete_single":
             notificacion_id = request.POST.get("notificacion_id")
@@ -407,7 +530,7 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
                     messages.success(request, "Notificación eliminada.")
                 except Notificacion.DoesNotExist:
                     messages.error(request, "Notificación no encontrada.")
-                return redirect("notifications")
+                return redirect(redirect_url)
         
         elif action == "mark_read":
             notificacion_ids = request.POST.getlist("notificacion_ids")
@@ -417,11 +540,57 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
                     usuario=request.user
                 ).update(leida=True)
                 messages.success(request, f"{len(notificacion_ids)} notificación(es) marcada(s) como leída(s).")
-                return redirect("notifications")
+                return redirect(redirect_url)
+        
+        elif action == "mark_read_single":
+            notificacion_id = request.POST.get("notificacion_id")
+            if notificacion_id:
+                try:
+                    n = Notificacion.objects.get(id=notificacion_id, usuario=request.user)
+                    n.leida = True
+                    n.save()
+                    messages.success(request, "Marcada como leída.")
+                except Notificacion.DoesNotExist:
+                    pass
+                return redirect(redirect_url)
+        
+        elif action == "mark_unread_single":
+            notificacion_id = request.POST.get("notificacion_id")
+            if notificacion_id:
+                try:
+                    n = Notificacion.objects.get(id=notificacion_id, usuario=request.user)
+                    n.leida = False
+                    n.save()
+                    messages.success(request, "Marcada como no leída.")
+                except Notificacion.DoesNotExist:
+                    pass
+                return redirect(redirect_url)
+        
+        elif action == "mark_all_read":
+            Notificacion.objects.filter(usuario=request.user, leida=False).update(leida=True)
+            messages.success(request, "Todas las notificaciones marcadas como leídas.")
+            # Redirigir sin filtro "solo no leídas" para que vean la lista
+            from urllib.parse import urlencode
+            params = {}
+            rt = request.POST.get("redirect_tipo")
+            if rt and rt != "None":
+                params["tipo"] = rt
+            rp = request.POST.get("redirect_paciente")
+            if rp and rp != "None":
+                params["paciente"] = rp
+            if request.POST.get("redirect_buscar"):
+                params["buscar"] = request.POST.get("redirect_buscar")
+            qs = urlencode(params) if params else ""
+            base = reverse("notifications")
+            return redirect(f"{base}?{qs}" if qs else base)
     
-    # Obtener filtros
-    paciente_id = request.GET.get("paciente")
-    tipo = request.GET.get("tipo")
+    # Obtener filtros (ignorar "None" como string)
+    paciente_id = request.GET.get("paciente") or None
+    if paciente_id == "None":
+        paciente_id = None
+    tipo = request.GET.get("tipo") or None
+    if tipo == "None":
+        tipo = None
     estado = request.GET.get("estado")
     fecha_desde = request.GET.get("fecha_desde")
     fecha_hasta = request.GET.get("fecha_hasta")
@@ -498,53 +667,39 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
 
 
 def plans_view(request: HttpRequest) -> HttpResponse:
-    """Vista para mostrar los planes disponibles y actualizar el plan del usuario."""
-    # Si el usuario está autenticado, puede cambiar de plan
+    """Vista para mostrar los planes (invitados). Logueados van a Mi cuenta > Plan."""
     if request.user.is_authenticated:
-        perfil, _ = Perfil.objects.get_or_create(user=request.user)
-        
-        if request.method == "POST":
-            nuevo_plan = request.POST.get("plan", "").strip()
-            if nuevo_plan in [Perfil.PLAN_FREEMIUM, Perfil.PLAN_GROWTH, Perfil.PLAN_MULTI_BUSINESS]:
-                perfil.plan = nuevo_plan
-                perfil.save()
-                messages.success(request, f"Plan actualizado a {perfil.get_plan_display()}.")
-                return redirect("plans")
-            else:
-                messages.error(request, "Plan inválido.")
-        plan_actual = perfil.plan
-    else:
-        perfil = None
-        plan_actual = None
+        return redirect(f"{reverse('edit_profile')}?tab=planes")
+    
+    perfil = None
+    plan_actual = None
     
     # Definir los planes con sus características (relevantes a Porvoz)
     planes_data = {
         Perfil.PLAN_FREEMIUM: {
-            "nombre": "Freemium",
-            "tagline": "Accede a recordatorios de medicamentos completamente gratis",
+            "nombre": "Prueba",
+            "tagline": "Prueba el servicio con límites. Ideal para conocer Porvoz.",
             "precio": "$0",
             "precio_cop": None,
             "precio_mensual": 0,
             "destacado": False,
             "caracteristicas": [
                 "1 Cuidador",
-                "Hasta 2 pacientes",
-                "Hasta 5 medicamentos",
-                "30 llamadas automatizadas/mes",
-                "Recordatorios básicos",
-                "Dashboard de seguimiento",
-                "Historial de 3 meses",
-                "Llamadas con IA en español",
+                "1 paciente",
+                "Hasta 3 medicamentos",
+                "10 llamadas automatizadas/mes",
+                "Dashboard básico",
+                "Historial 1 mes",
             ],
-            "boton_texto": "Usar gratis",
-            "boton_estilo": "border-blue-800 text-blue-800 hover:bg-blue-100",
+            "boton_texto": "Empezar prueba",
+            "boton_estilo": "border-slate-700 text-slate-700 hover:bg-slate-50",
         },
         Perfil.PLAN_GROWTH: {
-            "nombre": "Growth Plan",
-            "tagline": "Ideal para familias que necesitan seguimiento completo",
-            "precio": "$19",
-            "precio_cop": "59.900",
-            "precio_mensual": 19,
+            "nombre": "Growth",
+            "tagline": "Para familias. Seguimiento completo y llamadas ilimitadas.",
+            "precio": "$79.900",
+            "precio_cop": "79.900",
+            "precio_mensual": 79900,
             "destacado": True,
             "ahorro": "Ahorra en el año",
             "caracteristicas": [
@@ -552,43 +707,42 @@ def plans_view(request: HttpRequest) -> HttpResponse:
                 "Pacientes ilimitados",
                 "Medicamentos ilimitados",
                 "Llamadas ilimitadas",
-                "Recordatorios avanzados",
                 "Dashboard completo",
-                "Historial completo",
-                "Llamadas con IA personalizadas",
+                "Historial 12 meses",
+                "Llamadas con IA en español",
                 "Alertas de adherencia",
-                "Reportes de seguimiento",
+                "Soporte por correo",
             ],
-            "boton_texto": "Hazte Premium",
-            "boton_estilo": "bg-blue-800 text-white hover:bg-blue-900",
+            "boton_texto": "Contratar Growth",
+            "boton_estilo": "bg-slate-800 text-white hover:bg-slate-700",
         },
         Perfil.PLAN_MULTI_BUSINESS: {
             "nombre": "Multi-cuidador",
-            "tagline": "Para instituciones y múltiples cuidadores",
-            "precio": "+ $15",
-            "precio_cop": "79.900",
-            "precio_mensual": 15,
+            "tagline": "Instituciones y equipos. Varios cuidadores, un solo lugar.",
+            "precio": "$99.900",
+            "precio_cop": "99.900",
+            "precio_mensual": 99900,
             "destacado": False,
             "caracteristicas": [
-                "Todo lo del Growth Plan:",
-                "2-10 cuidadores",
-                "79.900 COP por cuidador adicional",
+                "Todo lo de Growth",
+                "2 a 10 cuidadores",
+                "99.900 COP por cuidador/mes",
                 "Gestión centralizada",
                 "Reportes consolidados",
                 "Soporte prioritario",
             ],
-            "boton_texto": "Contactar",
-            "boton_estilo": "border-blue-800 text-blue-800 hover:bg-blue-100",
+            "boton_texto": "Contactar ventas",
+            "boton_estilo": "border-slate-800 text-slate-800 hover:bg-slate-100",
         },
     }
-    
+
     # Preparar los planes en orden
     planes = [
         {**planes_data[Perfil.PLAN_FREEMIUM], "plan_key": Perfil.PLAN_FREEMIUM},
         {**planes_data[Perfil.PLAN_GROWTH], "plan_key": Perfil.PLAN_GROWTH},
         {**planes_data[Perfil.PLAN_MULTI_BUSINESS], "plan_key": Perfil.PLAN_MULTI_BUSINESS},
     ]
-    
+
     # Marcar el plan actual (solo si está autenticado)
     for plan in planes:
         if plan_actual:
@@ -673,8 +827,23 @@ def reset_password_view(request: HttpRequest) -> HttpResponse:
 
 
 def legal_info_view(request: HttpRequest) -> HttpResponse:
-    """Vista para mostrar información legal: términos, privacidad y contacto."""
+    """Vista índice de información legal (enlaces a términos, privacidad, contacto)."""
     return render(request, "core/legal_info.html")
+
+
+def terms_view(request: HttpRequest) -> HttpResponse:
+    """Términos y Condiciones."""
+    return render(request, "core/terms.html")
+
+
+def privacy_view(request: HttpRequest) -> HttpResponse:
+    """Política de Privacidad."""
+    return render(request, "core/privacy.html")
+
+
+def contact_view(request: HttpRequest) -> HttpResponse:
+    """Contacto."""
+    return render(request, "core/contact.html")
 
 
 def guide_view(request: HttpRequest) -> HttpResponse:

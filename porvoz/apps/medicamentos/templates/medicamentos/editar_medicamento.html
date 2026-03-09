@@ -5,7 +5,7 @@
 <div class="min-h-screen flex bg-slate-100">
     {% include "core/sidebar.html" %}
 
-    <main class="flex-1 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
         <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
             <i class="bi bi-list text-xl"></i>
         </button>
@@ -140,12 +140,36 @@
                             </div>
 
                             <div id="horario-container" class="{% if medicamento.frecuencia_tipo == 'cada_x_horas' %}hidden{% endif %}">
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Horario de toma <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <i class="bi bi-clock absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                                    <input name="horario" type="time" id="horario-input" value="{{ medicamento.horario|time:'H:i' }}"
-                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+                                <div class="flex items-center justify-between gap-4 mb-2">
+                                    <label class="block text-sm font-semibold text-slate-700">Horarios de toma <span class="text-red-500">*</span></label>
+                                    <button type="button" id="btn-agregar-horario" class="inline-flex items-center gap-2 rounded-xl border-2 border-dashed border-indigo-400 text-indigo-600 hover:border-indigo-600 hover:text-indigo-800 px-3 py-2 text-xs font-semibold transition-colors">
+                                        <i class="bi bi-plus-lg"></i>Agregar otro horario
+                                    </button>
                                 </div>
+                                <div id="horarios-list" class="space-y-3">
+                                    {% for h in medicamento.get_horarios_ordenados %}
+                                    <div class="horario-row flex gap-2 items-center">
+                                        <div class="relative flex-1">
+                                            <i class="bi bi-clock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                            <input name="horario" type="time" class="horario-input block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" value="{{ h.hora|time:'H:i' }}" {% if forloop.first %}required{% endif %}>
+                                        </div>
+                                        <button type="button" class="horario-remove p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors {% if forloop.first and forloop.last %}hidden{% endif %}" title="Quitar horario">
+                                            <i class="bi bi-x-lg text-lg"></i>
+                                        </button>
+                                    </div>
+                                    {% empty %}
+                                    <div class="horario-row flex gap-2 items-center">
+                                        <div class="relative flex-1">
+                                            <i class="bi bi-clock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                            <input name="horario" type="time" class="horario-input block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" value="{{ medicamento.horario|time:'H:i' }}" required>
+                                        </div>
+                                        <button type="button" class="horario-remove hidden p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Quitar horario">
+                                            <i class="bi bi-x-lg text-lg"></i>
+                                        </button>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <p class="text-xs text-slate-500 mt-2">Ej: 8:00, 14:00, 20:00 para varias tomas al día</p>
                             </div>
 
                             <div id="cada-x-horas-container" class="space-y-4 {% if medicamento.frecuencia_tipo != 'cada_x_horas' %}hidden{% endif %}">
@@ -165,12 +189,47 @@
                                             class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
                                     </div>
                                 </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Fecha de inicio del tratamiento</label>
+                                    <div class="relative">
+                                        <i class="bi bi-calendar3 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                        <input name="fecha_inicio_tratamiento" type="date" id="fecha-inicio-input" {% if medicamento.fecha_inicio_tratamiento %}value="{{ medicamento.fecha_inicio_tratamiento|date:'Y-m-d' }}"{% endif %}
+                                            class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1">Opcional. Para calcular correctamente las tomas desde una fecha.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 lg:p-8 bg-indigo-50/30">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600">
+                                <i class="bi bi-robot text-lg"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-slate-900">Configuración para la llamada</h2>
+                        </div>
+                        <p class="text-sm text-slate-500 mb-6">Instrucciones y preferencias para cuando la IA realice la llamada de recordatorio</p>
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Instrucciones para la IA</label>
+                                <textarea name="instrucciones_llamada" rows="3" placeholder="Ej: Recordar con el desayuno, Preguntar si tuvo efectos secundarios..."
+                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none">{{ medicamento.instrucciones_llamada }}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Llamar X minutos antes</label>
+                                <div class="relative max-w-[180px]">
+                                    <i class="bi bi-clock-history absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input name="minutos_antes_llamada" type="number" min="0" max="120" value="{{ medicamento.minutos_antes_llamada|default:0 }}"
+                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                                </div>
+                                <p class="text-xs text-slate-500 mt-1">Minutos antes de la hora de toma para realizar la llamada (ej: 15)</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="p-6 lg:p-8 bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                        <a href="{% url 'editar_paciente' paciente.id %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                        <a href="{% url 'detalle_paciente' paciente.id %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
                             <i class="bi bi-arrow-left"></i>
                             <span>Cancelar</span>
                         </a>
@@ -191,21 +250,28 @@
     const frecuenciaCadaX = document.getElementById("frecuencia_cada_x");
     const horarioContainer = document.getElementById("horario-container");
     const cadaXHorasContainer = document.getElementById("cada-x-horas-container");
-    const horarioInput = document.getElementById("horario-input");
+    const horariosList = document.getElementById("horarios-list");
     const cadaXHorasInput = document.getElementById("cada-x-horas-input");
     const horaInicioInput = document.getElementById("hora-inicio-input");
+
+    function setHorariosRequired(required) {
+        if (horariosList) horariosList.querySelectorAll(".horario-input").forEach(function(inp) {
+            if (required) inp.setAttribute("required", "required");
+            else inp.removeAttribute("required");
+        });
+    }
 
     function toggleFrecuencia() {
         if (frecuenciaCadaX && frecuenciaCadaX.checked) {
             if (horarioContainer) horarioContainer.classList.add("hidden");
             if (cadaXHorasContainer) cadaXHorasContainer.classList.remove("hidden");
-            if (horarioInput) horarioInput.removeAttribute("required");
+            setHorariosRequired(false);
             if (cadaXHorasInput) cadaXHorasInput.setAttribute("required", "required");
             if (horaInicioInput) horaInicioInput.setAttribute("required", "required");
         } else {
             if (horarioContainer) horarioContainer.classList.remove("hidden");
             if (cadaXHorasContainer) cadaXHorasContainer.classList.add("hidden");
-            if (horarioInput) horarioInput.setAttribute("required", "required");
+            setHorariosRequired(true);
             if (cadaXHorasInput) cadaXHorasInput.removeAttribute("required");
             if (horaInicioInput) horaInicioInput.removeAttribute("required");
         }
@@ -213,6 +279,32 @@
     if (frecuenciaHorario) frecuenciaHorario.addEventListener("change", toggleFrecuencia);
     if (frecuenciaCadaX) frecuenciaCadaX.addEventListener("change", toggleFrecuencia);
     toggleFrecuencia();
+
+    const btnAgregarHorario = document.getElementById("btn-agregar-horario");
+    if (btnAgregarHorario && horariosList) {
+        const firstRow = horariosList.querySelector(".horario-row");
+        if (firstRow) {
+            const template = firstRow.cloneNode(true);
+            template.querySelector("input").value = "";
+            template.querySelector("input").removeAttribute("required");
+            template.querySelector(".horario-remove").classList.remove("hidden");
+            btnAgregarHorario.addEventListener("click", function() {
+                const row = template.cloneNode(true);
+                row.querySelector("input").value = "";
+                horariosList.appendChild(row);
+                horariosList.querySelector(".horario-row .horario-remove")?.classList.remove("hidden");
+            });
+            horariosList.addEventListener("click", function(e) {
+                const btn = e.target.closest(".horario-remove");
+                if (btn && horariosList.querySelectorAll(".horario-row").length > 1) {
+                    btn.closest(".horario-row").remove();
+                    if (horariosList.querySelectorAll(".horario-row").length === 1) {
+                        horariosList.querySelector(".horario-remove")?.classList.add("hidden");
+                    }
+                }
+            });
+        }
+    }
 
     const duracionIndefinido = document.getElementById("duracion_indefinido");
     const duracionDiasRadio = document.getElementById("duracion_dias_radio");

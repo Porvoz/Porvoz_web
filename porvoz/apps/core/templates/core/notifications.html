@@ -2,277 +2,298 @@
 {% load static %}
 
 {% block body %}
-<div class="min-h-screen flex bg-slate-100 flex-col">
+<div class="min-h-screen flex bg-slate-50 flex-col w-full max-w-full overflow-x-hidden">
     {% include "core/sidebar.html" %}
 
-    <main class="flex-1 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
-        <!-- Botón hamburguesa para móvil -->
-        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10 flex flex-col">
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700 touch-manipulation" data-mobile-menu-toggle aria-label="Abrir menú">
             <i class="bi bi-list text-xl"></i>
         </button>
-        
-        <header class="mb-4 mt-12 lg:mt-0 flex items-start justify-between gap-4">
-            <div>
-                <h1 class="text-xl sm:text-2xl font-black text-slate-900">Notificaciones</h1>
-                <p class="text-xs text-slate-600 mt-0.5">Gestiona tus notificaciones, llamadas y recordatorios</p>
+
+        <!-- Header -->
+        <header class="mb-8 mt-12 lg:mt-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Notificaciones</h1>
+                    <p class="text-slate-600 mt-1">
+                        <span class="font-medium text-slate-700">{{ total_notificaciones }}</span> en total
+                        {% if no_leidas %}
+                        <span class="text-slate-400 mx-1">·</span>
+                        <span class="font-semibold text-slate-800">{{ no_leidas }} sin leer</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-700 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm self-start sm:self-center">
+                    <i class="bi bi-arrow-left"></i>
+                    Panel principal
+                </a>
             </div>
-            <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white text-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-50 transition-colors shadow-sm">
-                <i class="bi bi-house"></i>
-                <span class="hidden sm:inline">Panel</span>
-            </a>
         </header>
 
         {% if messages %}
-        <div class="mb-4 space-y-2">
+        <div class="mb-6 space-y-2">
             {% for message in messages %}
-                <div class="rounded-lg border px-3 py-2 text-xs font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
-                    {{ message }}
-                </div>
+            <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+                {{ message }}
+            </div>
             {% endfor %}
         </div>
         {% endif %}
 
-        <!-- Estadísticas compactas -->
-        <div class="grid grid-cols-3 gap-3 mb-4">
-            <div class="bg-white rounded-lg border border-slate-200 shadow-sm p-3">
-                <p class="text-2xl font-bold text-slate-900">{{ total_notificaciones }}</p>
-                <p class="text-xs text-slate-600 mt-0.5">Total</p>
-            </div>
-            <div class="bg-white rounded-lg border border-slate-200 shadow-sm p-3">
-                <p class="text-2xl font-bold text-slate-900">{{ no_leidas }}</p>
-                <p class="text-xs text-slate-600 mt-0.5">No leídas</p>
-            </div>
-            <div class="bg-white rounded-lg border border-slate-200 shadow-sm p-3">
-                <p class="text-2xl font-bold text-slate-900">{{ llamadas_atendidas }}</p>
-                <p class="text-xs text-slate-600 mt-0.5">Atendidas</p>
-            </div>
-        </div>
-
-        <!-- Filtros compactos -->
-        <div class="bg-white rounded-lg border border-slate-200 shadow-sm p-3 mb-4">
-            <form method="get" class="flex flex-wrap items-end gap-2">
-                <!-- Búsqueda -->
-                <div class="flex-1 min-w-[200px]">
-                    <div class="relative">
-                        <i class="bi bi-search absolute left-2.5 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input 
-                            type="text" 
-                            name="buscar" 
-                            value="{{ buscar }}"
-                            placeholder="Buscar..."
-                            class="block w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition-all"
-                        >
+        <!-- Filtros -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 mb-6">
+            <div class="flex flex-col gap-5">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider w-full sm:w-auto">Tipo</span>
+                        <a href="{% url 'notifications' %}{% if buscar %}?buscar={{ buscar|urlencode }}{% endif %}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all {% if not tipo_seleccionado and not solo_no_leidas %}bg-slate-700 text-white shadow-md ring-2 ring-slate-600 ring-offset-2{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800{% endif %}">
+                            <i class="bi bi-grid-3x3-gap"></i>Todas
+                        </a>
+                        <a href="{% url 'notifications' %}?tipo=llamada{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all {% if tipo_seleccionado == 'llamada' %}bg-blue-600 text-white shadow-md ring-2 ring-blue-500 ring-offset-2{% else %}bg-blue-50 text-blue-700 hover:bg-blue-100{% endif %}">
+                            <i class="bi bi-telephone"></i>Llamadas
+                        </a>
+                        <a href="{% url 'notifications' %}?tipo=recordatorio{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all {% if tipo_seleccionado == 'recordatorio' %}bg-amber-500 text-white shadow-md ring-2 ring-amber-400 ring-offset-2{% else %}bg-amber-50 text-amber-700 hover:bg-amber-100{% endif %}">
+                            <i class="bi bi-clock-history"></i>Recordatorios
+                        </a>
+                        <a href="{% url 'notifications' %}?tipo=alerta{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all {% if tipo_seleccionado == 'alerta' %}bg-rose-600 text-white shadow-md ring-2 ring-rose-500 ring-offset-2{% else %}bg-rose-50 text-rose-700 hover:bg-rose-100{% endif %}">
+                            <i class="bi bi-exclamation-triangle"></i>Alertas
+                        </a>
+                        <a href="{% url 'notifications' %}?tipo=sistema{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all {% if tipo_seleccionado == 'sistema' %}bg-slate-600 text-white shadow-md ring-2 ring-slate-500 ring-offset-2{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                            <i class="bi bi-gear"></i>Sistema
+                        </a>
+                        <a href="{% url 'notifications' %}?solo_no_leidas=1{% if tipo_seleccionado %}&tipo={{ tipo_seleccionado }}{% endif %}{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all {% if solo_no_leidas %}bg-emerald-600 text-white shadow-md ring-2 ring-emerald-500 ring-offset-2{% else %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100{% endif %}">
+                            <i class="bi bi-envelope"></i>No leídas
+                            {% if no_leidas %}<span class="rounded-full px-2 py-0.5 text-xs font-bold {% if solo_no_leidas %}bg-white/30{% else %}bg-emerald-200/80{% endif %}">{{ no_leidas }}</span>{% endif %}
+                        </a>
                     </div>
+                    {% if no_leidas and notificaciones %}
+                    <form method="post" class="inline-flex">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mark_all_read">
+                        <input type="hidden" name="redirect_tipo" value="{{ tipo_seleccionado|default:'' }}">
+                        <input type="hidden" name="redirect_paciente" value="{{ paciente_seleccionado|default:'' }}">
+                        <input type="hidden" name="redirect_solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
+                        <input type="hidden" name="redirect_buscar" value="{{ buscar }}">
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 text-sm font-semibold shadow-md transition-colors">
+                            <i class="bi bi-check2-all"></i>Marcar todas leídas
+                        </button>
+                    </form>
+                    {% endif %}
                 </div>
-
-                <!-- Filtro por paciente -->
-                <div class="min-w-[140px]">
-                    <select name="paciente" class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition-all">
-                        <option value="">Todos los pacientes</option>
-                        {% for paciente in pacientes %}
-                        <option value="{{ paciente.id }}" {% if paciente_seleccionado == paciente.id|stringformat:"s" %}selected{% endif %}>
-                            {{ paciente.get_display_nombre }}
-                        </option>
+                <div class="flex flex-col sm:flex-row gap-3 pt-2 border-t border-slate-100">
+                    <form method="get" class="flex-1 min-w-0">
+                        <input type="hidden" name="tipo" value="{{ tipo_seleccionado|default:'' }}">
+                        <input type="hidden" name="solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
+                        {% if paciente_seleccionado and paciente_seleccionado != "None" %}<input type="hidden" name="paciente" value="{{ paciente_seleccionado }}">{% endif %}
+                        <div class="relative max-w-sm">
+                            <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" name="buscar" value="{{ buscar }}" placeholder="Buscar en notificaciones..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-300 focus:bg-white transition-colors">
+                        </div>
+                    </form>
+                    {% if pacientes %}
+                    <select onchange="if(this.value){ window.location.href=this.value; }" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:bg-white cursor-pointer w-full sm:w-auto sm:min-w-[200px]">
+                        <option value="{% url 'notifications' %}{% if tipo_seleccionado %}?tipo={{ tipo_seleccionado }}{% if solo_no_leidas %}&solo_no_leidas=1{% endif %}{% elif solo_no_leidas %}?solo_no_leidas=1{% endif %}{% if buscar %}{% if tipo_seleccionado or solo_no_leidas %}&{% else %}?{% endif %}buscar={{ buscar|urlencode }}{% endif %}">Todos los pacientes</option>
+                        {% for p in pacientes %}
+                        <option value="{% url 'notifications' %}?paciente={{ p.id }}{% if tipo_seleccionado %}&tipo={{ tipo_seleccionado }}{% endif %}{% if solo_no_leidas %}&solo_no_leidas=1{% endif %}{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" {% if paciente_seleccionado == p.id|stringformat:'s' %}selected{% endif %}>{{ p.get_display_nombre }}</option>
                         {% endfor %}
                     </select>
-                </div>
-
-                <!-- Filtro por tipo -->
-                <div class="min-w-[120px]">
-                    <select name="tipo" class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition-all">
-                        <option value="">Todos los tipos</option>
-                        {% for tipo_key, tipo_label in tipos %}
-                        <option value="{{ tipo_key }}" {% if tipo_seleccionado == tipo_key %}selected{% endif %}>
-                            {{ tipo_label }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- Filtro por estado -->
-                <div class="min-w-[120px]">
-                    <select name="estado" class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 transition-all">
-                        <option value="">Todos los estados</option>
-                        {% for estado_key, estado_label in estados %}
-                        <option value="{{ estado_key }}" {% if estado_seleccionado == estado_key %}selected{% endif %}>
-                            {{ estado_label }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- Botones de acción -->
-                <div class="flex gap-2">
-                    <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 text-sm font-semibold transition-colors">
-                        <i class="bi bi-funnel text-xs"></i>
-                        <span class="hidden sm:inline">Filtrar</span>
-                    </button>
-                    <a href="{% url 'notifications' %}" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-50 transition-colors">
-                        <i class="bi bi-x-circle text-xs"></i>
-                        <span class="hidden sm:inline">Limpiar</span>
-                    </a>
-                </div>
-            </form>
-        </div>
-
-        <!-- Acciones masivas compactas -->
-        <form method="post" id="bulk-action-form" class="mb-4">
-            {% csrf_token %}
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white rounded-lg border border-slate-200 shadow-sm p-3">
-                <div class="flex items-center gap-3">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-slate-300 text-blue-800 focus:ring-blue-800">
-                        <span class="text-sm font-semibold text-slate-700">Seleccionar todas</span>
-                    </label>
-                    <span id="selected-count" class="text-sm text-slate-500">0 seleccionadas</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button type="submit" name="action" value="mark_read" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 px-3 py-1.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
-                        <i class="bi bi-check-circle"></i>
-                        Marcar leídas
-                    </button>
-                    <button type="submit" name="action" value="delete_selected" class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-sm font-semibold transition-colors" onclick="return confirm('¿Eliminar las notificaciones seleccionadas?');">
-                        <i class="bi bi-trash"></i>
-                        Eliminar
-                    </button>
+                    {% endif %}
                 </div>
             </div>
-        </form>
+        </div>
 
         <!-- Lista de notificaciones -->
         {% if notificaciones %}
-        <div class="space-y-2">
+        <div class="space-y-4">
             {% for notificacion in notificaciones %}
-            <div class="bg-white rounded-lg border border-slate-200 shadow-sm p-4 hover:shadow-md transition-all {% if not notificacion.leida %}border-l-4 border-l-blue-800{% endif %}">
-                <div class="flex items-start gap-3">
-                    <div class="flex-shrink-0 pt-0.5">
-                        <input 
-                            type="checkbox" 
-                            name="notificacion_ids" 
-                            value="{{ notificacion.id }}"
-                            class="notificacion-checkbox w-4 h-4 rounded border-slate-300 text-blue-800 focus:ring-blue-800"
-                        >
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-start justify-between gap-3 mb-1.5">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <h3 class="font-bold text-slate-900 text-sm {% if not notificacion.leida %}text-base{% endif %}">{{ notificacion.titulo }}</h3>
-                                    {% if not notificacion.leida %}
-                                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">
-                                        Nueva
-                                    </span>
+            <article class="group bg-white rounded-2xl border-l-4 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md
+                {% if notificacion.tipo == 'llamada' %}border-l-blue-500
+                {% elif notificacion.tipo == 'recordatorio' %}border-l-amber-500
+                {% elif notificacion.tipo == 'alerta' %}border-l-rose-500
+                {% else %}border-l-slate-400{% endif %}
+                {% if not notificacion.leida %}ring-2 ring-slate-200/80 ring-offset-2 ring-offset-slate-50 bg-slate-50/50{% endif %}">
+                <div class="p-5 sm:p-6">
+                    <div class="flex gap-4 sm:gap-5">
+                        <!-- Icono tipo -->
+                        <div class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center
+                            {% if notificacion.tipo == 'llamada' %}bg-blue-100 text-blue-600
+                            {% elif notificacion.tipo == 'recordatorio' %}bg-amber-100 text-amber-600
+                            {% elif notificacion.tipo == 'alerta' %}bg-rose-100 text-rose-600
+                            {% else %}bg-slate-100 text-slate-500{% endif %}">
+                            {% if notificacion.tipo == 'llamada' %}
+                            <i class="bi bi-telephone-outbound text-xl"></i>
+                            {% elif notificacion.tipo == 'recordatorio' %}
+                            <i class="bi bi-clock-history text-xl"></i>
+                            {% elif notificacion.tipo == 'alerta' %}
+                            <i class="bi bi-exclamation-triangle text-xl"></i>
+                            {% else %}
+                            <i class="bi bi-gear text-xl"></i>
+                            {% endif %}
+                        </div>
+
+                        <!-- Contenido -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                <div>
+                                    <h3 class="font-semibold text-slate-900 {% if not notificacion.leida %}text-base{% else %}text-[15px] text-slate-800{% endif %} leading-snug">{{ notificacion.titulo }}</h3>
+                                    {% if notificacion.mensaje %}
+                                    <p class="text-sm text-slate-600 mt-1.5 leading-relaxed">{{ notificacion.mensaje }}</p>
                                     {% endif %}
                                 </div>
-                                {% if notificacion.mensaje %}
-                                <p class="text-xs text-slate-600 mb-1.5 line-clamp-2">{{ notificacion.mensaje }}</p>
-                                {% endif %}
-                                <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                                    {% if notificacion.paciente %}
-                                    <span class="flex items-center gap-1">
-                                        <i class="bi bi-person text-xs"></i>
-                                        {{ notificacion.paciente.get_display_nombre }}
+                                <!-- Acciones: marcar leída / no leída y eliminar -->
+                                <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
+                                    {% if notificacion.estado != 'pendiente' %}
+                                    <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold
+                                        {% if notificacion.estado == 'atendida' %}bg-emerald-100 text-emerald-700
+                                        {% elif notificacion.estado == 'no_atendida' %}bg-amber-100 text-amber-700
+                                        {% elif notificacion.estado == 'fallida' %}bg-slate-100 text-slate-600
+                                        {% elif notificacion.estado == 'enviada' %}bg-blue-100 text-blue-700
+                                        {% else %}bg-slate-100 text-slate-600{% endif %}">
+                                        {{ notificacion.get_estado_display }}
                                     </span>
                                     {% endif %}
-                                    {% if notificacion.medicamento %}
-                                    <span class="flex items-center gap-1">
-                                        <i class="bi bi-capsule text-xs"></i>
-                                        {{ notificacion.medicamento.nombre }}
-                                    </span>
+                                    {% if not notificacion.leida %}
+                                    <form method="post" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="mark_read_single">
+                                        <input type="hidden" name="notificacion_id" value="{{ notificacion.id }}">
+                                        <input type="hidden" name="redirect_tipo" value="{{ tipo_seleccionado|default:'' }}">
+                                        <input type="hidden" name="redirect_paciente" value="{{ paciente_seleccionado|default:'' }}">
+                                        <input type="hidden" name="redirect_solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
+                                        <input type="hidden" name="redirect_buscar" value="{{ buscar }}">
+                                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 text-xs font-semibold shadow-sm transition-colors" title="Marcar como leída">
+                                            <i class="bi bi-check2-all"></i>Leída
+                                        </button>
+                                    </form>
                                     {% endif %}
-                                    <span class="flex items-center gap-1">
-                                        {% if notificacion.tipo == 'llamada' %}
-                                        <i class="bi bi-telephone text-xs"></i>
-                                        {% elif notificacion.tipo == 'alerta' %}
-                                        <i class="bi bi-exclamation-triangle text-xs"></i>
-                                        {% else %}
-                                        <i class="bi bi-bell text-xs"></i>
-                                        {% endif %}
-                                        {{ notificacion.get_tipo_display }}
-                                    </span>
-                                    <span class="flex items-center gap-1">
-                                        <i class="bi bi-clock text-xs"></i>
-                                        {{ notificacion.creado_en|timesince }} atrás
-                                    </span>
+                                    <form method="post" class="inline delete-notif-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete_single">
+                                        <input type="hidden" name="notificacion_id" value="{{ notificacion.id }}">
+                                        <input type="hidden" name="redirect_tipo" value="{{ tipo_seleccionado|default:'' }}">
+                                        <input type="hidden" name="redirect_paciente" value="{{ paciente_seleccionado|default:'' }}">
+                                        <input type="hidden" name="redirect_solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
+                                        <input type="hidden" name="redirect_buscar" value="{{ buscar }}">
+                                        <button type="button" class="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 text-xs font-semibold transition-colors btn-delete-notif" title="Eliminar">
+                                            <i class="bi bi-trash"></i>Eliminar
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 flex-shrink-0">
-                                <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold
-                                    {% if notificacion.estado == 'atendida' %}bg-emerald-100 text-emerald-700
-                                    {% elif notificacion.estado == 'no_atendida' %}bg-red-100 text-red-700
-                                    {% elif notificacion.estado == 'pendiente' %}bg-amber-100 text-amber-700
-                                    {% elif notificacion.estado == 'fallida' %}bg-slate-100 text-slate-700
-                                    {% else %}bg-blue-100 text-blue-700{% endif %}">
-                                    {{ notificacion.get_estado_display }}
-                                </span>
-                                <form method="post" class="inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action" value="delete_single">
-                                    <input type="hidden" name="notificacion_id" value="{{ notificacion.id }}">
-                                    <button type="submit" class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-red-100 hover:bg-red-200 text-red-600 transition-colors" onclick="return confirm('¿Eliminar?');" title="Eliminar">
-                                        <i class="bi bi-trash text-xs"></i>
-                                    </button>
-                                </form>
+                            <div class="flex flex-wrap items-center gap-x-5 gap-y-1 mt-3 text-xs text-slate-500">
+                                {% if notificacion.paciente %}
+                                <span class="inline-flex items-center gap-1.5"><i class="bi bi-person text-slate-400"></i>{{ notificacion.paciente.get_display_nombre }}</span>
+                                {% endif %}
+                                {% if notificacion.medicamento %}
+                                <span class="inline-flex items-center gap-1.5"><i class="bi bi-capsule text-slate-400"></i>{{ notificacion.medicamento.nombre }}</span>
+                                {% endif %}
+                                <span class="inline-flex items-center gap-1.5"><i class="bi bi-clock text-slate-400"></i>{{ notificacion.creado_en|date:"d/m/Y" }} · {{ notificacion.creado_en|timesince }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </article>
             {% endfor %}
         </div>
         {% else %}
-        <div class="bg-white rounded-lg border border-slate-200 shadow-sm p-8 text-center">
-            <div class="max-w-md mx-auto">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-3">
-                    <i class="bi bi-bell-slash text-2xl text-slate-400"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-900 mb-1">No hay notificaciones</h3>
-                <p class="text-slate-600 text-xs mb-3">No se encontraron notificaciones con los filtros seleccionados</p>
-                <a href="{% url 'notifications' %}" class="inline-flex items-center gap-2 text-blue-800 hover:text-blue-900 text-sm font-semibold">
-                    <i class="bi bi-arrow-clockwise"></i>
-                    Limpiar filtros
-                </a>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 sm:p-20 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-slate-100 mb-6">
+                <i class="bi bi-bell-slash text-4xl text-slate-400"></i>
             </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-2">No hay notificaciones</h3>
+            <p class="text-slate-600 text-sm mb-8 max-w-sm mx-auto leading-relaxed">{% if buscar %}No se encontraron resultados para "{{ buscar }}"{% else %}Las notificaciones de pacientes, medicamentos y llamadas aparecerán aquí{% endif %}</p>
+            {% if buscar %}
+            <a href="{% url 'notifications' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 text-sm font-semibold shadow-md transition-colors">
+                <i class="bi bi-x-lg"></i>Limpiar búsqueda
+            </a>
+            {% endif %}
         </div>
         {% endif %}
     </main>
-    
-    {% include "core/footer.html" %}
+</div>
+
+<!-- Modal confirmar eliminar notificación -->
+<div id="modal-delete-notif" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" data-modal-backdrop></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden transform transition-all" role="dialog" aria-modal="true" aria-labelledby="modal-delete-title">
+            <div class="p-6 sm:p-8">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center">
+                        <i class="bi bi-trash text-2xl text-red-600"></i>
+                    </div>
+                    <div>
+                        <h3 id="modal-delete-title" class="text-lg font-bold text-slate-900">Eliminar notificación</h3>
+                        <p class="text-sm text-slate-600 mt-0.5">Esta acción no se puede deshacer</p>
+                    </div>
+                </div>
+                <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                    ¿Estás seguro de que deseas eliminar esta notificación?
+                </p>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" class="btn-modal-cancel px-5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn-modal-confirm px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-sm">
+                        Sí, eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
 (function() {
-    const selectAll = document.getElementById("select-all");
-    const checkboxes = document.querySelectorAll(".notificacion-checkbox");
-    const selectedCount = document.getElementById("selected-count");
-    const bulkActionForm = document.getElementById("bulk-action-form");
-    
-    function updateSelectedCount() {
-        const selected = document.querySelectorAll(".notificacion-checkbox:checked").length;
-        selectedCount.textContent = `${selected} seleccionada${selected !== 1 ? 's' : ''}`;
-        selectAll.indeterminate = selected > 0 && selected < checkboxes.length;
-        selectAll.checked = selected === checkboxes.length && checkboxes.length > 0;
+    const modal = document.getElementById("modal-delete-notif");
+    const backdrop = modal && modal.querySelector("[data-modal-backdrop]");
+    const btnCancel = modal && modal.querySelector(".btn-modal-cancel");
+    const btnConfirm = modal && modal.querySelector(".btn-modal-confirm");
+    let formToSubmit = null;
+
+    function openModal(form) {
+        formToSubmit = form;
+        if (modal) {
+            modal.classList.remove("hidden");
+            document.body.style.overflow = "hidden";
+        }
     }
-    
-    selectAll.addEventListener("change", function() {
-        checkboxes.forEach(cb => cb.checked = this.checked);
-        updateSelectedCount();
-    });
-    
-    checkboxes.forEach(cb => {
-        cb.addEventListener("change", updateSelectedCount);
-    });
-    
-    bulkActionForm.addEventListener("submit", function(e) {
-        const selected = document.querySelectorAll(".notificacion-checkbox:checked");
-        if (selected.length === 0) {
+
+    function closeModal() {
+        formToSubmit = null;
+        if (modal) {
+            modal.classList.add("hidden");
+            document.body.style.overflow = "";
+        }
+    }
+
+    function confirmDelete() {
+        if (formToSubmit) {
+            formToSubmit.submit();
+        }
+        closeModal();
+    }
+
+    document.addEventListener("click", function(e) {
+        const btn = e.target.closest(".btn-delete-notif");
+        if (btn) {
             e.preventDefault();
-            alert("Por favor selecciona al menos una notificación.");
-            return false;
+            const form = btn.closest(".delete-notif-form");
+            if (form) openModal(form);
+        }
+        if (e.target === backdrop || e.target.closest(".btn-modal-cancel")) {
+            closeModal();
+        }
+        if (e.target.closest(".btn-modal-confirm")) {
+            confirmDelete();
         }
     });
-    
-    updateSelectedCount();
+
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) {
+            closeModal();
+        }
+    });
 })();
 </script>
 {% endblock %}
