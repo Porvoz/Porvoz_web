@@ -4,9 +4,10 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
 
 from .models import Medicamento, HorarioMedicamento
+from .services import MedicamentoService
 from apps.pacientes.models import Paciente
 from apps.core.models import Perfil
-from apps.llamadas.models import Notificacion
+from apps.notificaciones.services import NotificacionService
 
 
 @login_required
@@ -38,51 +39,26 @@ def agregar_medicamento_view(request: HttpRequest, paciente_id: int) -> HttpResp
             messages.error(request, "Indica cuántos días de tratamiento (número mayor a 0).")
         else:
             duracion_dias = int(duracion_dias_str) if duracion_tipo == "dias" and duracion_dias_str else None
-            fecha_inicio = None
-            if fecha_inicio_str:
-                try:
-                    from datetime import datetime
-                    fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d").date()
-                except ValueError:
-                    pass
-            minutos_antes = 0
-            if minutos_antes_str.isdigit():
-                minutos_antes = min(120, max(0, int(minutos_antes_str)))
-            horario_legacy = None
-            if horarios_raw and frecuencia_tipo == Medicamento.FRECUENCIA_HORARIO:
-                try:
-                    from datetime import datetime
-                    horario_legacy = datetime.strptime(horarios_raw[0], "%H:%M").time()
-                except ValueError:
-                    pass
-            medicamento = Medicamento.objects.create(
+            minutos_antes = min(120, max(0, int(minutos_antes_str))) if minutos_antes_str.isdigit() else 0
+            
+            medicamento = MedicamentoService.crear_medicamento(
                 paciente=paciente,
                 nombre=nombre,
                 dosis=dosis,
                 frecuencia_tipo=frecuencia_tipo,
-                horario=horario_legacy,
+                horarios=horarios_raw,
                 cada_x_horas=int(cada_x_horas) if cada_x_horas else None,
                 hora_inicio=hora_inicio or None,
-                fecha_inicio_tratamiento=fecha_inicio,
+                fecha_inicio=fecha_inicio_str,
                 duracion_dias=duracion_dias,
                 instrucciones_llamada=instrucciones_llamada,
-                minutos_antes_llamada=minutos_antes,
+                minutos_antes=minutos_antes,
             )
-            for i, h in enumerate(horarios_raw):
-                if frecuencia_tipo == Medicamento.FRECUENCIA_HORARIO and h:
-                    try:
-                        from datetime import datetime
-                        hora_obj = datetime.strptime(h, "%H:%M").time()
-                        HorarioMedicamento.objects.create(medicamento=medicamento, hora=hora_obj, orden=i)
-                    except ValueError:
-                        pass
-            Notificacion.objects.create(
+            NotificacionService.crear_notificacion_sistema(
                 usuario=request.user,
+                titulo=f'Medicamento "{nombre}" agregado para {paciente.get_display_nombre()}',
                 paciente=paciente,
                 medicamento=medicamento,
-                tipo=Notificacion.TIPO_SISTEMA,
-                titulo=f'Medicamento "{nombre}" agregado para {paciente.get_display_nombre()}',
-                mensaje="",
             )
             messages.success(request, f"Medicamento '{nombre}' agregado correctamente.")
             return redirect("detalle_paciente", paciente_id=paciente.id)
@@ -124,50 +100,26 @@ def editar_medicamento_view(request: HttpRequest, paciente_id: int, medicamento_
             messages.error(request, "Indica cuántos días de tratamiento (número mayor a 0).")
         else:
             duracion_dias = int(duracion_dias_str) if duracion_tipo == "dias" and duracion_dias_str else None
-            fecha_inicio = None
-            if fecha_inicio_str:
-                try:
-                    from datetime import datetime
-                    fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d").date()
-                except ValueError:
-                    pass
-            minutos_antes = 0
-            if minutos_antes_str.isdigit():
-                minutos_antes = min(120, max(0, int(minutos_antes_str)))
-            horario_legacy = None
-            if horarios_raw and frecuencia_tipo == Medicamento.FRECUENCIA_HORARIO:
-                try:
-                    from datetime import datetime
-                    horario_legacy = datetime.strptime(horarios_raw[0], "%H:%M").time()
-                except ValueError:
-                    pass
-            medicamento.nombre = nombre
-            medicamento.dosis = dosis
-            medicamento.frecuencia_tipo = frecuencia_tipo
-            medicamento.horario = horario_legacy
-            medicamento.cada_x_horas = int(cada_x_horas) if cada_x_horas else None
-            medicamento.hora_inicio = hora_inicio or None
-            medicamento.fecha_inicio_tratamiento = fecha_inicio
-            medicamento.duracion_dias = duracion_dias
-            medicamento.instrucciones_llamada = instrucciones_llamada
-            medicamento.minutos_antes_llamada = minutos_antes
-            medicamento.save()
-            medicamento.horarios.all().delete()
-            for i, h in enumerate(horarios_raw):
-                if frecuencia_tipo == Medicamento.FRECUENCIA_HORARIO and h:
-                    try:
-                        from datetime import datetime
-                        hora_obj = datetime.strptime(h, "%H:%M").time()
-                        HorarioMedicamento.objects.create(medicamento=medicamento, hora=hora_obj, orden=i)
-                    except ValueError:
-                        pass
-            Notificacion.objects.create(
+            minutos_antes = min(120, max(0, int(minutos_antes_str))) if minutos_antes_str.isdigit() else 0
+            
+            MedicamentoService.actualizar_medicamento(
+                medicamento=medicamento,
+                nombre=nombre,
+                dosis=dosis,
+                frecuencia_tipo=frecuencia_tipo,
+                horarios=horarios_raw,
+                cada_x_horas=int(cada_x_horas) if cada_x_horas else None,
+                hora_inicio=hora_inicio or None,
+                fecha_inicio=fecha_inicio_str,
+                duracion_dias=duracion_dias,
+                instrucciones_llamada=instrucciones_llamada,
+                minutos_antes=minutos_antes,
+            )
+            NotificacionService.crear_notificacion_sistema(
                 usuario=request.user,
+                titulo=f'Medicamento "{nombre}" actualizado para {paciente.get_display_nombre()}',
                 paciente=paciente,
                 medicamento=medicamento,
-                tipo=Notificacion.TIPO_SISTEMA,
-                titulo=f'Medicamento "{nombre}" actualizado para {paciente.get_display_nombre()}',
-                mensaje="",
             )
             messages.success(request, f"Medicamento '{nombre}' actualizado correctamente.")
             return redirect("detalle_paciente", paciente_id=paciente.id)
@@ -187,16 +139,13 @@ def toggle_medicamento_view(request: HttpRequest, paciente_id: int, medicamento_
         return redirect("detalle_paciente", paciente_id=paciente_id)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
     medicamento = get_object_or_404(Medicamento, id=medicamento_id, paciente=paciente)
-    medicamento.activo = not medicamento.activo
-    medicamento.save()
+    medicamento.activo = MedicamentoService.toggle_medicamento(medicamento)
     estado = "activado" if medicamento.activo else "desactivado"
-    Notificacion.objects.create(
+    NotificacionService.crear_notificacion_sistema(
         usuario=request.user,
+        titulo=f'Recordatorio "{medicamento.nombre}" {estado} para {paciente.get_display_nombre()}',
         paciente=paciente,
         medicamento=medicamento,
-        tipo=Notificacion.TIPO_SISTEMA,
-        titulo=f'Recordatorio "{medicamento.nombre}" {estado} para {paciente.get_display_nombre()}',
-        mensaje="",
     )
     messages.success(request, f"Recordatorio '{medicamento.nombre}' {estado}.")
     return redirect("detalle_paciente", paciente_id=paciente_id)
@@ -211,12 +160,10 @@ def eliminar_medicamento_view(request: HttpRequest, paciente_id: int, medicament
     if request.method == "POST":
         nombre_med = medicamento.nombre
         medicamento.delete()
-        Notificacion.objects.create(
+        NotificacionService.crear_notificacion_sistema(
             usuario=request.user,
-            paciente=paciente,
-            tipo=Notificacion.TIPO_SISTEMA,
             titulo=f'Medicamento "{nombre_med}" eliminado para {paciente.get_display_nombre()}',
-            mensaje="",
+            paciente=paciente,
         )
         messages.success(request, f"Medicamento '{nombre_med}' eliminado correctamente.")
         return redirect("detalle_paciente", paciente_id=paciente_id)

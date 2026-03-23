@@ -28,12 +28,18 @@ INSTALLED_APPS = [
     # Third-party
     "rest_framework",
     "corsheaders",
-    # Project apps (microapps)
+    # Project apps - Core
     "apps.core",
-    "apps.cuidadores",
+    "apps.shared",
+    # Project apps - Presentation
+    "apps.autenticacion",
+    "apps.usuarios",
+    "apps.dashboard",
+    "apps.legal",
+    # Project apps - Domain
     "apps.pacientes",
     "apps.medicamentos",
-    "apps.recordatorios",
+    "apps.notificaciones",
     "apps.llamadas",
 ]
 
@@ -53,7 +59,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

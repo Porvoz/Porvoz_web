@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100">
+    {% if user.is_authenticated %}{% include "sidebar.html" %}{% endif %}
+
+    <main class="main-content-responsive flex-1 {% if user.is_authenticated %}lg:ml-64{% endif %} px-4 py-5 sm:px-6 sm:py-6 lg:px-10 pb-12">
+        {% if user.is_authenticated %}
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle><i class="bi bi-list text-xl"></i></button>
+        {% endif %}
+
+        <div class="max-w-2xl mx-auto {% if user.is_authenticated %}mt-12 lg:mt-0{% endif %}">
+            <header class="mb-8 text-center sm:text-left">
+                <h1 class="text-xl font-black text-slate-900">Información legal</h1>
+                <p class="text-sm text-slate-600 mt-1">Términos, privacidad y contacto de Porvoz.</p>
+                {% if not user.is_authenticated %}
+                <a href="{% url 'login' %}" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 text-sm font-semibold mt-4 transition-colors">
+                    <i class="bi bi-box-arrow-in-right"></i>Iniciar sesión
+                </a>
+                {% endif %}
+            </header>
+
+            <nav class="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Enlaces legales">
+                <a href="{% url 'terms' %}" class="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition-all group">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-slate-900 text-sm group-hover:text-slate-800">Términos y Condiciones</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Uso del servicio y condiciones generales</p>
+                    </div>
+                </a>
+                <a href="{% url 'privacy' %}" class="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition-all group">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-slate-900 text-sm group-hover:text-slate-800">Política de Privacidad</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Datos personales y tratamiento</p>
+                    </div>
+                </a>
+                <a href="{% url 'contact' %}" class="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition-all group" id="contacto">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-envelope"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-slate-900 text-sm group-hover:text-slate-800">Contacto</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Correo, teléfono y horarios</p>
+                    </div>
+                </a>
+            </nav>
+        </div>
+    </main>
+    {% include "footer.html" %}
+</div>
+{% endblock %}
