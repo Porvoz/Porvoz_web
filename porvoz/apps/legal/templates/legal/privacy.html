@@ -2,20 +2,24 @@
 {% load static %}
 
 {% block body %}
-<div class="min-h-screen flex flex-col bg-slate-100">
+<div class="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden bg-slate-50">
+
     {% if user.is_authenticated %}
     {% include "sidebar.html" %}
-    <main class="main-content-responsive flex-1 lg:ml-64 px-4 py-5 sm:px-6 sm:py-6 lg:px-10 pb-12 flex flex-col">
+    <main class="main-content-responsive flex-1 min-w-0 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-12 flex flex-col">
         <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle><i class="bi bi-list text-xl"></i></button>
-        <div class="max-w-3xl mx-auto w-full mt-12 lg:mt-0">
+        <div class="w-full mt-12 lg:mt-0">
     {% else %}
-    <div class="grid lg:grid-cols-[16rem_1fr] flex-1 min-w-0 w-full">
-        {% include "guest_left_panel.html" %}
-        <section class="flex flex-col px-4 py-5 sm:px-6 sm:py-6 lg:px-10 pb-12 overflow-y-auto min-h-0">
-        <div class="flex justify-center lg:hidden mb-6">
-            <a href="{% url 'login' %}"><img src="{% static 'images/LogoPorvoz.png' %}" alt="Porvoz" class="h-16 w-auto"></a>
+    <header class="lg:hidden border-b border-slate-200 bg-white px-4 py-3 flex items-center justify-between flex-shrink-0 sticky top-0 z-20">
+        <a href="{% url 'login' %}"><img src="{% static 'images/LogoPorvoz.png' %}" alt="Porvoz" class="h-9 w-auto object-contain"></a>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'login' %}" class="text-xs font-semibold text-slate-700 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors">Iniciar sesión</a>
+            <a href="{% url 'register' %}" class="text-xs font-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">Crear cuenta</a>
         </div>
-        <div class="max-w-3xl mx-auto w-full">
+    </header>
+    {% include "guest_left_panel.html" %}
+    <main class="main-content-responsive flex-1 min-w-0 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-12 flex flex-col">
+        <div class="w-full">
     {% endif %}
             <nav class="mb-6">
                 <a href="javascript:void(0)" onclick="history.back()" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="bi bi-arrow-left"></i>Volver</a>
@@ -131,12 +135,11 @@
                 <a href="{% url 'contact' %}" class="text-slate-600 hover:text-slate-900 font-medium">Contacto</a>
             </nav>
         </div>
-    {% if user.is_authenticated %}
     </main>
-    {% else %}
-        </section>
-    </div>
-    {% endif %}
+    {% if user.is_authenticated %}
     {% include "footer.html" %}
+    {% else %}
+    {% include "footer.html" with guest_panel=True %}
+    {% endif %}
 </div>
 {% endblock %}

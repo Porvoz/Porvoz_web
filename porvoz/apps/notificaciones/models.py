@@ -17,10 +17,12 @@ class Notificacion(models.Model):
     TIPO_RECORDATORIO = "recordatorio"
     TIPO_ALERTA = "alerta"
     TIPO_SISTEMA = "sistema"
+    TIPO_LLAMADA = "llamada"
     TIPO_CHOICES = [
         (TIPO_RECORDATORIO, "Recordatorio"),
         (TIPO_ALERTA, "Alerta"),
         (TIPO_SISTEMA, "Sistema"),
+        (TIPO_LLAMADA, "Llamada"),
     ]
 
     usuario = models.ForeignKey(

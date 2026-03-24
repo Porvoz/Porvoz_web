@@ -102,7 +102,7 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
             return redirect(f"{base}?{qs}" if qs else base)
 
     # Obtener filtros y aplicarlos via service (desacoplado de HttpRequest)
-    datos_filtros = dict(request.POST) if request.method == "POST" else dict(request.GET)
+    datos_filtros = request.POST.dict() if request.method == "POST" else request.GET.dict()
     filtros = NotificacionService.obtener_filtros_desde_dict(datos_filtros)
     notificaciones = Notificacion.objects.filter(usuario=request.user)
     notificaciones = NotificacionService.aplicar_filtros(notificaciones, filtros)

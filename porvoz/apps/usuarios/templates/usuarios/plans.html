@@ -5,9 +5,11 @@
 <div class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100 w-full max-w-full overflow-x-hidden">
     {% if user.is_authenticated %}
         {% include "sidebar.html" %}
+    {% else %}
+        {% include "guest_left_panel.html" %}
     {% endif %}
 
-    <main class="{% if user.is_authenticated %}main-content-responsive {% endif %}flex-1 min-w-0 {% if user.is_authenticated %}lg:ml-64{% endif %} flex flex-col w-full">
+    <main class="main-content-responsive flex-1 min-w-0 flex flex-col">
         {% if user.is_authenticated %}
         <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
             <i class="bi bi-list text-xl"></i>

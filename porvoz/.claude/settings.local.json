@@ -8,7 +8,10 @@
       "Bash(DJANGO_SETTINGS_MODULE=config.settings.development python -c \"import django; django.setup\\(\\); from apps.pacientes.views import *; from apps.medicamentos.views import *; from apps.notificaciones.views import *; from apps.core.views import *; print\\(''OK - todos los módulos importan correctamente''\\)\")",
       "Bash(DJANGO_SETTINGS_MODULE=config.settings.development python -c \"import django; django.setup\\(\\); from apps.core.views import *; from apps.pacientes.views import *; from apps.medicamentos.views import *; from apps.notificaciones.views import *; from apps.core.services import *; from apps.notificaciones.services import *; print\\(''OK''\\)\")",
       "Bash(python manage.py makemigrations --check --dry-run)",
-      "Bash(python manage.py makemigrations)"
+      "Bash(python manage.py makemigrations)",
+      "Bash(python manage.py makemigrations notificaciones)",
+      "Bash(python manage.py shell -c \"from apps.notificaciones.models import Notificacion; notifs = Notificacion.objects.all\\(\\); print\\(''Total:'', notifs.count\\(\\)\\); print\\(''Tipos:''\\); [print\\(f''  {n.tipo}''\\) for n in notifs[:10]]\")",
+      "Bash(python manage.py:*)"
     ]
   }
 }

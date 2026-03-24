@@ -1,20 +1,23 @@
 {% load static %}
-<!-- Panel mínimo tipo sidebar: solo rellena el espacio a la izquierda (solo desktop) -->
-<aside class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white border-r border-slate-200">
-    <div class="p-4 border-b border-slate-200">
-        <a href="{% url 'login' %}">
-            <img src="{% static 'images/LogoPorvoz.png' %}" alt="Porvoz" class="h-10 w-auto object-contain">
+<aside class="sidebar hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 fixed left-0 top-0 h-screen z-20 shadow-sm">
+    <button type="button" class="sidebar-toggle hidden lg:flex absolute top-5 -right-[1.25rem] z-30 items-center justify-center w-10 h-10 rounded-full border-2 border-slate-200 bg-white shadow-md hover:bg-slate-50 hover:border-slate-300 text-slate-600 transition-all" data-sidebar-toggle aria-label="Colapsar o expandir menú">
+        <i class="bi bi-chevron-left text-sm"></i>
+    </button>
+    <div class="sidebar-header flex items-center justify-between flex-shrink-0 gap-3 px-3 py-5 lg:px-4 border-b border-slate-200">
+        <a href="{% url 'login' %}" class="sidebar-logo flex items-center justify-center min-w-0 flex-1 min-h-[2.5rem] -ml-2">
+            <img src="{% static 'images/LogoPorvoz.png' %}" alt="Porvoz" class="sidebar-logo-expanded h-10 w-auto max-w-full object-contain">
+            <img src="{% static 'images/LogoPorvoz_sidebar.png' %}" alt="Porvoz" class="sidebar-logo-collapsed hidden h-10 w-10 object-contain">
         </a>
     </div>
-    <nav class="p-4 flex flex-col gap-1 text-sm">
-        <a href="{% url 'login' %}" class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold flex items-center gap-2">
-            <i class="bi bi-box-arrow-in-right"></i>Iniciar sesión
+    <nav class="px-3 py-4 flex-1 flex flex-col gap-0.5 text-sm overflow-y-auto min-h-0">
+        <a href="{% url 'login' %}" class="nav-link px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold flex items-center gap-2">
+            <i class="bi bi-box-arrow-in-right mr-2"></i><span class="label-text">Iniciar sesión</span>
         </a>
-        <a href="{% url 'register' %}" class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold flex items-center gap-2">
-            <i class="bi bi-person-plus"></i>Crear cuenta
+        <a href="{% url 'register' %}" class="nav-link px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold flex items-center gap-2">
+            <i class="bi bi-person-plus mr-2"></i><span class="label-text">Crear cuenta</span>
         </a>
-        <a href="{% url 'plans' %}" class="px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold flex items-center gap-2">
-            <i class="bi bi-star"></i>Ver planes
+        <a href="{% url 'plans' %}" class="nav-link px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold flex items-center gap-2">
+            <i class="bi bi-star mr-2"></i><span class="label-text">Ver planes</span>
         </a>
     </nav>
 </aside>

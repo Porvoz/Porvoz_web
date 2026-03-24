@@ -1,5 +1,5 @@
 {% load static %}
-<footer class="border-t border-slate-200 bg-white py-3 px-4 sm:px-6 lg:px-10 min-w-0 {% if user.is_authenticated %}main-content-responsive{% endif %}">
+<footer class="border-t border-slate-200 bg-white py-3 px-4 sm:px-6 lg:px-10 min-w-0 {% if user.is_authenticated %}main-content-responsive{% elif guest_panel %}main-content-responsive{% endif %}">
     <div class="max-w-6xl ml-0 mr-auto">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
             <div class="flex items-center gap-2 flex-shrink-0">
