@@ -1,0 +1,8 @@
+Django>=4.2
+psycopg2-binary
+google-generativeai
+twilio
+APScheduler>=3.10
+dj-database-url
+gunicorn
+python-dotenv

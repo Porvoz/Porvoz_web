@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %} — Panel{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8" x-data="dashboard()" x-init="init()">
+  <div class="flex flex-col gap-2">
+    <h1 class="text-3xl font-bold tracking-tight text-[hsl(213,31%,91%)]">Bienvenido</h1>
+    <p class="text-[hsl(215,20%,55%)] text-lg">Aquí está el resumen de tus recordatorios.</p>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="grid gap-6 md:grid-cols-3">
+    <div class="card p-6">
+      <div class="flex items-center justify-between pb-2">
+        <span class="text-sm font-semibold text-[hsl(215,20%,55%)] uppercase tracking-wider">Total Contactos</span>
+        <div class="h-12 w-12 rounded-xl bg-[hsl(210,100%,60%)]/10 flex items-center justify-center">
+          <svg class="h-6 w-6 text-[hsl(210,100%,60%)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+        </div>
+      </div>
+      <div class="text-4xl font-bold" x-text="contacts.length"></div>
+      <p class="text-xs text-[hsl(215,20%,55%)] mt-2">Registrados en el sistema</p>
+    </div>
+
+    <div class="card p-6">
+      <div class="flex items-center justify-between pb-2">
+        <span class="text-sm font-semibold text-[hsl(215,20%,55%)] uppercase tracking-wider">Recordatorios Pendientes</span>
+        <div class="h-12 w-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+          <svg class="h-6 w-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        </div>
+      </div>
+      <div class="text-4xl font-bold text-amber-400" x-text="pendingCount"></div>
+      <p class="text-xs text-[hsl(215,20%,55%)] mt-2">En espera de llamada</p>
+    </div>
+
+    <div class="card p-6">
+      <div class="flex items-center justify-between pb-2">
+        <span class="text-sm font-semibold text-[hsl(215,20%,55%)] uppercase tracking-wider">Llamadas Completadas</span>
+        <div class="h-12 w-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+          <svg class="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        </div>
+      </div>
+      <div class="text-4xl font-bold text-green-400" x-text="completedCount"></div>
+      <p class="text-xs text-[hsl(215,20%,55%)] mt-2">Confirmadas exitosamente</p>
+    </div>
+  </div>
+
+  <!-- Chart + Recent calls -->
+  <div class="grid gap-6 md:grid-cols-2">
+    <div class="card p-6">
+      <h2 class="font-semibold text-[hsl(213,31%,91%)] mb-4">Estado de Llamadas</h2>
+      <div class="h-48">
+        <canvas id="callsChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-[hsl(213,31%,91%)]">Llamadas Recientes</h2>
+        <a href="/calls/" class="text-xs text-[hsl(210,100%,60%)] hover:underline">Ver todas →</a>
+      </div>
+      <div class="space-y-4">
+        <template x-if="recentCalls.length === 0">
+          <div class="text-center py-8 text-[hsl(215,20%,45%)]">
+            <svg class="h-10 w-10 mx-auto opacity-20 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+            <p class="text-sm">Sin llamadas recientes</p>
+          </div>
+        </template>
+        <template x-for="call in recentCalls" :key="call.id">
+          <div class="flex items-center gap-4">
+            <div :class="{
+              'bg-green-500/15 text-green-400': call.status === 'completed',
+              'bg-red-500/15 text-red-400': call.status === 'failed',
+              'bg-blue-500/15 text-blue-400': call.status !== 'completed' && call.status !== 'failed'
+            }" class="h-10 w-10 rounded-full flex items-center justify-center shrink-0">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-bold truncate" x-text="call.contactName || 'Contacto desconocido'"></p>
+              <p class="text-xs text-[hsl(215,20%,55%)] mt-0.5">
+                <span class="capitalize font-medium" x-text="call.status"></span>
+                &bull;
+                <span x-text="fmtDate(call.createdAt)"></span>
+              </p>
+            </div>
+            <div x-show="call.duration" class="text-xs font-semibold bg-[hsl(222,47%,15%)] px-2.5 py-1 rounded-full" x-text="`${call.duration}s`"></div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <template x-if="loading">
+    <div class="fixed inset-0 flex items-center justify-center z-50 bg-black/30">
+      <div class="flex flex-col items-center gap-4">
+        <div class="h-10 w-10 animate-spin rounded-full border-4 border-[hsl(210,100%,60%)] border-t-transparent"></div>
+        <p class="text-[hsl(215,20%,55%)] animate-pulse">Cargando panel...</p>
+      </div>
+    </div>
+  </template>
+</div>
+
+<script>
+function dashboard() {
+  return {
+    contacts: [],
+    reminders: [],
+    calls: [],
+    loading: true,
+
+    get pendingCount() { return this.reminders.filter(r => r.status === 'pending').length; },
+    get completedCount() { return this.calls.filter(c => c.status === 'completed').length; },
+    get recentCalls() {
+      return [...this.calls].sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt)).slice(0, 5);
+    },
+
+    async init() {
+      const [contacts, reminders, calls] = await Promise.all([
+        fetch('/api/contacts').then(r => r.json()),
+        fetch('/api/reminders').then(r => r.json()),
+        fetch('/api/calls').then(r => r.json()),
+      ]);
+      this.contacts = contacts;
+      this.reminders = reminders;
+      this.calls = calls;
+      this.loading = false;
+      this.$nextTick(() => this.renderChart());
+    },
+
+    renderChart() {
+      const ctx = document.getElementById('callsChart');
+      if (!ctx) return;
+      const data = [
+        { label: 'Iniciadas', count: this.calls.filter(c=>c.status==='initiated').length, color: '#94a3b8' },
+        { label: 'En Progreso', count: this.calls.filter(c=>c.status==='in-progress').length, color: '#38bdf8' },
+        { label: 'Completadas', count: this.calls.filter(c=>c.status==='completed').length, color: '#10b981' },
+        { label: 'Fallidas', count: this.calls.filter(c=>c.status==='failed').length, color: '#ef4444' },
+      ];
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(d => d.label),
+          datasets: [{
+            data: data.map(d => d.count),
+            backgroundColor: data.map(d => d.color),
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { ticks: { color: '#64748b', stepSize: 1 }, grid: { color: '#1e293b' } },
+            x: { ticks: { color: '#64748b' }, grid: { display: false } }
+          }
+        }
+      });
+    },
+
+    fmtDate,
+  };
+}
+</script>
+{% endblock %}
