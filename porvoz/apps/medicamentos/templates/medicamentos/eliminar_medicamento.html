@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-100">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
+        </button>
+
+        <div class="max-w-2xl mx-auto mt-12 lg:mt-0">
+            <header class="mb-6">
+                <h1 class="text-2xl font-black tracking-tight text-slate-900">Eliminar recordatorio</h1>
+                <p class="mt-1 text-sm text-slate-600">¿Estás seguro de que deseas eliminar este recordatorio de medicamento?</p>
+            </header>
+
+            <div class="bg-white rounded-2xl border border-red-200 shadow-sm p-6 lg:p-8">
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-100 mb-4">
+                        <i class="bi bi-capsule text-2xl text-red-600"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900">{{ medicamento.nombre }}{% if medicamento.dosis %} {{ medicamento.dosis }}{% endif %}</h2>
+                    <p class="text-sm text-slate-600 mt-1">Paciente: {{ paciente.get_display_nombre }}</p>
+                    <p class="text-slate-600 mt-3 text-sm">Esta acción no se puede deshacer.</p>
+                </div>
+
+                <form method="post" class="flex flex-col sm:flex-row items-center justify-end gap-3">
+                    {% csrf_token %}
+                    <a href="{% url 'detalle_paciente' paciente.id %}" class="order-2 sm:order-1 px-5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="order-1 sm:order-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors">
+                        <i class="bi bi-trash"></i>
+                        Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

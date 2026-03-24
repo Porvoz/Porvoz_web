@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100">
+    {% if user.is_authenticated %}
+    {% include "sidebar.html" %}
+    <main class="main-content-responsive flex-1 lg:ml-64 px-4 py-5 sm:px-6 sm:py-6 lg:px-10 pb-12 flex flex-col">
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle><i class="bi bi-list text-xl"></i></button>
+        <div class="max-w-3xl mx-auto w-full mt-12 lg:mt-0">
+    {% else %}
+    <div class="grid lg:grid-cols-[16rem_1fr] flex-1 min-w-0 w-full">
+        {% include "guest_left_panel.html" %}
+        <section class="flex flex-col px-4 py-5 sm:px-6 sm:py-6 lg:px-10 pb-12 overflow-y-auto min-h-0">
+        <div class="flex justify-center lg:hidden mb-6">
+            <a href="{% url 'login' %}"><img src="{% static 'images/LogoPorvoz.png' %}" alt="Porvoz" class="h-16 w-auto"></a>
+        </div>
+        <div class="max-w-3xl mx-auto w-full">
+    {% endif %}
+            <nav class="mb-6">
+                <a href="javascript:void(0)" onclick="history.back()" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="bi bi-arrow-left"></i>Volver</a>
+            </nav>
+
+            <header class="mb-8">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200/80 text-slate-600 text-xs font-semibold mb-4">
+                    <i class="bi bi-shield-lock"></i> Protección de datos
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">Política de Privacidad</h1>
+                <p class="text-sm text-slate-500 mt-2 flex items-center gap-2">
+                    <i class="bi bi-calendar3"></i>Última actualización: {% now "d/m/Y" %}
+                    <span class="text-slate-300">·</span>
+                    <i class="bi bi-geo-alt"></i>Vigente en Colombia
+                </p>
+            </header>
+
+            <div class="rounded-xl bg-blue-50 border border-blue-200/80 p-4 mb-8">
+                <p class="text-sm text-blue-900 mb-2 font-semibold"><i class="bi bi-journal-text mr-1"></i>Marco normativo colombiano</p>
+                <p class="text-xs text-blue-800/90 leading-relaxed">Esta Política se rige por la <strong>Ley Estatutaria 1581 de 2012</strong> (protección de datos personales), el <strong>Decreto 1377 de 2013</strong> (reglamentación), los <strong>artículos 15 y 20 de la Constitución Política de Colombia</strong> (derecho a la intimidad y habeas data) y la <strong>Circular Única de la SIC</strong> en materia de tratamiento de datos. Porvoz actúa como <strong>Responsable del Tratamiento</strong>.</p>
+            </div>
+
+            <article class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 sm:p-8 space-y-8 text-base leading-relaxed">
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">1</span>
+                            Responsable del tratamiento
+                        </h2>
+                        <p class="text-slate-700">El responsable del tratamiento es la entidad que opera la plataforma Porvoz. Para ejercer sus derechos como titular de datos personales, puede dirigirse a la página de <a href="{% url 'contact' %}" class="text-slate-800 hover:text-slate-900 font-semibold underline underline-offset-2">Contacto</a>.</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">2</span>
+                            Datos personales que recopilamos
+                        </h2>
+                        <p class="text-slate-700 mb-3">De conformidad con el artículo 3 de la Ley 1581 de 2012, recopilamos, entre otros:</p>
+                        <ul class="text-slate-700 space-y-2 ml-4 list-disc pl-2">
+                            <li><strong>Cuenta:</strong> nombre, correo electrónico, contraseña (cifrada), teléfono, tipo y número de documento</li>
+                            <li><strong>Perfil:</strong> fecha de nacimiento, ciudad, contacto de emergencia</li>
+                            <li><strong>Pacientes y tratamiento:</strong> nombre del paciente, teléfono, medicamentos, dosis, horarios, condiciones que usted registre</li>
+                            <li><strong>Uso:</strong> registros de llamadas, historial de recordatorios, estado de atención</li>
+                        </ul>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">3</span>
+                            Finalidades del tratamiento
+                        </h2>
+                        <ul class="text-slate-700 space-y-2 ml-4 list-disc pl-2">
+                            <li>Prestar el Servicio de recordatorios y realizar las llamadas automatizadas</li>
+                            <li>Gestionar cuenta, autenticación y soporte</li>
+                            <li>Comunicarnos sobre el Servicio, actualizaciones o cambios legales</li>
+                            <li>Seguridad, prevención de usos indebidos y cumplimiento legal</li>
+                        </ul>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">4</span>
+                            Principios y medidas de seguridad
+                        </h2>
+                        <p class="text-slate-700">Tratamos sus datos con sujeción a los principios de legalidad, finalidad, libertad, veracidad, transparencia, acceso y circulación restringida, seguridad y confidencialidad establecidos en el artículo 4 de la Ley 1581 de 2012. Implementamos medidas técnicas y organizativas (cifrado de contraseñas, controles de acceso) para proteger la información.</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">5</span>
+                            Cesión y transmisión
+                        </h2>
+                        <p class="text-slate-700"><strong>No vendemos ni alquilamos sus datos.</strong> Solo compartimos información con encargados del tratamiento necesarios para el Servicio (bajo cláusulas de confidencialidad), cumplimiento legal o con su consentimiento previo, conforme al artículo 24 de la Ley 1581 de 2012.</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">6</span>
+                            Conservación y supresión
+                        </h2>
+                        <p class="text-slate-700">Conservamos los datos el tiempo necesario para las finalidades y obligaciones legales. Al solicitar eliminación de cuenta, suprimimos o anonimizamos sus datos salvo que la ley exija su conservación, de conformidad con el artículo 9 de la Ley 1581 de 2012.</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">7</span>
+                            Derechos del titular
+                        </h2>
+                        <p class="text-slate-700 mb-3">Conforme al artículo 8 de la Ley 1581 de 2012, usted tiene derecho a conocer, actualizar, rectificar, solicitar supresión o revocar la autorización. Para ejercerlos, diríjase a <a href="{% url 'contact' %}" class="text-slate-800 hover:text-slate-900 font-semibold underline underline-offset-2">Contacto</a>.</p>
+                        <p class="text-slate-600 text-sm">Ante la Superintendencia de Industria y Comercio (SIC) puede presentar quejas por el tratamiento de sus datos personales.</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">8</span>
+                            Cookies
+                        </h2>
+                        <p class="text-slate-700">Utilizamos cookies para el funcionamiento del sitio y la sesión. Puede gestionarlas desde su navegador; ello puede afectar algunas funcionalidades.</p>
+                    </section>
+
+                    <section class="pb-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">9</span>
+                            Modificaciones
+                        </h2>
+                        <p class="text-slate-700">Nos reservamos el derecho de actualizar esta política. Los cambios se publicarán en esta página. El uso continuado implica la aceptación en la medida permitida por la ley.</p>
+                    </section>
+                </div>
+            </article>
+
+            <nav class="mt-8 pt-6 border-t border-slate-200 flex flex-wrap justify-center gap-4 text-sm">
+                <a href="{% url 'terms' %}" class="text-slate-600 hover:text-slate-900 font-medium">Términos y Condiciones</a>
+                <a href="{% url 'contact' %}" class="text-slate-600 hover:text-slate-900 font-medium">Contacto</a>
+            </nav>
+        </div>
+    {% if user.is_authenticated %}
+    </main>
+    {% else %}
+        </section>
+    </div>
+    {% endif %}
+    {% include "footer.html" %}
+</div>
+{% endblock %}

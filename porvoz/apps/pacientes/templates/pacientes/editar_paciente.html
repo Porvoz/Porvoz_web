@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-100 w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 w-full lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700 transition-colors" data-mobile-menu-toggle aria-label="Abrir menú">
+            <i class="bi bi-list text-xl"></i>
+        </button>
+
+        <header class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-12 lg:mt-0">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-700 text-white shadow-lg shadow-slate-300/50">
+                    <i class="bi bi-pencil-square text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Editar paciente</h1>
+                    <p class="text-sm text-slate-600 mt-0.5">{{ paciente.get_display_nombre }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all shadow-sm">
+                    <i class="bi bi-arrow-left"></i>
+                    Volver
+                </a>
+                <a href="{% url 'eliminar_paciente' paciente.id %}" class="inline-flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 text-sm font-semibold transition-colors shadow-sm hover:shadow-md">
+                    <i class="bi bi-trash"></i>
+                    Eliminar
+                </a>
+            </div>
+        </header>
+
+        {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+                <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="content-max content-max-wide space-y-6 w-full">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-lg shadow-slate-200/50 overflow-hidden transition-shadow hover:shadow-xl hover:shadow-slate-200/40">
+                <form method="post" enctype="multipart/form-data" class="divide-y divide-slate-200">
+                    {% csrf_token %}
+
+                    <!-- Foto -->
+                    <div class="p-6 lg:p-8 bg-gradient-to-br from-slate-50 to-slate-100/80">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                            <div class="relative">
+                                <div id="foto-preview-placeholder" class="h-28 w-28 rounded-2xl bg-slate-200 border-2 border-slate-300 flex items-center justify-center {% if paciente.get_display_foto %}hidden{% endif %}">
+                                    <i class="bi bi-camera text-3xl text-slate-400"></i>
+                                </div>
+                                <img id="foto-preview" src="{% if paciente.get_display_foto %}{{ paciente.get_display_foto.url }}{% endif %}" alt="Foto" class="h-28 w-28 rounded-2xl object-cover border-2 border-slate-300 {% if not paciente.get_display_foto %}hidden{% endif %}">
+                                <div class="absolute -bottom-2 -right-2 bg-slate-600 text-white rounded-full p-2.5 shadow-lg">
+                                    <i class="bi bi-camera text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold text-slate-900 mb-1">Foto del paciente</h3>
+                                <p class="text-sm text-slate-600 mb-4">Sube una foto para identificar fácilmente al paciente (opcional)</p>
+                                {% if paciente.es_usuario_mismo %}
+                                <p class="text-sm text-slate-600">
+                                    <i class="bi bi-person-check text-slate-600"></i>
+                                    La foto se edita desde <a href="{% url 'edit_profile' %}" class="font-semibold text-slate-700 hover:underline">tu perfil</a>.
+                                </p>
+                                {% else %}
+                                <label class="inline-flex items-center gap-2 rounded-xl border-2 border-slate-600 bg-slate-50 text-slate-800 px-5 py-2.5 text-sm font-semibold hover:bg-slate-100 cursor-pointer transition-all">
+                                    <i class="bi bi-cloud-upload"></i>
+                                    <span>Cambiar foto</span>
+                                    <input id="foto-input" name="foto" type="file" accept="image/*" class="hidden">
+                                </label>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información básica -->
+                    <div class="p-6 lg:p-8">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-700">
+                                <i class="bi bi-person text-lg"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-slate-900">Información básica</h2>
+                        </div>
+
+                        {% if paciente.es_usuario_mismo %}
+                        <p class="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mb-5">
+                            <i class="bi bi-person-check text-slate-600"></i>
+                            Eres tú. Nombre y teléfono se editan desde <a href="{% url 'edit_profile' %}" class="font-semibold text-slate-700 hover:underline">tu perfil</a>. Aquí puedes editar sexo, fecha de nacimiento, descripción y notas.
+                        </p>
+                        {% endif %}
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            {% if not paciente.es_usuario_mismo %}
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Nombre completo <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <i class="bi bi-person absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input name="nombre" type="text" required value="{{ paciente.nombre }}"
+                                        placeholder="Ej: María García López"
+                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Teléfono <span class="text-red-500">*</span>
+                                </label>
+                                <div class="grid grid-cols-[120px_1fr] gap-2">
+                                    <select name="phone_country" class="rounded-xl border border-slate-300 text-sm px-3 py-3 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white font-medium">
+                                        <option value="+57" {% if telefono_pais == "+57" %}selected{% endif %}>+57 CO</option>
+                                        <option value="+1" {% if telefono_pais == "+1" %}selected{% endif %}>+1 US</option>
+                                        <option value="+34" {% if telefono_pais == "+34" %}selected{% endif %}>+34 ES</option>
+                                        <option value="+52" {% if telefono_pais == "+52" %}selected{% endif %}>+52 MX</option>
+                                    </select>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span class="text-slate-500 font-medium">+</span>
+                                        </div>
+                                        <input name="phone_number" type="tel" required value="{{ telefono_numero }}"
+                                            placeholder="300 123 4567" pattern="[0-9\s]+"
+                                            class="block w-full pl-6 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all">
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Fecha de nacimiento</label>
+                                <div class="relative">
+                                    <i class="bi bi-calendar3 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input name="fecha_nacimiento" type="date"
+                                        {% if paciente.get_display_fecha_nacimiento %}value="{{ paciente.get_display_fecha_nacimiento|date:'Y-m-d' }}"{% endif %}
+                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Sexo</label>
+                                <select name="sexo" class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all">
+                                    <option value="">Seleccionar</option>
+                                    {% for valor, etiqueta in sexo_choices %}
+                                    <option value="{{ valor }}" {% if paciente.sexo == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            {% if not paciente.es_usuario_mismo %}
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Parentesco / Relación</label>
+                                <select name="parentesco" class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all">
+                                    <option value="">Seleccionar (opcional)</option>
+                                    <option value="Padre" {% if paciente.parentesco == "Padre" %}selected{% endif %}>Padre</option>
+                                    <option value="Madre" {% if paciente.parentesco == "Madre" %}selected{% endif %}>Madre</option>
+                                    <option value="Hijo/a" {% if paciente.parentesco == "Hijo/a" %}selected{% endif %}>Hijo/a</option>
+                                    <option value="Cónyuge" {% if paciente.parentesco == "Cónyuge" %}selected{% endif %}>Cónyuge</option>
+                                    <option value="Hermano/a" {% if paciente.parentesco == "Hermano/a" %}selected{% endif %}>Hermano/a</option>
+                                    <option value="Abuelo/a" {% if paciente.parentesco == "Abuelo/a" %}selected{% endif %}>Abuelo/a</option>
+                                    <option value="Otro familiar" {% if paciente.parentesco == "Otro familiar" %}selected{% endif %}>Otro familiar</option>
+                                    <option value="Amigo/a" {% if paciente.parentesco == "Amigo/a" %}selected{% endif %}>Amigo/a</option>
+                                </select>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Información adicional -->
+                    <div class="p-6 lg:p-8 bg-gradient-to-br from-slate-50 to-slate-100/80">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-700">
+                                <i class="bi bi-file-text text-lg"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-slate-900">Información adicional</h2>
+                        </div>
+
+                        <div class="space-y-5">
+                            <!-- Condiciones médicas -->
+                            <div>
+                                <div class="flex items-center justify-between gap-4 mb-3">
+                                    <label class="block text-sm font-semibold text-slate-700">Condiciones médicas</label>
+                                    <button type="button" id="btn-agregar-condicion" class="inline-flex items-center gap-2 rounded-xl border-2 border-dashed border-slate-400 text-slate-600 hover:border-slate-600 hover:text-slate-800 px-3 py-2 text-xs font-semibold transition-colors">
+                                        <i class="bi bi-plus-lg"></i>Agregar otra condición
+                                    </button>
+                                </div>
+                                <div id="condiciones-container" class="space-y-3">
+                                    {% for e in paciente.enfermedades.all %}
+                                    <div class="condicion-row flex gap-2 items-center">
+                                        <div class="relative flex-1">
+                                            <i class="bi bi-heart-pulse absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                            <input name="condicion" type="text" value="{{ e.nombre }}" placeholder="Ej: Diabetes, Hipertensión..."
+                                                class="block w-full pl-11 pr-10 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 transition-all">
+                                        </div>
+                                        <button type="button" class="condicion-remove p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors {% if forloop.first and forloop.last %}hidden{% endif %}" title="Quitar condición">
+                                            <i class="bi bi-x-lg text-lg"></i>
+                                        </button>
+                                    </div>
+                                    {% empty %}
+                                    <div class="condicion-row flex gap-2 items-center">
+                                        <div class="relative flex-1">
+                                            <i class="bi bi-heart-pulse absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                            <input name="condicion" type="text" placeholder="Ej: Diabetes, Hipertensión, Asma..."
+                                                class="block w-full pl-11 pr-10 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 transition-all">
+                                        </div>
+                                        <button type="button" class="condicion-remove hidden p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Quitar condición">
+                                            <i class="bi bi-x-lg text-lg"></i>
+                                        </button>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <p class="text-xs text-slate-500 mt-2">Condiciones o enfermedades del paciente (opcional)</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Zona horaria</label>
+                                <select name="timezone" class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all">
+                                    <option value="America/Bogota" {% if paciente.timezone == "America/Bogota" %}selected{% endif %}>Colombia (America/Bogota)</option>
+                                    <option value="America/Mexico_City" {% if paciente.timezone == "America/Mexico_City" %}selected{% endif %}>México (America/Mexico_City)</option>
+                                    <option value="America/New_York" {% if paciente.timezone == "America/New_York" %}selected{% endif %}>EE.UU. Este (America/New_York)</option>
+                                    <option value="America/Los_Angeles" {% if paciente.timezone == "America/Los_Angeles" %}selected{% endif %}>EE.UU. Oeste (America/Los_Angeles)</option>
+                                    <option value="Europe/Madrid" {% if paciente.timezone == "Europe/Madrid" %}selected{% endif %}>España (Europe/Madrid)</option>
+                                    <option value="America/Buenos_Aires" {% if paciente.timezone == "America/Buenos_Aires" %}selected{% endif %}>Argentina (America/Buenos_Aires)</option>
+                                    <option value="America/Santiago" {% if paciente.timezone == "America/Santiago" %}selected{% endif %}>Chile (America/Santiago)</option>
+                                </select>
+                                <p class="text-xs text-slate-500 mt-1">Para programar llamadas en la hora local del paciente</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Descripción</label>
+                                <textarea name="descripcion" rows="3"
+                                    placeholder="Información general, relación familiar, contexto del paciente..."
+                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all resize-none">{{ paciente.descripcion }}</textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Notas médicas</label>
+                                <textarea name="notas" rows="3"
+                                    placeholder="Alergias, observaciones importantes, historial médico relevante..."
+                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all resize-none">{{ paciente.notas }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="p-6 lg:p-8 bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                        <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                            <i class="bi bi-arrow-left"></i>
+                            <span>Volver a pacientes</span>
+                        </a>
+                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-600 hover:bg-slate-700 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-slate-300/30 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-all">
+                            <i class="bi bi-check-circle text-lg"></i>
+                            <span>Guardar cambios</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+(function() {
+    var fotoInput = document.getElementById("foto-input");
+    var fotoPreview = document.getElementById("foto-preview");
+    var fotoPlaceholder = document.getElementById("foto-preview-placeholder");
+    if (fotoInput && fotoPreview) {
+        fotoInput.addEventListener("change", function(e) {
+            var file = e.target.files[0];
+            if (file && file.type.startsWith("image/")) {
+                if (file.size > 5 * 1024 * 1024) { alert("La imagen debe ser menor a 5MB"); return; }
+                var r = new FileReader();
+                r.onload = function(ev) {
+                    fotoPreview.src = ev.target.result;
+                    fotoPreview.classList.remove("hidden");
+                    if (fotoPlaceholder) fotoPlaceholder.classList.add("hidden");
+                };
+                r.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Condiciones: agregar otra condición
+    var btnAgregar = document.getElementById("btn-agregar-condicion");
+    var container = document.getElementById("condiciones-container");
+    if (btnAgregar && container) {
+        var firstRow = container.querySelector(".condicion-row");
+        if (firstRow) {
+            var template = firstRow.cloneNode(true);
+            template.querySelector("input").value = "";
+            template.querySelector(".condicion-remove").classList.remove("hidden");
+            btnAgregar.addEventListener("click", function() {
+                var row = template.cloneNode(true);
+                row.querySelector("input").value = "";
+                container.appendChild(row);
+            });
+            container.addEventListener("click", function(e) {
+                var btn = e.target.closest(".condicion-remove");
+                if (btn && container.querySelectorAll(".condicion-row").length > 1) {
+                    btn.closest(".condicion-row").remove();
+                }
+            });
+        }
+    }
+})();
+</script>
+{% endblock %}

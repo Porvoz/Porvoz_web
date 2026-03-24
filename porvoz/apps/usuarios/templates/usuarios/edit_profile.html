@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-100 flex-col w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 bg-slate-100 flex flex-col">
+        <!-- Botón hamburguesa para móvil -->
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
+        </button>
+        
+        <div class="w-full mt-12 lg:mt-0 flex-1 flex flex-col">
+            <!-- Header -->
+            <div class="mb-6 flex items-start justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">Mi Cuenta</h1>
+                    <p class="text-sm text-slate-500 mt-1">Perfil y plan</p>
+                </div>
+                <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-600 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                    <i class="bi bi-house"></i>Volver a panel principal
+                </a>
+            </div>
+
+            {% if messages %}
+            <div class="mb-5 space-y-2">
+                {% for message in messages %}
+                    <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Tabs -->
+            <div class="flex gap-2 mb-6">
+                <a href="{% url 'edit_profile' %}?tab=perfil" class="flex-1 px-5 py-3 rounded-xl text-center text-sm font-semibold transition-colors {% if tab_activo == 'perfil' %}bg-slate-600 text-white{% else %}bg-white border border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
+                    <i class="bi bi-person mr-2"></i>Perfil
+                </a>
+                <a href="{% url 'edit_profile' %}?tab=planes" class="flex-1 px-5 py-3 rounded-xl text-center text-sm font-semibold transition-colors {% if tab_activo == 'planes' %}bg-slate-600 text-white{% else %}bg-white border border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
+                    <i class="bi bi-star mr-2"></i>Plan
+                </a>
+            </div>
+
+            {% if tab_activo == 'perfil' %}
+            <!-- TAB PERFIL -->
+            {% if editando %}
+            <!-- Modo edición -->
+            <form method="post" enctype="multipart/form-data" class="space-y-4 flex-1">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="actualizar_perfil">
+
+                <!-- Foto de perfil -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                    <div class="flex items-center gap-4">
+                        <div class="relative">
+                            {% if perfil.profile_image %}
+                            <img id="profile-image-preview" src="{{ perfil.profile_image.url }}" alt="Foto de perfil" class="h-14 w-14 rounded-lg object-cover border border-slate-200">
+                            {% else %}
+                            <div id="profile-image-placeholder" class="h-14 w-14 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-lg font-bold text-slate-600">
+                                {{ first_name|default:request.user.first_name|default:request.user.username|slice:":1"|upper }}
+                            </div>
+                            <img id="profile-image-preview" src="" alt="Foto de perfil" class="hidden h-14 w-14 rounded-lg object-cover border border-slate-200">
+                            {% endif %}
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-bold text-slate-900 mb-0.5">Foto de perfil</h3>
+                            <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 cursor-pointer transition-colors">
+                                <i class="bi bi-cloud-upload text-sm"></i>
+                                <span>Cambiar</span>
+                                <input id="profile_image" name="profile_image" type="file" accept="image/*" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información personal -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-4">Información personal</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Nombre <span class="text-red-500">*</span></label>
+                            <input name="first_name" type="text" value="{{ first_name }}" required class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Apellido <span class="text-red-500">*</span></label>
+                            <input name="last_name" type="text" value="{{ last_name }}" required class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Fecha de nacimiento</label>
+                            <input name="date_of_birth" type="date" {% if perfil.date_of_birth %}value="{{ perfil.date_of_birth|date:'Y-m-d' }}"{% endif %} class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Ciudad</label>
+                            <input name="city" type="text" value="{{ perfil.city }}" placeholder="Ciudad" class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de contacto -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-4">Contacto</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Teléfono</label>
+                            <div class="grid grid-cols-[80px_1fr] gap-2">
+                                <select name="phone_country" class="rounded-xl border border-slate-200 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-400 bg-white">
+                                    <option value="+57" {% if phone_country == '+57' %}selected{% endif %}>+57</option>
+                                    <option value="+1" {% if phone_country == '+1' %}selected{% endif %}>+1</option>
+                                    <option value="+34" {% if phone_country == '+34' %}selected{% endif %}>+34</option>
+                                    <option value="+52" {% if phone_country == '+52' %}selected{% endif %}>+52</option>
+                                </select>
+                                <input name="phone_number" type="text" value="{{ phone_number }}" placeholder="3001234567" class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Documento</label>
+                            <div class="grid grid-cols-[100px_1fr] gap-2">
+                                <select name="document_type" class="rounded-xl border border-slate-200 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-400 bg-white">
+                                    <option value="cc" {% if perfil.document_type == 'cc' %}selected{% endif %}>Cédula</option>
+                                    <option value="ce" {% if perfil.document_type == 'ce' %}selected{% endif %}>Cédula ext.</option>
+                                    <option value="ti" {% if perfil.document_type == 'ti' %}selected{% endif %}>Tarjeta ID</option>
+                                    <option value="pp" {% if perfil.document_type == 'pp' %}selected{% endif %}>Pasaporte</option>
+                                </select>
+                                <input name="document_number" type="text" value="{{ perfil.document_number }}" placeholder="Número" class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contacto de emergencia -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-4">Contacto de emergencia</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Nombre</label>
+                            <input name="emergency_contact_name" type="text" value="{{ perfil.emergency_contact_name }}" placeholder="Nombre completo" class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Teléfono</label>
+                            <div class="grid grid-cols-[80px_1fr] gap-2">
+                                <select name="emergency_contact_phone_country" class="rounded-xl border border-slate-200 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-400 bg-white">
+                                    <option value="+57" {% if emergency_phone_country == '+57' %}selected{% endif %}>+57</option>
+                                    <option value="+1" {% if emergency_phone_country == '+1' %}selected{% endif %}>+1</option>
+                                    <option value="+34" {% if emergency_phone_country == '+34' %}selected{% endif %}>+34</option>
+                                    <option value="+52" {% if emergency_phone_country == '+52' %}selected{% endif %}>+52</option>
+                                </select>
+                                <input name="emergency_contact_phone_number" type="text" value="{{ emergency_phone_number }}" placeholder="3001234567" class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="flex items-center justify-between gap-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <a href="{% url 'edit_profile' %}?tab=perfil" class="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors">Cancelar</a>
+                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white px-5 py-2.5 text-sm font-semibold transition-colors">
+                        <i class="bi bi-check-lg"></i>Guardar
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <!-- Modo visualización -->
+            <div class="space-y-5 flex-1">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <!-- Header -->
+                    <div class="bg-slate-600 px-6 py-5">
+                        <div class="flex items-center gap-4">
+                            {% if perfil.profile_image %}
+                            <img src="{{ perfil.profile_image.url }}" alt="" class="h-16 w-16 rounded-xl object-cover border border-white/20">
+                            {% else %}
+                            <div class="h-16 w-16 rounded-xl bg-white/10 flex items-center justify-center text-2xl font-bold text-white">
+                                {{ first_name|default:request.user.first_name|default:request.user.username|slice:":1"|upper }}
+                            </div>
+                            {% endif %}
+                            <div class="min-w-0 flex-1">
+                                <h2 class="text-lg font-bold text-white truncate">{{ first_name|default:request.user.first_name }} {{ last_name|default:request.user.last_name }}</h2>
+                                <p class="text-sm text-slate-300 truncate">{{ request.user.email }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Datos en grid -->
+                    <div class="p-6 border-b border-slate-100">
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="rounded-xl bg-slate-50 px-4 py-3">
+                                <p class="text-slate-500 font-medium mb-0.5">Fecha nac.</p>
+                                <p class="text-slate-900 font-medium">{% if perfil.date_of_birth %}{{ perfil.date_of_birth|date:"d/m/Y" }}{% else %}—{% endif %}</p>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 px-4 py-3">
+                                <p class="text-slate-500 font-medium mb-0.5">Ciudad</p>
+                                <p class="text-slate-900 font-medium">{% if perfil.city %}{{ perfil.city }}{% else %}—{% endif %}</p>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 px-4 py-3">
+                                <p class="text-slate-500 font-medium mb-0.5">Teléfono</p>
+                                <p class="text-slate-900 font-medium truncate">{% if perfil.phone %}{{ perfil.phone }}{% else %}—{% endif %}</p>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 px-4 py-3">
+                                <p class="text-slate-500 font-medium mb-0.5">Documento</p>
+                                <p class="text-slate-900 font-medium">{% if perfil.document_number %}{{ perfil.document_number }}{% else %}—{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% if perfil.emergency_contact_name or perfil.emergency_contact_phone %}
+                    <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                        <p class="text-sm font-semibold text-slate-500 mb-1">Contacto de emergencia</p>
+                        <p class="text-base text-slate-900">{{ perfil.emergency_contact_name|default:"—" }} · {{ perfil.emergency_contact_phone|default:"" }}</p>
+                    </div>
+                    {% endif %}
+                    {% if tab_activo == 'perfil' and not editando %}
+                    <div class="p-6">
+                        <a href="{% url 'edit_profile' %}?tab=perfil&edit=1" class="block w-full text-center rounded-xl bg-slate-600 hover:bg-slate-700 text-white px-4 py-3 text-sm font-semibold transition-colors">
+                            <i class="bi bi-pencil mr-2"></i>Editar perfil
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-base font-semibold text-slate-900">Contraseña</p>
+                        <p class="text-sm text-slate-500">Cambiar de forma segura</p>
+                    </div>
+                    <a href="{% url 'change_password' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-600 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                        <i class="bi bi-key"></i>Cambiar
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% if tab_activo == 'planes' %}
+            <!-- TAB PLANES - mismo estilo que página /planes/ -->
+            <div class="space-y-6 flex-1">
+                <div class="bg-slate-600 rounded-xl px-5 py-3 text-white flex items-center justify-between">
+                    <span class="text-sm text-slate-400">Plan actual</span>
+                    <span class="text-base font-bold">
+                        {% if perfil.plan == perfil.PLAN_FREEMIUM %}Prueba · Gratis
+                        {% elif perfil.plan == perfil.PLAN_GROWTH %}Growth · $79.900/mes
+                        {% elif perfil.plan == perfil.PLAN_MULTI_BUSINESS %}Multi-cuidador · $99.900/mes
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                    {% for plan in planes %}
+                    <article class="bg-white rounded-2xl border shadow-sm overflow-hidden flex flex-col min-w-0 transition-all hover:shadow-md {% if plan.es_plan_actual %}border-slate-300 bg-slate-50/30{% elif plan.destacado %}border-slate-600 ring-2 ring-slate-600 ring-offset-2 shadow-lg{% else %}border-slate-200{% endif %}">
+                        {% if plan.destacado %}
+                        <div class="bg-slate-600 text-white text-center py-2 text-xs font-bold uppercase tracking-wider">Recomendado</div>
+                        {% elif plan.es_plan_actual %}
+                        <div class="bg-slate-600 text-white text-center py-2 text-xs font-bold uppercase tracking-wider">Actual</div>
+                        {% endif %}
+                        <div class="p-6 flex-1 flex flex-col {% if plan.destacado %}bg-slate-600 text-white{% else %}bg-white{% endif %}">
+                            <h2 class="text-lg font-bold {% if plan.destacado %}text-white{% else %}text-slate-900{% endif %}">{{ plan.nombre }}</h2>
+                            <p class="text-sm {% if plan.destacado %}text-slate-300{% else %}text-slate-600{% endif %} mt-1">{{ plan.tagline }}</p>
+                            <div class="mt-5 flex items-baseline gap-1">
+                                {% if plan.precio_cop %}
+                                <span class="text-2xl font-black {% if plan.destacado %}text-white{% else %}text-slate-900{% endif %}">${{ plan.precio_cop }}</span>
+                                <span class="text-sm {% if plan.destacado %}text-slate-400{% else %}text-slate-500{% endif %}">COP/mes</span>
+                                {% else %}
+                                <span class="text-2xl font-black {% if plan.destacado %}text-white{% else %}text-slate-900{% endif %}">Gratis</span>
+                                <span class="text-sm {% if plan.destacado %}text-slate-400{% else %}text-slate-500{% endif %}">prueba</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <ul class="p-6 flex-1 space-y-2.5 text-sm text-slate-700 bg-white">
+                            {% for caracteristica in plan.caracteristicas %}
+                            <li class="flex items-start gap-2"><i class="bi bi-check2 text-emerald-600 mt-0.5 shrink-0 text-base"></i><span>{{ caracteristica }}</span></li>
+                            {% endfor %}
+                        </ul>
+                        <div class="p-6 pt-0 border-t border-slate-100">
+                            {% if plan.es_plan_actual %}
+                            <button disabled class="w-full rounded-xl bg-slate-200 text-slate-500 py-3 text-sm font-semibold cursor-not-allowed">Plan actual</button>
+                            {% else %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="cambiar_plan">
+                                <input type="hidden" name="plan" value="{{ plan.plan_key }}">
+                                <button type="submit" class="w-full rounded-xl py-3 text-sm font-semibold transition-colors {{ plan.boton_estilo }}">
+                                    {{ plan.boton_texto }}
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+    <div class="mt-16 sm:mt-20 lg:mt-24">
+        {% include "footer.html" %}
+    </div>
+</div>
+
+{% if editando %}
+<script>
+    (function () {
+        const input = document.getElementById("profile_image");
+        const preview = document.getElementById("profile-image-preview");
+        const placeholder = document.getElementById("profile-image-placeholder");
+        
+        if (!input) return;
+        
+        input.addEventListener("change", function () {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith("image/")) {
+                alert("Por favor selecciona una imagen válida");
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                alert("La imagen debe ser menor a 5MB");
+                return;
+            }
+            
+            const url = URL.createObjectURL(file);
+            if (preview) {
+                preview.src = url;
+                preview.classList.remove("hidden");
+            }
+            if (placeholder) {
+                placeholder.classList.add("hidden");
+            }
+        });
+    })();
+</script>
+{% endif %}
+{% endblock %}
