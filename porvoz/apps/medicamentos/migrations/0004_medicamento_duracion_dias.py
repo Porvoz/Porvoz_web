@@ -6,18 +6,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('medicamentos', '0003_rename_porvoz_medi_paciente_idx_porvoz_medi_pacient_79ec81_idx_and_more'),
+        (
+            "medicamentos",
+            "0003_rename_porvoz_medi_paciente_idx_porvoz_medi_pacient_79ec81_idx_and_more",
+        ),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='medicamento',
-            name='duracion_dias',
+            model_name="medicamento",
+            name="duracion_dias",
             field=models.PositiveIntegerField(
                 blank=True,
-                help_text='Dejar vacío para tratamiento indefinido; o indicar cantidad de días (ej: 7, 30)',
+                help_text="Dejar vacío para tratamiento indefinido; o indicar cantidad de días (ej: 7, 30)",
                 null=True,
-                verbose_name='Duración en días',
+                verbose_name="Duración en días",
             ),
         ),
     ]

@@ -4,6 +4,7 @@ Formularios para la app de autenticación.
 Centraliza la validación de registro e inicio de sesión,
 liberando a las vistas de lógica de validación.
 """
+
 from django import forms
 from django.contrib.auth.models import User
 

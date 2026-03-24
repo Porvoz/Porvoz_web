@@ -46,8 +46,12 @@ def register_view(request: HttpRequest) -> HttpResponse:
         date_of_birth = request.POST.get("date_of_birth", "").strip()
         city = request.POST.get("city", "").strip()
         emergency_contact_name = request.POST.get("emergency_contact_name", "").strip()
-        emergency_contact_phone_country = request.POST.get("emergency_contact_phone_country", "+57").strip()
-        emergency_contact_phone_number = request.POST.get("emergency_contact_phone_number", "").strip()
+        emergency_contact_phone_country = request.POST.get(
+            "emergency_contact_phone_country", "+57"
+        ).strip()
+        emergency_contact_phone_number = request.POST.get(
+            "emergency_contact_phone_number", ""
+        ).strip()
 
         # Validaciones básicas
         if not username or not email or not password or not first_name or not last_name:

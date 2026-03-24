@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pacientes', '0006_restrict_sexo_choices'),
+        ("pacientes", "0006_restrict_sexo_choices"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='paciente',
-            name='parentesco',
-            field=models.CharField(blank=True, help_text='Ej: Padre, Madre, Hijo/a, Cónyuge, etc.', max_length=50, verbose_name='Parentesco / Relación'),
+            model_name="paciente",
+            name="parentesco",
+            field=models.CharField(
+                blank=True,
+                help_text="Ej: Padre, Madre, Hijo/a, Cónyuge, etc.",
+                max_length=50,
+                verbose_name="Parentesco / Relación",
+            ),
         ),
     ]

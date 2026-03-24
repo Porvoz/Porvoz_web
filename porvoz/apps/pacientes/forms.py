@@ -4,6 +4,7 @@ Formularios para la app de pacientes.
 Centraliza la validación de entradas del usuario,
 liberando a las vistas de lógica de validación.
 """
+
 from django import forms
 
 from .models import Paciente, Enfermedad

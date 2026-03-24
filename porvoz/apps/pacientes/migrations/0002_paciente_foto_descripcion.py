@@ -10,12 +10,20 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="paciente",
             name="foto",
-            field=models.ImageField(blank=True, null=True, upload_to="pacientes_fotos/", verbose_name="Foto del paciente"),
+            field=models.ImageField(
+                blank=True,
+                null=True,
+                upload_to="pacientes_fotos/",
+                verbose_name="Foto del paciente",
+            ),
         ),
         migrations.AddField(
             model_name="paciente",
             name="descripcion",
-            field=models.TextField(blank=True, help_text="Información adicional sobre el paciente", verbose_name="Descripción"),
+            field=models.TextField(
+                blank=True,
+                help_text="Información adicional sobre el paciente",
+                verbose_name="Descripción",
+            ),
         ),
     ]
-

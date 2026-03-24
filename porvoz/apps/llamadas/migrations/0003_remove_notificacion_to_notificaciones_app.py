@@ -5,6 +5,7 @@ Usa SeparateDatabaseAndState: Django deja de reconocer el modelo aquí,
 pero la tabla porvoz_notificacion en la BD no se toca.
 La tabla ahora es gestionada por apps.notificaciones.
 """
+
 from django.db import migrations
 
 

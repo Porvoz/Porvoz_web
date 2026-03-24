@@ -12,14 +12,19 @@ def clear_invalid_sexo(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pacientes', '0005_add_paciente_sexo'),
+        ("pacientes", "0005_add_paciente_sexo"),
     ]
 
     operations = [
         migrations.RunPython(clear_invalid_sexo, migrations.RunPython.noop),
         migrations.AlterField(
-            model_name='paciente',
-            name='sexo',
-            field=models.CharField(blank=True, choices=[('M', 'Mujer'), ('H', 'Hombre')], max_length=1, verbose_name='Sexo'),
+            model_name="paciente",
+            name="sexo",
+            field=models.CharField(
+                blank=True,
+                choices=[("M", "Mujer"), ("H", "Hombre")],
+                max_length=1,
+                verbose_name="Sexo",
+            ),
         ),
     ]

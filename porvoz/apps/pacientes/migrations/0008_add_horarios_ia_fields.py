@@ -6,13 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pacientes', '0007_add_parentesco'),
+        ("pacientes", "0007_add_parentesco"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='paciente',
-            name='timezone',
-            field=models.CharField(blank=True, default='America/Bogota', help_text='Ej: America/Bogota, America/Mexico_City. Para programar llamadas en la hora local del paciente.', max_length=50, verbose_name='Zona horaria'),
+            model_name="paciente",
+            name="timezone",
+            field=models.CharField(
+                blank=True,
+                default="America/Bogota",
+                help_text="Ej: America/Bogota, America/Mexico_City. Para programar llamadas en la hora local del paciente.",
+                max_length=50,
+                verbose_name="Zona horaria",
+            ),
         ),
     ]

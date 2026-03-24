@@ -1,8 +1,8 @@
 """
 Datos y lógica de planes de suscripción.
 """
-from apps.core.models import Perfil
 
+from apps.core.models import Perfil
 
 PLANES_DATA = {
     Perfil.PLAN_FREEMIUM: {

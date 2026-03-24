@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('porvoz', '0004_perfil_plan'),
+        ("porvoz", "0004_perfil_plan"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='perfil',
-            name='plan_expiration',
-            field=models.DateField(blank=True, help_text='Fecha hasta la cual el plan está activo', null=True, verbose_name='Vencimiento del plan'),
+            model_name="perfil",
+            name="plan_expiration",
+            field=models.DateField(
+                blank=True,
+                help_text="Fecha hasta la cual el plan está activo",
+                null=True,
+                verbose_name="Vencimiento del plan",
+            ),
         ),
     ]

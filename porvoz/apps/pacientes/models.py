@@ -15,6 +15,7 @@ class Paciente(models.Model):
     Modelo para representar un paciente.
     Un paciente puede ser el mismo usuario o otra persona agregada por el usuario.
     """
+
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -37,24 +38,28 @@ class Paciente(models.Model):
     es_usuario_mismo = models.BooleanField(
         "Es el usuario mismo",
         default=False,
-        help_text="True si este paciente es el mismo usuario que lo creó"
+        help_text="True si este paciente es el mismo usuario que lo creó",
     )
     fecha_nacimiento = models.DateField("Fecha de nacimiento", blank=True, null=True)
     parentesco = models.CharField(
         "Parentesco / Relación",
         max_length=50,
         blank=True,
-        help_text="Ej: Padre, Madre, Hijo/a, Cónyuge, etc."
+        help_text="Ej: Padre, Madre, Hijo/a, Cónyuge, etc.",
     )
-    foto = models.ImageField("Foto del paciente", upload_to="pacientes_fotos/", blank=True, null=True)
-    descripcion = models.TextField("Descripción", blank=True, help_text="Información adicional sobre el paciente")
+    foto = models.ImageField(
+        "Foto del paciente", upload_to="pacientes_fotos/", blank=True, null=True
+    )
+    descripcion = models.TextField(
+        "Descripción", blank=True, help_text="Información adicional sobre el paciente"
+    )
     notas = models.TextField("Notas adicionales", blank=True)
     timezone = models.CharField(
         "Zona horaria",
         max_length=50,
         default="America/Bogota",
         blank=True,
-        help_text="Ej: America/Bogota, America/Mexico_City. Para programar llamadas en la hora local del paciente."
+        help_text="Ej: America/Bogota, America/Mexico_City. Para programar llamadas en la hora local del paciente.",
     )
     activo = models.BooleanField("Activo", default=True)
     creado_en = models.DateTimeField("Fecha de creación", auto_now_add=True)
@@ -115,6 +120,7 @@ class Paciente(models.Model):
     def get_edad_display(self):
         """Edad en años para mostrar (desde fecha de nacimiento), o None si no hay."""
         from datetime import date
+
         fn = self.get_display_fecha_nacimiento()
         if not fn:
             return None
@@ -138,6 +144,7 @@ class Paciente(models.Model):
     def get_fin_tratamiento(self):
         """Fecha de fin del tratamiento: max(creado_en + duracion_dias) si hay duración."""
         from datetime import timedelta
+
         fechas_fin = []
         for m in self.medicamentos.filter(activo=True):
             if m.duracion_dias and m.creado_en:
@@ -150,6 +157,7 @@ class Enfermedad(models.Model):
     """
     Modelo para representar una enfermedad o condición médica de un paciente.
     """
+
     paciente = models.ForeignKey(
         Paciente,
         on_delete=models.CASCADE,

@@ -4,6 +4,7 @@ Formularios para la app de medicamentos.
 Centraliza la validación de entradas del usuario,
 liberando a las vistas de lógica de validación.
 """
+
 from django import forms
 
 from .models import Medicamento
@@ -30,7 +31,9 @@ class MedicamentoForm(forms.Form):
     )
     duracion_dias = forms.IntegerField(min_value=1, required=False)
     instrucciones_llamada = forms.CharField(widget=forms.Textarea, required=False)
-    minutos_antes_llamada = forms.IntegerField(min_value=0, max_value=120, initial=0, required=False)
+    minutos_antes_llamada = forms.IntegerField(
+        min_value=0, max_value=120, initial=0, required=False
+    )
 
     def clean(self):
         cleaned = super().clean()

@@ -8,46 +8,68 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('llamadas', '0001_initial'),
-        ('medicamentos', '0003_rename_porvoz_medi_paciente_idx_porvoz_medi_pacient_79ec81_idx_and_more'),
-        ('pacientes', '0004_rename_porvoz_enfe_paciente_idx_porvoz_enfe_pacient_48fc44_idx_and_more'),
+        ("llamadas", "0001_initial"),
+        (
+            "medicamentos",
+            "0003_rename_porvoz_medi_paciente_idx_porvoz_medi_pacient_79ec81_idx_and_more",
+        ),
+        (
+            "pacientes",
+            "0004_rename_porvoz_enfe_paciente_idx_porvoz_enfe_pacient_48fc44_idx_and_more",
+        ),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RenameIndex(
-            model_name='notificacion',
-            new_name='porvoz_noti_usuario_4220f6_idx',
-            old_name='porvoz_noti_usuario_idx',
+            model_name="notificacion",
+            new_name="porvoz_noti_usuario_4220f6_idx",
+            old_name="porvoz_noti_usuario_idx",
         ),
         migrations.RenameIndex(
-            model_name='notificacion',
-            new_name='porvoz_noti_usuario_4fc788_idx',
-            old_name='porvoz_noti_usuario_tipo_idx',
+            model_name="notificacion",
+            new_name="porvoz_noti_usuario_4fc788_idx",
+            old_name="porvoz_noti_usuario_tipo_idx",
         ),
         migrations.RenameIndex(
-            model_name='notificacion',
-            new_name='porvoz_noti_pacient_fe5275_idx',
-            old_name='porvoz_noti_paciente_idx',
+            model_name="notificacion",
+            new_name="porvoz_noti_pacient_fe5275_idx",
+            old_name="porvoz_noti_paciente_idx",
         ),
         migrations.RenameIndex(
-            model_name='notificacion',
-            new_name='porvoz_noti_fecha_p_d3c5b8_idx',
-            old_name='porvoz_noti_fecha_pr_idx',
+            model_name="notificacion",
+            new_name="porvoz_noti_fecha_p_d3c5b8_idx",
+            old_name="porvoz_noti_fecha_pr_idx",
         ),
         migrations.AlterField(
-            model_name='notificacion',
-            name='medicamento',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='notificaciones', to='medicamentos.medicamento'),
+            model_name="notificacion",
+            name="medicamento",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="notificaciones",
+                to="medicamentos.medicamento",
+            ),
         ),
         migrations.AlterField(
-            model_name='notificacion',
-            name='paciente',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='notificaciones', to='pacientes.paciente'),
+            model_name="notificacion",
+            name="paciente",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="notificaciones",
+                to="pacientes.paciente",
+            ),
         ),
         migrations.AlterField(
-            model_name='notificacion',
-            name='usuario',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notificaciones', to=settings.AUTH_USER_MODEL),
+            model_name="notificacion",
+            name="usuario",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="notificaciones",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

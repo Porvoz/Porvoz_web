@@ -26,43 +26,74 @@ def reverse_migrar_horarios(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('medicamentos', '0004_medicamento_duracion_dias'),
+        ("medicamentos", "0004_medicamento_duracion_dias"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='medicamento',
-            name='fecha_inicio_tratamiento',
-            field=models.DateField(blank=True, help_text="Para 'Cada X horas': fecha desde la que se calculan las tomas", null=True, verbose_name='Fecha de inicio del tratamiento'),
+            model_name="medicamento",
+            name="fecha_inicio_tratamiento",
+            field=models.DateField(
+                blank=True,
+                help_text="Para 'Cada X horas': fecha desde la que se calculan las tomas",
+                null=True,
+                verbose_name="Fecha de inicio del tratamiento",
+            ),
         ),
         migrations.AddField(
-            model_name='medicamento',
-            name='instrucciones_llamada',
-            field=models.TextField(blank=True, help_text="Contexto para la IA: 'Recordar con el desayuno', 'Preguntar efectos secundarios', etc.", verbose_name='Instrucciones para la llamada'),
+            model_name="medicamento",
+            name="instrucciones_llamada",
+            field=models.TextField(
+                blank=True,
+                help_text="Contexto para la IA: 'Recordar con el desayuno', 'Preguntar efectos secundarios', etc.",
+                verbose_name="Instrucciones para la llamada",
+            ),
         ),
         migrations.AddField(
-            model_name='medicamento',
-            name='minutos_antes_llamada',
-            field=models.PositiveSmallIntegerField(blank=True, default=0, help_text='Llamar X minutos antes de la hora de toma (ej: 15)', verbose_name='Minutos antes para llamar'),
+            model_name="medicamento",
+            name="minutos_antes_llamada",
+            field=models.PositiveSmallIntegerField(
+                blank=True,
+                default=0,
+                help_text="Llamar X minutos antes de la hora de toma (ej: 15)",
+                verbose_name="Minutos antes para llamar",
+            ),
         ),
         migrations.AlterField(
-            model_name='medicamento',
-            name='horario',
-            field=models.TimeField(blank=True, help_text='Mantenido para compatibilidad; usar horarios cuando existan', null=True, verbose_name='Horario de toma (legacy)'),
+            model_name="medicamento",
+            name="horario",
+            field=models.TimeField(
+                blank=True,
+                help_text="Mantenido para compatibilidad; usar horarios cuando existan",
+                null=True,
+                verbose_name="Horario de toma (legacy)",
+            ),
         ),
         migrations.CreateModel(
-            name='HorarioMedicamento',
+            name="HorarioMedicamento",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('hora', models.TimeField(verbose_name='Hora de toma')),
-                ('orden', models.PositiveSmallIntegerField(default=0, verbose_name='Orden')),
-                ('medicamento', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='horarios', to='medicamentos.medicamento')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("hora", models.TimeField(verbose_name="Hora de toma")),
+                ("orden", models.PositiveSmallIntegerField(default=0, verbose_name="Orden")),
+                (
+                    "medicamento",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="horarios",
+                        to="medicamentos.medicamento",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Horario de medicamento',
-                'verbose_name_plural': 'Horarios de medicamento',
-                'db_table': 'porvoz_horario_medicamento',
-                'ordering': ['orden', 'hora'],
+                "verbose_name": "Horario de medicamento",
+                "verbose_name_plural": "Horarios de medicamento",
+                "db_table": "porvoz_horario_medicamento",
+                "ordering": ["orden", "hora"],
             },
         ),
         migrations.RunPython(migrar_horarios_legacy, reverse_migrar_horarios),

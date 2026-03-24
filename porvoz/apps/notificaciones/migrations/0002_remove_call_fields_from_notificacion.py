@@ -8,59 +8,84 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('medicamentos', '0005_add_horarios_ia_fields'),
-        ('notificaciones', '0001_initial'),
-        ('pacientes', '0008_add_horarios_ia_fields'),
+        ("medicamentos", "0005_add_horarios_ia_fields"),
+        ("notificaciones", "0001_initial"),
+        ("pacientes", "0008_add_horarios_ia_fields"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='notificacion',
-            name='estado',
+            model_name="notificacion",
+            name="estado",
         ),
         migrations.RemoveField(
-            model_name='notificacion',
-            name='fecha_atendida',
+            model_name="notificacion",
+            name="fecha_atendida",
         ),
         migrations.RemoveField(
-            model_name='notificacion',
-            name='fecha_enviada',
+            model_name="notificacion",
+            name="fecha_enviada",
         ),
         migrations.AlterField(
-            model_name='notificacion',
-            name='medicamento',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='notificaciones', to='medicamentos.medicamento'),
+            model_name="notificacion",
+            name="medicamento",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="notificaciones",
+                to="medicamentos.medicamento",
+            ),
         ),
         migrations.AlterField(
-            model_name='notificacion',
-            name='paciente',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='notificaciones', to='pacientes.paciente'),
+            model_name="notificacion",
+            name="paciente",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="notificaciones",
+                to="pacientes.paciente",
+            ),
         ),
         migrations.AlterField(
-            model_name='notificacion',
-            name='tipo',
-            field=models.CharField(choices=[('recordatorio', 'Recordatorio'), ('alerta', 'Alerta'), ('sistema', 'Sistema')], default='sistema', max_length=20, verbose_name='Tipo de notificación'),
+            model_name="notificacion",
+            name="tipo",
+            field=models.CharField(
+                choices=[
+                    ("recordatorio", "Recordatorio"),
+                    ("alerta", "Alerta"),
+                    ("sistema", "Sistema"),
+                ],
+                default="sistema",
+                max_length=20,
+                verbose_name="Tipo de notificación",
+            ),
         ),
         migrations.AlterField(
-            model_name='notificacion',
-            name='usuario',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notificaciones', to=settings.AUTH_USER_MODEL),
+            model_name="notificacion",
+            name="usuario",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="notificaciones",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddIndex(
-            model_name='notificacion',
-            index=models.Index(fields=['usuario', 'leida'], name='porvoz_noti_usuario_idx'),
+            model_name="notificacion",
+            index=models.Index(fields=["usuario", "leida"], name="porvoz_noti_usuario_idx"),
         ),
         migrations.AddIndex(
-            model_name='notificacion',
-            index=models.Index(fields=['usuario', 'tipo'], name='porvoz_noti_usuario_tipo_idx'),
+            model_name="notificacion",
+            index=models.Index(fields=["usuario", "tipo"], name="porvoz_noti_usuario_tipo_idx"),
         ),
         migrations.AddIndex(
-            model_name='notificacion',
-            index=models.Index(fields=['paciente'], name='porvoz_noti_paciente_idx'),
+            model_name="notificacion",
+            index=models.Index(fields=["paciente"], name="porvoz_noti_paciente_idx"),
         ),
         migrations.AddIndex(
-            model_name='notificacion',
-            index=models.Index(fields=['fecha_programada'], name='porvoz_noti_fecha_pr_idx'),
+            model_name="notificacion",
+            index=models.Index(fields=["fecha_programada"], name="porvoz_noti_fecha_pr_idx"),
         ),
     ]

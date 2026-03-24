@@ -11,13 +11,30 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Enfermedad",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("nombre", models.CharField(max_length=200, verbose_name="Nombre de la enfermedad")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "nombre",
+                    models.CharField(max_length=200, verbose_name="Nombre de la enfermedad"),
+                ),
                 ("descripcion", models.TextField(blank=True, verbose_name="Descripción")),
-                ("diagnostico_fecha", models.DateField(blank=True, null=True, verbose_name="Fecha de diagnóstico")),
+                (
+                    "diagnostico_fecha",
+                    models.DateField(blank=True, null=True, verbose_name="Fecha de diagnóstico"),
+                ),
                 ("activa", models.BooleanField(default=True, verbose_name="Activa")),
-                ("creado_en", models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")),
-                ("actualizado_en", models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización")),
+                (
+                    "creado_en",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "actualizado_en",
+                    models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización"),
+                ),
                 (
                     "paciente",
                     models.ForeignKey(
@@ -38,4 +55,3 @@ class Migration(migrations.Migration):
             index=models.Index(fields=["paciente", "activa"], name="porvoz_enfe_paciente_idx"),
         ),
     ]
-

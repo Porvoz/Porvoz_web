@@ -66,7 +66,9 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
                     id__in=notificacion_ids,
                     usuario=request.user,
                 ).update(leida=True)
-                messages.success(request, f"{len(notificacion_ids)} notificación(es) marcada(s) como leída(s).")
+                messages.success(
+                    request, f"{len(notificacion_ids)} notificación(es) marcada(s) como leída(s)."
+                )
                 return redirect(redirect_url)
 
         elif action == "mark_read_single":

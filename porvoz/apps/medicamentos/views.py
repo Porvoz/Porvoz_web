@@ -15,7 +15,7 @@ def agregar_medicamento_view(request: HttpRequest, paciente_id: int) -> HttpResp
     """Vista para agregar un medicamento a un paciente."""
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
-    
+
     if request.method == "POST":
         nombre = request.POST.get("nombre", "").strip()
         dosis = request.POST.get("dosis", "").strip()
@@ -28,19 +28,27 @@ def agregar_medicamento_view(request: HttpRequest, paciente_id: int) -> HttpResp
         duracion_dias_str = request.POST.get("duracion_dias", "").strip()
         instrucciones_llamada = request.POST.get("instrucciones_llamada", "").strip()
         minutos_antes_str = request.POST.get("minutos_antes_llamada", "0").strip()
-        
+
         if not nombre or not dosis:
             messages.error(request, "El nombre y la dosis son obligatorios.")
         elif frecuencia_tipo == Medicamento.FRECUENCIA_HORARIO and not horarios_raw:
             messages.error(request, "Debes especificar al menos un horario de toma.")
-        elif frecuencia_tipo == Medicamento.FRECUENCIA_CADA_X_HORAS and (not cada_x_horas or not hora_inicio):
+        elif frecuencia_tipo == Medicamento.FRECUENCIA_CADA_X_HORAS and (
+            not cada_x_horas or not hora_inicio
+        ):
             messages.error(request, "Debes especificar cada cuántas horas y la hora de inicio.")
-        elif duracion_tipo == "dias" and (not duracion_dias_str or not duracion_dias_str.isdigit() or int(duracion_dias_str) < 1):
+        elif duracion_tipo == "dias" and (
+            not duracion_dias_str or not duracion_dias_str.isdigit() or int(duracion_dias_str) < 1
+        ):
             messages.error(request, "Indica cuántos días de tratamiento (número mayor a 0).")
         else:
-            duracion_dias = int(duracion_dias_str) if duracion_tipo == "dias" and duracion_dias_str else None
-            minutos_antes = min(120, max(0, int(minutos_antes_str))) if minutos_antes_str.isdigit() else 0
-            
+            duracion_dias = (
+                int(duracion_dias_str) if duracion_tipo == "dias" and duracion_dias_str else None
+            )
+            minutos_antes = (
+                min(120, max(0, int(minutos_antes_str))) if minutos_antes_str.isdigit() else 0
+            )
+
             medicamento = MedicamentoService.crear_medicamento(
                 paciente=paciente,
                 nombre=nombre,
@@ -62,7 +70,7 @@ def agregar_medicamento_view(request: HttpRequest, paciente_id: int) -> HttpResp
             )
             messages.success(request, f"Medicamento '{nombre}' agregado correctamente.")
             return redirect("detalle_paciente", paciente_id=paciente.id)
-    
+
     context = {
         "perfil": perfil,
         "paciente": paciente,
@@ -71,7 +79,9 @@ def agregar_medicamento_view(request: HttpRequest, paciente_id: int) -> HttpResp
 
 
 @login_required
-def editar_medicamento_view(request: HttpRequest, paciente_id: int, medicamento_id: int) -> HttpResponse:
+def editar_medicamento_view(
+    request: HttpRequest, paciente_id: int, medicamento_id: int
+) -> HttpResponse:
     """Vista para editar un medicamento de un paciente."""
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
@@ -94,14 +104,22 @@ def editar_medicamento_view(request: HttpRequest, paciente_id: int, medicamento_
             messages.error(request, "El nombre y la dosis son obligatorios.")
         elif frecuencia_tipo == Medicamento.FRECUENCIA_HORARIO and not horarios_raw:
             messages.error(request, "Debes especificar al menos un horario de toma.")
-        elif frecuencia_tipo == Medicamento.FRECUENCIA_CADA_X_HORAS and (not cada_x_horas or not hora_inicio):
+        elif frecuencia_tipo == Medicamento.FRECUENCIA_CADA_X_HORAS and (
+            not cada_x_horas or not hora_inicio
+        ):
             messages.error(request, "Debes especificar cada cuántas horas y la hora de inicio.")
-        elif duracion_tipo == "dias" and (not duracion_dias_str or not duracion_dias_str.isdigit() or int(duracion_dias_str) < 1):
+        elif duracion_tipo == "dias" and (
+            not duracion_dias_str or not duracion_dias_str.isdigit() or int(duracion_dias_str) < 1
+        ):
             messages.error(request, "Indica cuántos días de tratamiento (número mayor a 0).")
         else:
-            duracion_dias = int(duracion_dias_str) if duracion_tipo == "dias" and duracion_dias_str else None
-            minutos_antes = min(120, max(0, int(minutos_antes_str))) if minutos_antes_str.isdigit() else 0
-            
+            duracion_dias = (
+                int(duracion_dias_str) if duracion_tipo == "dias" and duracion_dias_str else None
+            )
+            minutos_antes = (
+                min(120, max(0, int(minutos_antes_str))) if minutos_antes_str.isdigit() else 0
+            )
+
             MedicamentoService.actualizar_medicamento(
                 medicamento=medicamento,
                 nombre=nombre,
@@ -133,7 +151,9 @@ def editar_medicamento_view(request: HttpRequest, paciente_id: int, medicamento_
 
 
 @login_required
-def toggle_medicamento_view(request: HttpRequest, paciente_id: int, medicamento_id: int) -> HttpResponse:
+def toggle_medicamento_view(
+    request: HttpRequest, paciente_id: int, medicamento_id: int
+) -> HttpResponse:
     """POST: activar o desactivar un medicamento. Redirige al detalle del paciente."""
     if request.method != "POST":
         return redirect("detalle_paciente", paciente_id=paciente_id)
@@ -152,7 +172,9 @@ def toggle_medicamento_view(request: HttpRequest, paciente_id: int, medicamento_
 
 
 @login_required
-def eliminar_medicamento_view(request: HttpRequest, paciente_id: int, medicamento_id: int) -> HttpResponse:
+def eliminar_medicamento_view(
+    request: HttpRequest, paciente_id: int, medicamento_id: int
+) -> HttpResponse:
     """Vista para confirmar y eliminar un medicamento."""
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
     medicamento = get_object_or_404(Medicamento, id=medicamento_id, paciente=paciente)

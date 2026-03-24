@@ -2,6 +2,7 @@
 Tests para los servicios del core (PerfilService, RegistroService, TelefonoService).
 Ejecutar: python manage.py test apps.core
 """
+
 from datetime import date, timedelta
 
 from django.test import TestCase

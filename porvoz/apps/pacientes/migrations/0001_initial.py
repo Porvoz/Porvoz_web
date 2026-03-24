@@ -14,7 +14,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Paciente",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("nombre", models.CharField(max_length=200, verbose_name="Nombre completo")),
                 ("telefono", models.CharField(max_length=30, verbose_name="Teléfono")),
                 (
@@ -25,11 +30,20 @@ class Migration(migrations.Migration):
                         verbose_name="Es el usuario mismo",
                     ),
                 ),
-                ("fecha_nacimiento", models.DateField(blank=True, null=True, verbose_name="Fecha de nacimiento")),
+                (
+                    "fecha_nacimiento",
+                    models.DateField(blank=True, null=True, verbose_name="Fecha de nacimiento"),
+                ),
                 ("notas", models.TextField(blank=True, verbose_name="Notas adicionales")),
                 ("activo", models.BooleanField(default=True, verbose_name="Activo")),
-                ("creado_en", models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")),
-                ("actualizado_en", models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización")),
+                (
+                    "creado_en",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "actualizado_en",
+                    models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización"),
+                ),
                 (
                     "usuario",
                     models.ForeignKey(
@@ -54,4 +68,3 @@ class Migration(migrations.Migration):
             unique_together={("usuario", "telefono")},
         ),
     ]
-

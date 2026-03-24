@@ -14,6 +14,7 @@ def perfil_sidebar(request):
     if request.user.is_authenticated:
         perfil, _ = Perfil.objects.get_or_create(user=request.user)
         from apps.notificaciones.models import Notificacion
+
         no_leidas = Notificacion.objects.filter(usuario=request.user, leida=False).count()
         return {"perfil": perfil, "no_leidas_notificaciones": no_leidas}
     return {"perfil": None, "no_leidas_notificaciones": 0}

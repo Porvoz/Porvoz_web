@@ -19,7 +19,7 @@ from apps.notificaciones.services import NotificacionService
 def agregar_paciente_view(request: HttpRequest) -> HttpResponse:
     """Vista para agregar un paciente (puede ser el usuario mismo o otra persona)."""
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
-    
+
     if request.method == "POST":
         nombre = request.POST.get("nombre", "").strip()
         phone_country = request.POST.get("phone_country", "+57").strip()
@@ -70,7 +70,7 @@ def agregar_paciente_view(request: HttpRequest) -> HttpResponse:
             # Crear condiciones si se indicaron
             for nombre_condicion in condiciones:
                 PacienteService.crear_enfermedad(paciente, nombre_condicion)
-            
+
             NotificacionService.crear_notificacion_sistema(
                 usuario=request.user,
                 titulo=f'Paciente "{paciente.get_display_nombre()}" agregado',
@@ -78,32 +78,36 @@ def agregar_paciente_view(request: HttpRequest) -> HttpResponse:
             )
             messages.success(request, f"Paciente '{nombre}' agregado correctamente.")
             return redirect("listar_pacientes")
-    
+
     # Verificar si ya existe un paciente que sea el usuario mismo
     ya_existe_paciente_mismo = Paciente.objects.filter(
-        usuario=request.user,
-        es_usuario_mismo=True,
-        activo=True
+        usuario=request.user, es_usuario_mismo=True, activo=True
     ).exists()
-    
+
     # Pre-llenar datos si es "agregarme a mí"
     prefill = request.GET.get("prefill") == "me"
-    
+
     # Parsear teléfono para prefill
     prefill_phone_data = TelefonoService.prefill_desde_perfil(perfil.phone if prefill else None)
     prefill_phone_country = prefill_phone_data["pais"]
     prefill_telefono = prefill_phone_data["numero"]
-    
+
     context = {
         "perfil": perfil,
         "prefill": prefill,
         "ya_existe_paciente_mismo": ya_existe_paciente_mismo,
-        "prefill_nombre": f"{request.user.first_name} {request.user.last_name}".strip() if prefill else "",
+        "prefill_nombre": (
+            f"{request.user.first_name} {request.user.last_name}".strip() if prefill else ""
+        ),
         "prefill_telefono": prefill_telefono,
         "sexo_choices": Paciente.SEXO_CHOICES,
         "prefill_phone_country": prefill_phone_country,
-        "prefill_fecha_nacimiento": perfil.date_of_birth.strftime("%Y-%m-%d") if prefill and perfil.date_of_birth else "",
-        "prefill_descripcion": f"Paciente autogestionado. {perfil.city or ''}".strip() if prefill else "",
+        "prefill_fecha_nacimiento": (
+            perfil.date_of_birth.strftime("%Y-%m-%d") if prefill and perfil.date_of_birth else ""
+        ),
+        "prefill_descripcion": (
+            f"Paciente autogestionado. {perfil.city or ''}".strip() if prefill else ""
+        ),
         "prefill_foto_url": perfil.profile_image.url if prefill and perfil.profile_image else "",
     }
     return render(request, "pacientes/agregar_paciente.html", context)
@@ -114,7 +118,7 @@ def editar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse
     """Vista para editar un paciente."""
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
-    
+
     if request.method == "POST":
         descripcion = request.POST.get("descripcion", "").strip()
         notas = request.POST.get("notas", "").strip()
@@ -136,7 +140,9 @@ def editar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse
                 paciente.save()
                 paciente.enfermedades.all().delete()
                 for nombre_condicion in condiciones:
-                    Enfermedad.objects.create(paciente=paciente, nombre=nombre_condicion, descripcion="")
+                    Enfermedad.objects.create(
+                        paciente=paciente, nombre=nombre_condicion, descripcion=""
+                    )
                 NotificacionService.crear_notificacion_sistema(
                     usuario=request.user,
                     titulo=f'Información de "{paciente.get_display_nombre()}" actualizada',
@@ -159,14 +165,17 @@ def editar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse
             if not nombre or not telefono:
                 messages.error(request, "El nombre y teléfono son obligatorios.")
             else:
-                paciente_existente = Paciente.objects.filter(
-                    usuario=request.user,
-                    telefono=telefono,
-                    activo=True
-                ).exclude(id=paciente.id).first()
+                paciente_existente = (
+                    Paciente.objects.filter(usuario=request.user, telefono=telefono, activo=True)
+                    .exclude(id=paciente.id)
+                    .first()
+                )
 
                 if paciente_existente:
-                    messages.error(request, f"Ya existe otro paciente con el número de teléfono {telefono}. Por favor, usa un número diferente.")
+                    messages.error(
+                        request,
+                        f"Ya existe otro paciente con el número de teléfono {telefono}. Por favor, usa un número diferente.",
+                    )
                 else:
                     paciente.nombre = nombre
                     paciente.telefono = telefono
@@ -185,7 +194,9 @@ def editar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse
                     paciente.save()
                     paciente.enfermedades.all().delete()
                     for nombre_condicion in condiciones:
-                        Enfermedad.objects.create(paciente=paciente, nombre=nombre_condicion, descripcion="")
+                        Enfermedad.objects.create(
+                            paciente=paciente, nombre=nombre_condicion, descripcion=""
+                        )
                     NotificacionService.crear_notificacion_sistema(
                         usuario=request.user,
                         titulo=f'Paciente "{paciente.get_display_nombre()}" actualizado',
@@ -196,12 +207,12 @@ def editar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse
                     return redirect("editar_paciente", paciente_id=paciente.id)
                 except Exception as e:
                     messages.error(request, f"Error al actualizar el paciente: {str(e)}")
-    
+
     # Parsear teléfono para mostrar en el formulario
     tel_parsed = TelefonoService.parsear_telefono(paciente.telefono)
     telefono_pais = tel_parsed.pais
     telefono_numero = tel_parsed.numero
-    
+
     context = {
         "perfil": perfil,
         "paciente": paciente,
@@ -216,13 +227,15 @@ def editar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse
 def eliminar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse:
     """Vista para eliminar un paciente."""
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
-    
+
     if request.method == "POST":
         confirm_name = request.POST.get("confirm_name", "").strip()
         nombre_mostrado = paciente.get_display_nombre()
         acepta = confirm_name == paciente.nombre or confirm_name == nombre_mostrado
         if not acepta:
-            messages.error(request, f"El nombre no coincide. Debes escribir exactamente: {nombre_mostrado}")
+            messages.error(
+                request, f"El nombre no coincide. Debes escribir exactamente: {nombre_mostrado}"
+            )
         else:
             NotificacionService.crear_notificacion_sistema(
                 usuario=request.user,
@@ -231,7 +244,7 @@ def eliminar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpRespon
             paciente.delete()
             messages.success(request, f"Paciente '{nombre_mostrado}' eliminado correctamente.")
             return redirect("listar_pacientes")
-    
+
     context = {
         "paciente": paciente,
     }
@@ -255,10 +268,14 @@ def historial_llamadas_paciente_view(request: HttpRequest, paciente_id: int) -> 
     """Historial de novedades del paciente (notificaciones asociadas)."""
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
-    novedades = Notificacion.objects.filter(
-        usuario=request.user,
-        paciente=paciente,
-    ).select_related("medicamento").order_by("-creado_en")
+    novedades = (
+        Notificacion.objects.filter(
+            usuario=request.user,
+            paciente=paciente,
+        )
+        .select_related("medicamento")
+        .order_by("-creado_en")
+    )
     context = {
         "perfil": perfil,
         "paciente": paciente,
@@ -271,14 +288,15 @@ def historial_llamadas_paciente_view(request: HttpRequest, paciente_id: int) -> 
 def agregar_enfermedad_view(request: HttpRequest, paciente_id: int) -> HttpResponse:
     """Vista para agregar una enfermedad a un paciente."""
     from datetime import date, datetime
+
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
-    
+
     if request.method == "POST":
         nombre = request.POST.get("nombre", "").strip()
         descripcion = request.POST.get("descripcion", "").strip()
         diagnostico_fecha_str = request.POST.get("diagnostico_fecha", "").strip()
-        
+
         if not nombre:
             messages.error(request, "El nombre de la enfermedad es obligatorio.")
         else:
@@ -288,7 +306,11 @@ def agregar_enfermedad_view(request: HttpRequest, paciente_id: int) -> HttpRespo
                     diagnostico_fecha = datetime.strptime(diagnostico_fecha_str, "%Y-%m-%d").date()
                     if diagnostico_fecha > date.today():
                         messages.error(request, "La fecha de diagnóstico no puede ser futura.")
-                        return render(request, "pacientes/agregar_enfermedad.html", {"perfil": perfil, "paciente": paciente})
+                        return render(
+                            request,
+                            "pacientes/agregar_enfermedad.html",
+                            {"perfil": perfil, "paciente": paciente},
+                        )
                 except ValueError:
                     pass
             PacienteService.crear_enfermedad(
@@ -304,7 +326,7 @@ def agregar_enfermedad_view(request: HttpRequest, paciente_id: int) -> HttpRespo
             )
             messages.success(request, f"Enfermedad '{nombre}' agregada correctamente.")
             return redirect("editar_paciente", paciente_id=paciente.id)
-    
+
     context = {
         "perfil": perfil,
         "paciente": paciente,
@@ -313,7 +335,9 @@ def agregar_enfermedad_view(request: HttpRequest, paciente_id: int) -> HttpRespo
 
 
 @login_required
-def editar_enfermedad_view(request: HttpRequest, paciente_id: int, enfermedad_id: int) -> HttpResponse:
+def editar_enfermedad_view(
+    request: HttpRequest, paciente_id: int, enfermedad_id: int
+) -> HttpResponse:
     """Vista para editar una condición/enfermedad de un paciente."""
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
@@ -321,6 +345,7 @@ def editar_enfermedad_view(request: HttpRequest, paciente_id: int, enfermedad_id
 
     if request.method == "POST":
         from datetime import date, datetime
+
         nombre = request.POST.get("nombre", "").strip()
         descripcion = request.POST.get("descripcion", "").strip()
         diagnostico_fecha_str = request.POST.get("diagnostico_fecha", "").strip()
@@ -334,7 +359,11 @@ def editar_enfermedad_view(request: HttpRequest, paciente_id: int, enfermedad_id
                     diagnostico_fecha = datetime.strptime(diagnostico_fecha_str, "%Y-%m-%d").date()
                     if diagnostico_fecha > date.today():
                         messages.error(request, "La fecha de diagnóstico no puede ser futura.")
-                        return render(request, "pacientes/editar_enfermedad.html", {"perfil": perfil, "paciente": paciente, "enfermedad": enfermedad})
+                        return render(
+                            request,
+                            "pacientes/editar_enfermedad.html",
+                            {"perfil": perfil, "paciente": paciente, "enfermedad": enfermedad},
+                        )
                 except ValueError:
                     pass
             enfermedad.nombre = nombre

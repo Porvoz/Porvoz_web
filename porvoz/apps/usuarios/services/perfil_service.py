@@ -1,6 +1,7 @@
 """
 Servicio para gestionar perfiles de usuario.
 """
+
 from datetime import date, datetime, timedelta
 from typing import Optional, Tuple
 
@@ -37,8 +38,10 @@ class PerfilService:
             return None, "Fecha de nacimiento inválida."
 
         today = date.today()
-        age = today.year - birth_date.year - (
-            (today.month, today.day) < (birth_date.month, birth_date.day)
+        age = (
+            today.year
+            - birth_date.year
+            - ((today.month, today.day) < (birth_date.month, birth_date.day))
         )
 
         if age < 10:
@@ -119,9 +122,7 @@ class PerfilService:
         return True, None
 
     @staticmethod
-    def cambiar_plan(
-        perfil: Perfil, nuevo_plan: str
-    ) -> Tuple[bool, Optional[str]]:
+    def cambiar_plan(perfil: Perfil, nuevo_plan: str) -> Tuple[bool, Optional[str]]:
         """
         Cambia el plan del perfil a uno válido.
 

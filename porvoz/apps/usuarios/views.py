@@ -116,7 +116,10 @@ def change_password_view(request: HttpRequest) -> HttpResponse:
         else:
             request.user.set_password(new_password)
             request.user.save()
-            messages.success(request, "Contraseña actualizada correctamente. Por favor, inicia sesión nuevamente.")
+            messages.success(
+                request,
+                "Contraseña actualizada correctamente. Por favor, inicia sesión nuevamente.",
+            )
             return redirect("login")
 
     return render(request, "usuarios/change_password.html", {"perfil": perfil})

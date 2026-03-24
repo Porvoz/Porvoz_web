@@ -1,6 +1,7 @@
 """
 Servicio para gestión de notificaciones.
 """
+
 from datetime import datetime
 
 from django.contrib.auth.models import User
@@ -92,27 +93,18 @@ class NotificacionService:
     @staticmethod
     def marcar_todas_como_leidas(usuario: User) -> int:
         """Marca todas las notificaciones como leídas. Retorna cantidad."""
-        return Notificacion.objects.filter(
-            usuario=usuario,
-            leida=False
-        ).update(leida=True)
+        return Notificacion.objects.filter(usuario=usuario, leida=False).update(leida=True)
 
     @staticmethod
     def eliminar_notificacion(notificacion_id: int, usuario: User) -> bool:
         """Elimina una notificación. Retorna True si se encontró."""
-        deleted, _ = Notificacion.objects.filter(
-            id=notificacion_id,
-            usuario=usuario
-        ).delete()
+        deleted, _ = Notificacion.objects.filter(id=notificacion_id, usuario=usuario).delete()
         return deleted > 0
 
     @staticmethod
     def eliminar_notificaciones(ids: list[int], usuario: User) -> int:
         """Elimina múltiples notificaciones. Retorna cantidad eliminada."""
-        deleted, _ = Notificacion.objects.filter(
-            id__in=ids,
-            usuario=usuario
-        ).delete()
+        deleted, _ = Notificacion.objects.filter(id__in=ids, usuario=usuario).delete()
         return deleted
 
     @staticmethod
@@ -175,8 +167,7 @@ class NotificacionService:
 
         if filtros.get("buscar"):
             queryset = queryset.filter(
-                Q(titulo__icontains=filtros["buscar"]) |
-                Q(mensaje__icontains=filtros["buscar"])
+                Q(titulo__icontains=filtros["buscar"]) | Q(mensaje__icontains=filtros["buscar"])
             )
 
         return queryset

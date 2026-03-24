@@ -29,13 +29,21 @@ class Perfil(models.Model):
     date_of_birth = models.DateField("Fecha de nacimiento", blank=True, null=True)
     city = models.CharField("Ciudad", max_length=100, blank=True)
     phone = models.CharField("Teléfono", max_length=30, blank=True)
-    profile_image = models.ImageField("Foto de perfil", upload_to="profile_images/", blank=True, null=True)
-    document_type = models.CharField("Tipo de documento", max_length=10, choices=DOC_CHOICES, blank=True)
+    profile_image = models.ImageField(
+        "Foto de perfil", upload_to="profile_images/", blank=True, null=True
+    )
+    document_type = models.CharField(
+        "Tipo de documento", max_length=10, choices=DOC_CHOICES, blank=True
+    )
     document_number = models.CharField("Número de documento", max_length=30, blank=True)
-    emergency_contact_name = models.CharField("Nombre contacto de emergencia", max_length=150, blank=True)
-    emergency_contact_phone = models.CharField("Teléfono contacto de emergencia", max_length=30, blank=True)
+    emergency_contact_name = models.CharField(
+        "Nombre contacto de emergencia", max_length=150, blank=True
+    )
+    emergency_contact_phone = models.CharField(
+        "Teléfono contacto de emergencia", max_length=30, blank=True
+    )
     profile_completed = models.BooleanField(default=False)
-    
+
     # Planes
     PLAN_FREEMIUM = "freemium"
     PLAN_GROWTH = "growth"
@@ -50,13 +58,13 @@ class Perfil(models.Model):
         max_length=20,
         choices=PLAN_CHOICES,
         default=PLAN_FREEMIUM,
-        help_text="Plan de suscripción del usuario"
+        help_text="Plan de suscripción del usuario",
     )
     plan_expiration = models.DateField(
         "Vencimiento del plan",
         null=True,
         blank=True,
-        help_text="Fecha hasta la cual el plan está activo"
+        help_text="Fecha hasta la cual el plan está activo",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -77,4 +85,3 @@ class Perfil(models.Model):
             delta = (self.plan_expiration - hoy).days
             return max(0, delta)
         return 365
-

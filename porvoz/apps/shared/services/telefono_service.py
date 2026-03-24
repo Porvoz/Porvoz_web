@@ -13,7 +13,7 @@ class TelefonoParseado:
 
 
 class TelefonoService:
-    
+
     PREFIJOS_COMUNES = {
         "+57": "Colombia",
         "+1": "USA/Canadá",
@@ -26,12 +26,12 @@ class TelefonoService:
         "+593": "Ecuador",
         "+58": "Venezuela",
     }
-    
+
     @classmethod
     def parsear_telefono(cls, telefono: str) -> TelefonoParseado:
         """
         Parsea un número de teléfono y retorna país y número separados.
-        
+
         Ejemplos:
             "+57 3001234567" -> pais="+57", numero="3001234567"
             "+573001234567" -> pais="+57", numero="3001234567"
@@ -39,27 +39,25 @@ class TelefonoService:
         """
         if not telefono:
             return TelefonoParseado(pais="+57", numero="", completo="")
-        
+
         telefono = telefono.strip()
-        
+
         for prefijo in sorted(cls.PREFIJOS_COMUNES.keys(), key=len, reverse=True):
             if telefono.startswith(prefijo):
-                resto = telefono[len(prefijo):].strip()
+                resto = telefono[len(prefijo) :].strip()
                 if resto:
                     return TelefonoParseado(
-                        pais=prefijo,
-                        numero=resto,
-                        completo=f"{prefijo} {resto}"
+                        pais=prefijo, numero=resto, completo=f"{prefijo} {resto}"
                     )
-        
+
         if telefono.startswith("+"):
             parts = telefono.split(" ", 1)
             if len(parts) == 2:
                 return TelefonoParseado(pais=parts[0], numero=parts[1], completo=telefono)
             return TelefonoParseado(pais="+57", numero=telefono[1:], completo=telefono)
-        
+
         return TelefonoParseado(pais="+57", numero=telefono, completo=f"+57 {telefono}")
-    
+
     @classmethod
     def formatear_completo(cls, pais: str, numero: str) -> str:
         """Formatea país y número en un solo string."""
@@ -69,7 +67,7 @@ class TelefonoService:
         if not pais.startswith("+"):
             pais = f"+{pais}"
         return f"{pais} {numero.strip()}"
-    
+
     @classmethod
     def prefill_desde_perfil(cls, telefono_perfil: str | None) -> dict:
         """
@@ -77,10 +75,10 @@ class TelefonoService:
         """
         if not telefono_perfil:
             return {"pais": "+57", "numero": ""}
-        
+
         parsed = cls.parsear_telefono(telefono_perfil)
         return {"pais": parsed.pais, "numero": parsed.numero}
-    
+
     @classmethod
     def sanitizar_numero(cls, numero: str) -> str:
         """Elimina espacios y guiones de un número."""

@@ -1,6 +1,7 @@
 """
 Servicio para estadísticas y datos del dashboard.
 """
+
 from datetime import datetime
 
 from django.contrib.auth.models import User
@@ -11,7 +12,7 @@ from apps.notificaciones.models import Notificacion
 
 
 class DashboardService:
-    
+
     ICONOS = {
         "alerta": "exclamation-triangle",
         "recordatorio": "bell",
@@ -20,22 +21,21 @@ class DashboardService:
         "sistema_condicion": "heart-pulse",
         "default": "info-circle",
     }
-    
+
     @staticmethod
     def obtener_pacientes(usuario: User, ordenar: str = "recientes") -> list:
         """Obtiene pacientes ordenados según el criterio."""
         from apps.pacientes.models import Paciente
-        
-        base_qs = Paciente.objects.filter(
-            usuario=usuario,
-            activo=True
-        ).select_related(
-            "usuario", "usuario__perfil"
-        ).prefetch_related(
-            Prefetch("medicamentos", queryset=Medicamento.objects.filter(activo=True)),
-            "enfermedades"
+
+        base_qs = (
+            Paciente.objects.filter(usuario=usuario, activo=True)
+            .select_related("usuario", "usuario__perfil")
+            .prefetch_related(
+                Prefetch("medicamentos", queryset=Medicamento.objects.filter(activo=True)),
+                "enfermedades",
+            )
         )
-        
+
         if ordenar == "nombre_asc":
             return list(base_qs.order_by("nombre"))
         elif ordenar == "nombre_desc":
@@ -45,71 +45,80 @@ class DashboardService:
             if ordenar == "medicamentos":
                 return sorted(base_list, key=lambda p: p.medicamentos.count(), reverse=True)
             elif ordenar == "inicio":
+
                 def _inicio(p):
                     m = p.medicamentos.filter(activo=True).order_by("creado_en").first()
                     return m.creado_en if m else p.creado_en
+
                 return sorted(base_list, key=_inicio, reverse=True)
             elif ordenar == "edad_asc":
+
                 def _edad_asc(p):
                     edad = p.get_edad_display()
                     return (edad if edad is not None else 999, p.nombre)
+
                 return sorted(base_list, key=_edad_asc)
             elif ordenar == "edad_desc":
+
                 def _edad_desc(p):
                     edad = p.get_edad_display()
                     return (-(edad if edad is not None else 999), p.nombre)
+
                 return sorted(base_list, key=_edad_desc)
             elif ordenar == "condicion":
                 return sorted(
                     base_list,
                     key=lambda p: ((p.get_primera_condicion() or "zzz").lower(), p.nombre),
                 )
-        
+
         return list(base_qs.order_by("-es_usuario_mismo", "-creado_en"))
-    
+
     @staticmethod
     def obtener_total_medicamentos(usuario: User) -> int:
         """Obtiene el total de medicamentos activos del usuario."""
-        return Medicamento.objects.filter(
-            paciente__usuario=usuario,
-            activo=True
-        ).count()
-    
+        return Medicamento.objects.filter(paciente__usuario=usuario, activo=True).count()
+
     @staticmethod
     def obtener_proximos_recordatorios(usuario: User, limite: int = 5) -> list:
         """Obtiene los próximos recordatorios de medicamentos."""
         hoy = datetime.now().date()
-        
-        medicamentos = Medicamento.objects.filter(
-            paciente__usuario=usuario,
-            activo=True,
-            frecuencia_tipo=Medicamento.FRECUENCIA_HORARIO,
-        ).prefetch_related("horarios").select_related("paciente")
-        
+
+        medicamentos = (
+            Medicamento.objects.filter(
+                paciente__usuario=usuario,
+                activo=True,
+                frecuencia_tipo=Medicamento.FRECUENCIA_HORARIO,
+            )
+            .prefetch_related("horarios")
+            .select_related("paciente")
+        )
+
         items = []
         for med in medicamentos:
             horarios = med.get_horarios_ordenados()
             if not horarios:
                 continue
             for h in horarios:
-                items.append({
-                    "medicamento": med,
-                    "horario": h.hora,
-                    "fecha": hoy,
-                })
-        
+                items.append(
+                    {
+                        "medicamento": med,
+                        "horario": h.hora,
+                        "fecha": hoy,
+                    }
+                )
+
         items.sort(key=lambda x: x["horario"])
         return items[:limite]
-    
+
     @staticmethod
     def obtener_actividad_reciente(usuario: User, limite: int = 5) -> list:
         """Obtiene la actividad reciente del usuario (notificaciones)."""
-        notificaciones = Notificacion.objects.filter(
-            usuario=usuario
-        ).select_related(
-            "paciente", "medicamento"
-        ).order_by("-creado_en")[:10]
-        
+        notificaciones = (
+            Notificacion.objects.filter(usuario=usuario)
+            .select_related("paciente", "medicamento")
+            .order_by("-creado_en")[:10]
+        )
+
         return [
             {
                 "icono": DashboardService._icono_para_notificacion(n),
@@ -118,7 +127,7 @@ class DashboardService:
             }
             for n in notificaciones
         ][:limite]
-    
+
     @staticmethod
     def _icono_para_notificacion(notif) -> str:
         """Mapea tipo/título de notificación a icono."""
@@ -136,14 +145,14 @@ class DashboardService:
             return DashboardService.ICONOS["sistema_condicion"]
 
         return DashboardService.ICONOS["default"]
-    
+
     @staticmethod
     def obtener_datos_completos(usuario: User, ordenar: str = "recientes") -> dict:
         """Obtiene todos los datos necesarios para el dashboard."""
         from apps.core.models import Perfil
-        
+
         perfil, _ = Perfil.objects.get_or_create(user=usuario)
-        
+
         return {
             "perfil": perfil,
             "pacientes": DashboardService.obtener_pacientes(usuario, ordenar),
