@@ -180,4 +180,10 @@ class NotificacionService:
         return {
             "total": base_qs.count(),
             "no_leidas": base_qs.filter(leida=False).count(),
+            "total_recordatorios": base_qs.filter(
+                tipo=Notificacion.TIPO_RECORDATORIO
+            ).count(),
+            "total_alertas": base_qs.filter(
+                tipo=Notificacion.TIPO_ALERTA
+            ).count(),
         }
