@@ -1,0 +1,13 @@
+services:
+  web:
+    build:
+      context: ./porvoz
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./porvoz/media:/app/media
+      - ./porvoz/db.sqlite3:/app/db.sqlite3
+    restart: unless-stopped

@@ -8,8 +8,10 @@ from datetime import date, timedelta
 from django.test import TestCase
 from django.contrib.auth.models import User
 
+from apps.autenticacion.services import RegistroService
 from apps.core.models import Perfil
-from apps.core.services import PerfilService, RegistroService, TelefonoService
+from apps.shared.services import TelefonoService
+from apps.usuarios.services import PerfilService
 
 
 class PerfilServiceValidarEdadTest(TestCase):
