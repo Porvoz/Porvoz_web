@@ -9,10 +9,10 @@ from django.shortcuts import redirect, render, get_object_or_404
 from .models import Paciente, Enfermedad
 from .services import PacienteService
 from apps.core.models import Perfil
-from apps.shared.services import TelefonoService
 from apps.dashboard.services import DashboardService
-from apps.notificaciones.models import Notificacion
+from apps.llamadas.models import Llamada
 from apps.notificaciones.services import NotificacionService
+from apps.shared.services import TelefonoService
 
 
 @login_required
@@ -266,7 +266,6 @@ def detalle_paciente_view(request: HttpRequest, paciente_id: int) -> HttpRespons
 @login_required
 def historial_llamadas_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse:
     """Historial de llamadas automáticas del paciente."""
-    from apps.llamadas.models import Llamada
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
     llamadas = (

@@ -7,6 +7,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.db.models import Prefetch
 
+from apps.core.models import Perfil
 from apps.medicamentos.models import Medicamento
 from apps.notificaciones.models import Notificacion
 
@@ -149,8 +150,6 @@ class DashboardService:
     @staticmethod
     def obtener_datos_completos(usuario: User, ordenar: str = "recientes") -> dict:
         """Obtiene todos los datos necesarios para el dashboard."""
-        from apps.core.models import Perfil
-
         perfil, _ = Perfil.objects.get_or_create(user=usuario)
 
         return {
