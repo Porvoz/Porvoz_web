@@ -265,21 +265,20 @@ def detalle_paciente_view(request: HttpRequest, paciente_id: int) -> HttpRespons
 
 @login_required
 def historial_llamadas_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse:
-    """Historial de novedades del paciente (notificaciones asociadas)."""
+    """Historial de llamadas automáticas del paciente."""
+    from apps.llamadas.models import Llamada
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
-    novedades = (
-        Notificacion.objects.filter(
-            usuario=request.user,
-            paciente=paciente,
-        )
+    llamadas = (
+        Llamada.objects.filter(paciente=paciente, usuario=request.user)
         .select_related("medicamento")
-        .order_by("-creado_en")
+        .prefetch_related("respuesta")
+        .order_by("-fecha_programada")
     )
     context = {
         "perfil": perfil,
         "paciente": paciente,
-        "llamadas": novedades,
+        "llamadas": llamadas,
     }
     return render(request, "pacientes/historial_llamadas_paciente.html", context)
 

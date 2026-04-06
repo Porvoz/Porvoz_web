@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-50 flex-col w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10 flex flex-col">
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700 touch-manipulation" data-mobile-menu-toggle aria-label="Abrir menú">
+            <i class="bi bi-list text-xl"></i>
+        </button>
+
+        <!-- Header -->
+        <header class="mb-8 mt-12 lg:mt-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-100 text-blue-600 flex-shrink-0">
+                        <i class="bi bi-telephone-outbound text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Llamadas</h1>
+                        <p class="text-slate-600 mt-1">
+                            <span class="font-medium text-slate-700">{{ total }}</span> en total
+                        </p>
+                    </div>
+                </div>
+                <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-700 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm self-start sm:self-center">
+                    <i class="bi bi-arrow-left"></i>
+                    Panel principal
+                </a>
+            </div>
+        </header>
+
+        <!-- Filtros -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 mb-6">
+            <form method="get" class="flex flex-col sm:flex-row gap-3">
+                <select name="paciente" onchange="this.form.submit()" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 cursor-pointer flex-1">
+                    <option value="">Todos los pacientes</option>
+                    {% for p in pacientes %}
+                    <option value="{{ p.id }}" {% if paciente_filtro == p.id|stringformat:'s' %}selected{% endif %}>{{ p.get_display_nombre }}</option>
+                    {% endfor %}
+                </select>
+                <select name="estado" onchange="this.form.submit()" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 cursor-pointer flex-1">
+                    <option value="">Todos los estados</option>
+                    {% for valor, etiqueta in estados %}
+                    <option value="{{ valor }}" {% if estado_filtro == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                    {% endfor %}
+                </select>
+                {% if estado_filtro or paciente_filtro %}
+                <a href="{% url 'historial_llamadas' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-600 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-all self-start sm:self-auto">
+                    <i class="bi bi-x-lg"></i> Limpiar
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Lista de llamadas -->
+        {% if llamadas %}
+        <div class="space-y-4">
+            {% for llamada in llamadas %}
+            <article class="bg-white rounded-2xl border-l-4 shadow-sm overflow-hidden transition-shadow hover:shadow-md
+                {% if llamada.estado == 'completada' %}border-l-emerald-500
+                {% elif llamada.estado == 'fallida' %}border-l-rose-500
+                {% elif llamada.estado == 'en_curso' %}border-l-blue-500
+                {% else %}border-l-slate-400{% endif %}">
+                <div class="p-5 sm:p-6">
+                    <div class="flex gap-4 sm:gap-5">
+                        <!-- Icono estado -->
+                        <div class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center
+                            {% if llamada.estado == 'completada' %}bg-emerald-100 text-emerald-600
+                            {% elif llamada.estado == 'fallida' %}bg-rose-100 text-rose-600
+                            {% elif llamada.estado == 'en_curso' %}bg-blue-100 text-blue-600
+                            {% else %}bg-slate-100 text-slate-500{% endif %}">
+                            {% if llamada.estado == 'completada' %}
+                            <i class="bi bi-telephone-fill text-xl"></i>
+                            {% elif llamada.estado == 'fallida' %}
+                            <i class="bi bi-telephone-x-fill text-xl"></i>
+                            {% elif llamada.estado == 'en_curso' %}
+                            <i class="bi bi-telephone-inbound-fill text-xl"></i>
+                            {% else %}
+                            <i class="bi bi-telephone-outbound text-xl"></i>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                                <div>
+                                    <p class="font-bold text-slate-900 text-base leading-snug">
+                                        {% if llamada.medicamento %}{{ llamada.medicamento.nombre }}{% else %}Sin medicamento{% endif %}
+                                    </p>
+                                    <p class="text-sm text-slate-600 mt-0.5">
+                                        <i class="bi bi-person mr-1"></i>{{ llamada.paciente.get_display_nombre }}
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold
+                                        {% if llamada.estado == 'completada' %}bg-emerald-100 text-emerald-700
+                                        {% elif llamada.estado == 'fallida' %}bg-rose-100 text-rose-700
+                                        {% elif llamada.estado == 'en_curso' %}bg-blue-100 text-blue-700
+                                        {% else %}bg-slate-100 text-slate-600{% endif %}">
+                                        <span class="w-1.5 h-1.5 rounded-full
+                                            {% if llamada.estado == 'completada' %}bg-emerald-500
+                                            {% elif llamada.estado == 'fallida' %}bg-rose-500
+                                            {% elif llamada.estado == 'en_curso' %}bg-blue-500
+                                            {% else %}bg-slate-400{% endif %}"></span>
+                                        {{ llamada.get_estado_display }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-slate-500">
+                                <span class="flex items-center gap-1">
+                                    <i class="bi bi-calendar3"></i>
+                                    {{ llamada.fecha_programada|date:"d/m/Y H:i" }}
+                                </span>
+                                {% if llamada.duracion %}
+                                <span class="flex items-center gap-1">
+                                    <i class="bi bi-stopwatch"></i>
+                                    {{ llamada.duracion }}s
+                                </span>
+                                {% endif %}
+                                {% if llamada.respuesta %}
+                                <span class="flex items-center gap-1 font-semibold
+                                    {% if llamada.respuesta.como_respondio == 'atendida' %}text-emerald-600
+                                    {% elif llamada.respuesta.como_respondio == 'no_atendida' %}text-rose-600
+                                    {% else %}text-amber-600{% endif %}">
+                                    <i class="bi bi-person-check"></i>
+                                    {{ llamada.respuesta.get_como_respondio_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Transcripción (expandible) -->
+                            {% if llamada.respuesta and llamada.respuesta.transcripcion %}
+                            <details class="mt-3">
+                                <summary class="text-xs font-semibold text-slate-500 hover:text-slate-700 cursor-pointer select-none">
+                                    <i class="bi bi-chat-left-text mr-1"></i>Ver transcripción
+                                </summary>
+                                <pre class="mt-2 p-3 bg-slate-50 rounded-xl text-xs text-slate-600 whitespace-pre-wrap font-sans border border-slate-100">{{ llamada.respuesta.transcripcion }}</pre>
+                            </details>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <!-- Estado vacío -->
+        <div class="flex flex-col items-center justify-center py-20 text-center">
+            <div class="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center mb-6">
+                <i class="bi bi-telephone-outbound text-3xl text-slate-400"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-700 mb-2">No hay llamadas</h3>
+            <p class="text-slate-500 text-sm max-w-sm">
+                {% if estado_filtro or paciente_filtro %}
+                No hay llamadas con los filtros seleccionados.
+                {% else %}
+                Las llamadas automáticas aparecerán aquí cuando estén configuradas.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+
+    </main>
+</div>
+{% endblock %}

@@ -15,6 +15,7 @@ urlpatterns = [
     path("notificaciones/", include("apps.notificaciones.urls")),
     path("pacientes/", include("apps.pacientes.urls")),
     path("medicamentos/", include("apps.medicamentos.urls")),
+    path("llamadas/", include("apps.llamadas.urls")),
 ]
 
 if settings.DEBUG:

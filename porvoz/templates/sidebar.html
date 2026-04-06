@@ -34,6 +34,9 @@
             <span class="nav-notif-badge flex items-center justify-center rounded-full bg-red-500 text-white font-bold shadow-sm flex-shrink-0">{% if no_leidas_notificaciones > 99 %}99+{% else %}{{ no_leidas_notificaciones }}{% endif %}</span>
             {% endif %}
         </a>
+        <a href="{% url 'historial_llamadas' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'historial_llamadas' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
+            <i class="bi bi-telephone-outbound mr-2"></i><span class="label-text">Llamadas</span>
+        </a>
         <div class="px-2 mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2 label-text">Cuenta</div>
         <a href="{% url 'edit_profile' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'edit_profile' or request.resolver_match.url_name == 'change_password' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
             <i class="bi bi-gear mr-2"></i><span class="label-text">Mi cuenta</span>
