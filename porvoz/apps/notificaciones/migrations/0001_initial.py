@@ -27,7 +27,10 @@ class Migration(migrations.Migration):
         ("pacientes", "0001_initial"),
         ("medicamentos", "0001_initial"),
         # Depende de que llamadas ya haya creado la tabla en la BD.
-        ("llamadas", "0002_rename_porvoz_noti_usuario_idx_porvoz_noti_usuario_4220f6_idx_and_more"),
+        (
+            "llamadas",
+            "0002_rename_porvoz_noti_usuario_idx_porvoz_noti_usuario_4220f6_idx_and_more",
+        ),
     ]
 
     operations = [
@@ -75,8 +78,14 @@ class Migration(migrations.Migration):
                                 verbose_name="Estado",
                             ),
                         ),
-                        ("titulo", models.CharField(max_length=200, verbose_name="Título")),
-                        ("mensaje", models.TextField(blank=True, verbose_name="Mensaje")),
+                        (
+                            "titulo",
+                            models.CharField(max_length=200, verbose_name="Título"),
+                        ),
+                        (
+                            "mensaje",
+                            models.TextField(blank=True, verbose_name="Mensaje"),
+                        ),
                         (
                             "fecha_programada",
                             models.DateTimeField(
@@ -95,7 +104,10 @@ class Migration(migrations.Migration):
                                 blank=True, null=True, verbose_name="Fecha atendida"
                             ),
                         ),
-                        ("leida", models.BooleanField(default=False, verbose_name="Leída")),
+                        (
+                            "leida",
+                            models.BooleanField(default=False, verbose_name="Leída"),
+                        ),
                         (
                             "creado_en",
                             models.DateTimeField(

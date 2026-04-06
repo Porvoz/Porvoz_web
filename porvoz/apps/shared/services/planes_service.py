@@ -70,8 +70,14 @@ def obtener_planes(plan_actual: str | None = None) -> list[dict]:
     """Retorna la lista de planes con marca de plan actual."""
     planes = [
         {**PLANES_DATA[key], "plan_key": key}
-        for key in [Perfil.PLAN_FREEMIUM, Perfil.PLAN_GROWTH, Perfil.PLAN_MULTI_BUSINESS]
+        for key in [
+            Perfil.PLAN_FREEMIUM,
+            Perfil.PLAN_GROWTH,
+            Perfil.PLAN_MULTI_BUSINESS,
+        ]
     ]
     for plan in planes:
-        plan["es_plan_actual"] = plan_actual == plan["plan_key"] if plan_actual else False
+        plan["es_plan_actual"] = (
+            plan_actual == plan["plan_key"] if plan_actual else False
+        )
     return planes

@@ -5,8 +5,6 @@ Servicio para gestionar perfiles de usuario.
 from datetime import date, datetime, timedelta
 from typing import Optional, Tuple
 
-from django.contrib.auth.models import User
-
 from apps.core.models import Perfil
 from apps.shared.services import TelefonoService
 

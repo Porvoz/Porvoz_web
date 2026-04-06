@@ -22,7 +22,10 @@ def _notifications_redirect_url(request: HttpRequest) -> str:
     p = source.get("paciente") or source.get("redirect_paciente")
     if p and p != "None":
         params["paciente"] = p
-    if source.get("solo_no_leidas") == "1" or source.get("redirect_solo_no_leidas") == "1":
+    if (
+        source.get("solo_no_leidas") == "1"
+        or source.get("redirect_solo_no_leidas") == "1"
+    ):
         params["solo_no_leidas"] = "1"
     b = source.get("buscar") or source.get("redirect_buscar")
     if b:
@@ -53,7 +56,9 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
         elif action == "delete_single":
             notificacion_id = request.POST.get("notificacion_id")
             if notificacion_id:
-                if NotificacionService.eliminar_notificacion(int(notificacion_id), request.user):
+                if NotificacionService.eliminar_notificacion(
+                    int(notificacion_id), request.user
+                ):
                     messages.success(request, "Notificación eliminada.")
                 else:
                     messages.error(request, "Notificación no encontrada.")
@@ -62,47 +67,42 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
         elif action == "mark_read":
             notificacion_ids = request.POST.getlist("notificacion_ids")
             if notificacion_ids:
-                Notificacion.objects.filter(
-                    id__in=notificacion_ids,
-                    usuario=request.user,
-                ).update(leida=True)
+                count = NotificacionService.marcar_notificaciones_como_leidas(
+                    [int(i) for i in notificacion_ids], request.user
+                )
                 messages.success(
-                    request, f"{len(notificacion_ids)} notificación(es) marcada(s) como leída(s)."
+                    request,
+                    f"{count} notificación(es) marcada(s) como leída(s).",
                 )
                 return redirect(redirect_url)
 
         elif action == "mark_read_single":
             notificacion_id = request.POST.get("notificacion_id")
             if notificacion_id:
-                NotificacionService.marcar_como_leida(int(notificacion_id), request.user)
+                NotificacionService.marcar_como_leida(
+                    int(notificacion_id), request.user
+                )
                 messages.success(request, "Marcada como leída.")
                 return redirect(redirect_url)
 
         elif action == "mark_unread_single":
             notificacion_id = request.POST.get("notificacion_id")
             if notificacion_id:
-                NotificacionService.marcar_como_no_leida(int(notificacion_id), request.user)
+                NotificacionService.marcar_como_no_leida(
+                    int(notificacion_id), request.user
+                )
                 messages.success(request, "Marcada como no leída.")
                 return redirect(redirect_url)
 
         elif action == "mark_all_read":
             NotificacionService.marcar_todas_como_leidas(request.user)
             messages.success(request, "Todas las notificaciones marcadas como leídas.")
-            params = {}
-            rt = request.POST.get("redirect_tipo")
-            if rt and rt != "None":
-                params["tipo"] = rt
-            rp = request.POST.get("redirect_paciente")
-            if rp and rp != "None":
-                params["paciente"] = rp
-            if request.POST.get("redirect_buscar"):
-                params["buscar"] = request.POST.get("redirect_buscar")
-            qs = urlencode(params) if params else ""
-            base = reverse("notifications")
-            return redirect(f"{base}?{qs}" if qs else base)
+            return redirect(redirect_url)
 
     # Obtener filtros y aplicarlos via service (desacoplado de HttpRequest)
-    datos_filtros = request.POST.dict() if request.method == "POST" else request.GET.dict()
+    datos_filtros = (
+        request.POST.dict() if request.method == "POST" else request.GET.dict()
+    )
     filtros = NotificacionService.obtener_filtros_desde_dict(datos_filtros)
     notificaciones = Notificacion.objects.filter(usuario=request.user)
     notificaciones = NotificacionService.aplicar_filtros(notificaciones, filtros)

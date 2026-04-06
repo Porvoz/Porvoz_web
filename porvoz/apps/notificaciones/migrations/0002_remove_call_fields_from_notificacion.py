@@ -74,11 +74,15 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="notificacion",
-            index=models.Index(fields=["usuario", "leida"], name="porvoz_noti_usuario_idx"),
+            index=models.Index(
+                fields=["usuario", "leida"], name="porvoz_noti_usuario_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="notificacion",
-            index=models.Index(fields=["usuario", "tipo"], name="porvoz_noti_usuario_tipo_idx"),
+            index=models.Index(
+                fields=["usuario", "tipo"], name="porvoz_noti_usuario_tipo_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="notificacion",
@@ -86,6 +90,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="notificacion",
-            index=models.Index(fields=["fecha_programada"], name="porvoz_noti_fecha_pr_idx"),
+            index=models.Index(
+                fields=["fecha_programada"], name="porvoz_noti_fecha_pr_idx"
+            ),
         ),
     ]

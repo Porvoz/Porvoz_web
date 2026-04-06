@@ -10,6 +10,7 @@ from django.db.models import Prefetch
 from apps.core.models import Perfil
 from apps.medicamentos.models import Medicamento
 from apps.notificaciones.models import Notificacion
+from apps.pacientes.models import Paciente
 
 
 class DashboardService:
@@ -26,13 +27,13 @@ class DashboardService:
     @staticmethod
     def obtener_pacientes(usuario: User, ordenar: str = "recientes") -> list:
         """Obtiene pacientes ordenados según el criterio."""
-        from apps.pacientes.models import Paciente
-
         base_qs = (
             Paciente.objects.filter(usuario=usuario, activo=True)
             .select_related("usuario", "usuario__perfil")
             .prefetch_related(
-                Prefetch("medicamentos", queryset=Medicamento.objects.filter(activo=True)),
+                Prefetch(
+                    "medicamentos", queryset=Medicamento.objects.filter(activo=True)
+                ),
                 "enfermedades",
             )
         )
@@ -41,10 +42,18 @@ class DashboardService:
             return list(base_qs.order_by("nombre"))
         elif ordenar == "nombre_desc":
             return list(base_qs.order_by("-nombre"))
-        elif ordenar in ("medicamentos", "inicio", "edad_asc", "edad_desc", "condicion"):
+        elif ordenar in (
+            "medicamentos",
+            "inicio",
+            "edad_asc",
+            "edad_desc",
+            "condicion",
+        ):
             base_list = list(base_qs)
             if ordenar == "medicamentos":
-                return sorted(base_list, key=lambda p: p.medicamentos.count(), reverse=True)
+                return sorted(
+                    base_list, key=lambda p: p.medicamentos.count(), reverse=True
+                )
             elif ordenar == "inicio":
 
                 def _inicio(p):
@@ -69,7 +78,10 @@ class DashboardService:
             elif ordenar == "condicion":
                 return sorted(
                     base_list,
-                    key=lambda p: ((p.get_primera_condicion() or "zzz").lower(), p.nombre),
+                    key=lambda p: (
+                        (p.get_primera_condicion() or "zzz").lower(),
+                        p.nombre,
+                    ),
                 )
 
         return list(base_qs.order_by("-es_usuario_mismo", "-creado_en"))
@@ -77,7 +89,9 @@ class DashboardService:
     @staticmethod
     def obtener_total_medicamentos(usuario: User) -> int:
         """Obtiene el total de medicamentos activos del usuario."""
-        return Medicamento.objects.filter(paciente__usuario=usuario, activo=True).count()
+        return Medicamento.objects.filter(
+            paciente__usuario=usuario, activo=True
+        ).count()
 
     @staticmethod
     def obtener_proximos_recordatorios(usuario: User, limite: int = 5) -> list:
@@ -156,7 +170,9 @@ class DashboardService:
             "perfil": perfil,
             "pacientes": DashboardService.obtener_pacientes(usuario, ordenar),
             "total_medicamentos": DashboardService.obtener_total_medicamentos(usuario),
-            "proximos_recordatorios": DashboardService.obtener_proximos_recordatorios(usuario),
+            "proximos_recordatorios": DashboardService.obtener_proximos_recordatorios(
+                usuario
+            ),
             "actividad_reciente": DashboardService.obtener_actividad_reciente(usuario),
             "dias_restantes_plan": perfil.get_dias_restantes_plan(),
             "nombre_plan": perfil.get_plan_display(),

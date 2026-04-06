@@ -16,25 +16,39 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigAutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
-                ("nombre", models.CharField(max_length=200, verbose_name="Nombre del medicamento")),
+                (
+                    "nombre",
+                    models.CharField(
+                        max_length=200, verbose_name="Nombre del medicamento"
+                    ),
+                ),
                 (
                     "dosis",
                     models.CharField(
-                        help_text="Ej: 1 tableta, 500mg, etc.", max_length=100, verbose_name="Dosis"
+                        help_text="Ej: 1 tableta, 500mg, etc.",
+                        max_length=100,
+                        verbose_name="Dosis",
                     ),
                 ),
                 ("horario", models.TimeField(verbose_name="Horario de toma")),
                 ("activo", models.BooleanField(default=True, verbose_name="Activo")),
                 (
                     "creado_en",
-                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Fecha de creación"
+                    ),
                 ),
                 (
                     "actualizado_en",
-                    models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización"),
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Fecha de actualización"
+                    ),
                 ),
                 (
                     "paciente",
@@ -53,7 +67,9 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="medicamento",
-            index=models.Index(fields=["paciente", "activo"], name="porvoz_medi_paciente_idx"),
+            index=models.Index(
+                fields=["paciente", "activo"], name="porvoz_medi_paciente_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="medicamento",

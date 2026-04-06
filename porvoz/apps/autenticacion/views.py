@@ -1,11 +1,8 @@
-from datetime import date
-
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse
 
 from apps.autenticacion.services import RegistroService
 from apps.usuarios.services import PerfilService
@@ -87,7 +84,9 @@ def register_view(request: HttpRequest) -> HttpResponse:
                     emergency_contact_phone_country=emergency_contact_phone_country,
                     emergency_contact_phone_number=emergency_contact_phone_number,
                 )
-                messages.success(request, "Cuenta creada. Inicia sesión para continuar.")
+                messages.success(
+                    request, "Cuenta creada. Inicia sesión para continuar."
+                )
                 return redirect("login")
             except Exception as e:
                 messages.error(request, f"Error al crear la cuenta: {str(e)}")
@@ -109,28 +108,27 @@ def reset_password_view(request: HttpRequest) -> HttpResponse:
         username_or_email = request.POST.get("username_or_email", "").strip()
 
         if not username_or_email:
-            messages.error(request, "Por favor ingresa tu usuario o correo electrónico.")
+            messages.error(
+                request, "Por favor ingresa tu usuario o correo electrónico."
+            )
         else:
             # Buscar usuario por username o email
+            _recovery_msg = (
+                "Si existe una cuenta con ese usuario o correo, se ha enviado "
+                "un enlace de recuperación. Por favor revisa tu correo electrónico. "
+                "(Funcionalidad en desarrollo)"
+            )
             try:
                 if "@" in username_or_email:
-                    user = User.objects.get(email=username_or_email)
+                    User.objects.get(email=username_or_email)
                 else:
-                    user = User.objects.get(username=username_or_email)
+                    User.objects.get(username=username_or_email)
 
                 # Aquí iría la lógica para enviar el email de recuperación
                 # Por ahora solo mostramos un mensaje de éxito
-                messages.success(
-                    request,
-                    f"Si existe una cuenta con ese usuario o correo, se ha enviado un enlace de recuperación. "
-                    f"Por favor revisa tu correo electrónico. (Funcionalidad en desarrollo)",
-                )
+                messages.success(request, _recovery_msg)
             except User.DoesNotExist:
                 # Por seguridad, no revelamos si el usuario existe o no
-                messages.success(
-                    request,
-                    "Si existe una cuenta con ese usuario o correo, se ha enviado un enlace de recuperación. "
-                    "Por favor revisa tu correo electrónico. (Funcionalidad en desarrollo)",
-                )
+                messages.success(request, _recovery_msg)
 
     return render(request, "autenticacion/reset_password.html")

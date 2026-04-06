@@ -17,7 +17,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigAutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 (
@@ -28,17 +31,32 @@ class Migration(migrations.Migration):
                         verbose_name="Rol",
                     ),
                 ),
-                ("first_name", models.CharField(blank=True, max_length=150, verbose_name="Nombre")),
+                (
+                    "first_name",
+                    models.CharField(blank=True, max_length=150, verbose_name="Nombre"),
+                ),
                 (
                     "last_name",
-                    models.CharField(blank=True, max_length=150, verbose_name="Apellidos"),
+                    models.CharField(
+                        blank=True, max_length=150, verbose_name="Apellidos"
+                    ),
                 ),
                 (
                     "date_of_birth",
-                    models.DateField(blank=True, null=True, verbose_name="Fecha de nacimiento"),
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Fecha de nacimiento"
+                    ),
                 ),
-                ("city", models.CharField(blank=True, max_length=100, verbose_name="Ciudad")),
-                ("phone", models.CharField(blank=True, max_length=30, verbose_name="Teléfono")),
+                (
+                    "city",
+                    models.CharField(blank=True, max_length=100, verbose_name="Ciudad"),
+                ),
+                (
+                    "phone",
+                    models.CharField(
+                        blank=True, max_length=30, verbose_name="Teléfono"
+                    ),
+                ),
                 (
                     "document_type",
                     models.CharField(
@@ -55,18 +73,24 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "document_number",
-                    models.CharField(blank=True, max_length=30, verbose_name="Número de documento"),
+                    models.CharField(
+                        blank=True, max_length=30, verbose_name="Número de documento"
+                    ),
                 ),
                 (
                     "emergency_contact_name",
                     models.CharField(
-                        blank=True, max_length=150, verbose_name="Nombre contacto de emergencia"
+                        blank=True,
+                        max_length=150,
+                        verbose_name="Nombre contacto de emergencia",
                     ),
                 ),
                 (
                     "emergency_contact_phone",
                     models.CharField(
-                        blank=True, max_length=30, verbose_name="Teléfono contacto de emergencia"
+                        blank=True,
+                        max_length=30,
+                        verbose_name="Teléfono contacto de emergencia",
                     ),
                 ),
                 ("profile_completed", models.BooleanField(default=False)),

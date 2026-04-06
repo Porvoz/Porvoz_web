@@ -1,6 +1,7 @@
 """
 Servicio para gestión de notificaciones.
 """
+
 from datetime import datetime
 
 from django.contrib.auth.models import User
@@ -23,7 +24,11 @@ class NotificacionService:
         fecha_programada: datetime = None,
     ) -> Notificacion:
         """Crea una notificación de cualquier tipo."""
-        tipos_validos = {Notificacion.TIPO_SISTEMA, Notificacion.TIPO_RECORDATORIO, Notificacion.TIPO_ALERTA}
+        tipos_validos = {
+            Notificacion.TIPO_SISTEMA,
+            Notificacion.TIPO_RECORDATORIO,
+            Notificacion.TIPO_ALERTA,
+        }
         if tipo not in tipos_validos:
             raise NotificacionError(f"Tipo '{tipo}' no válido. Usar: {tipos_validos}")
         return Notificacion.objects.create(
@@ -46,9 +51,12 @@ class NotificacionService:
     ) -> Notificacion:
         """Crea una notificación de tipo sistema."""
         return NotificacionService.crear_notificacion(
-            usuario=usuario, tipo=Notificacion.TIPO_SISTEMA,
-            titulo=titulo, mensaje=mensaje,
-            paciente=paciente, medicamento=medicamento,
+            usuario=usuario,
+            tipo=Notificacion.TIPO_SISTEMA,
+            titulo=titulo,
+            mensaje=mensaje,
+            paciente=paciente,
+            medicamento=medicamento,
         )
 
     @staticmethod
@@ -62,9 +70,12 @@ class NotificacionService:
     ) -> Notificacion:
         """Crea una notificación de tipo recordatorio."""
         return NotificacionService.crear_notificacion(
-            usuario=usuario, tipo=Notificacion.TIPO_RECORDATORIO,
-            titulo=titulo, mensaje=mensaje,
-            paciente=paciente, medicamento=medicamento,
+            usuario=usuario,
+            tipo=Notificacion.TIPO_RECORDATORIO,
+            titulo=titulo,
+            mensaje=mensaje,
+            paciente=paciente,
+            medicamento=medicamento,
             fecha_programada=fecha_programada,
         )
 
@@ -78,9 +89,12 @@ class NotificacionService:
     ) -> Notificacion:
         """Crea una notificación de tipo alerta."""
         return NotificacionService.crear_notificacion(
-            usuario=usuario, tipo=Notificacion.TIPO_ALERTA,
-            titulo=titulo, mensaje=mensaje,
-            paciente=paciente, medicamento=medicamento,
+            usuario=usuario,
+            tipo=Notificacion.TIPO_ALERTA,
+            titulo=titulo,
+            mensaje=mensaje,
+            paciente=paciente,
+            medicamento=medicamento,
         )
 
     @staticmethod
@@ -106,14 +120,25 @@ class NotificacionService:
             return False
 
     @staticmethod
+    def marcar_notificaciones_como_leidas(ids: list[int], usuario: User) -> int:
+        """Marca múltiples notificaciones como leídas. Retorna cantidad."""
+        return Notificacion.objects.filter(id__in=ids, usuario=usuario).update(
+            leida=True
+        )
+
+    @staticmethod
     def marcar_todas_como_leidas(usuario: User) -> int:
         """Marca todas las notificaciones como leídas. Retorna cantidad."""
-        return Notificacion.objects.filter(usuario=usuario, leida=False).update(leida=True)
+        return Notificacion.objects.filter(usuario=usuario, leida=False).update(
+            leida=True
+        )
 
     @staticmethod
     def eliminar_notificacion(notificacion_id: int, usuario: User) -> bool:
         """Elimina una notificación. Retorna True si se encontró."""
-        deleted, _ = Notificacion.objects.filter(id=notificacion_id, usuario=usuario).delete()
+        deleted, _ = Notificacion.objects.filter(
+            id=notificacion_id, usuario=usuario
+        ).delete()
         return deleted > 0
 
     @staticmethod
@@ -165,7 +190,8 @@ class NotificacionService:
             queryset = queryset.filter(leida=False)
         if filtros.get("buscar"):
             queryset = queryset.filter(
-                Q(titulo__icontains=filtros["buscar"]) | Q(mensaje__icontains=filtros["buscar"])
+                Q(titulo__icontains=filtros["buscar"])
+                | Q(mensaje__icontains=filtros["buscar"])
             )
         return queryset
 
@@ -176,6 +202,8 @@ class NotificacionService:
         return {
             "total": base_qs.count(),
             "no_leidas": base_qs.filter(leida=False).count(),
-            "total_recordatorios": base_qs.filter(tipo=Notificacion.TIPO_RECORDATORIO).count(),
+            "total_recordatorios": base_qs.filter(
+                tipo=Notificacion.TIPO_RECORDATORIO
+            ).count(),
             "total_alertas": base_qs.filter(tipo=Notificacion.TIPO_ALERTA).count(),
         }

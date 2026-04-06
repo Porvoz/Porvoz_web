@@ -22,7 +22,9 @@ class Medicamento(models.Model):
         related_name="medicamentos",
     )
     nombre = models.CharField("Nombre del medicamento", max_length=200)
-    dosis = models.CharField("Dosis", max_length=100, help_text="Ej: 1 tableta, 500mg, etc.")
+    dosis = models.CharField(
+        "Dosis", max_length=100, help_text="Ej: 1 tableta, 500mg, etc."
+    )
     frecuencia_tipo = models.CharField(
         "Tipo de frecuencia",
         max_length=20,
@@ -57,12 +59,12 @@ class Medicamento(models.Model):
         "Duración en días",
         blank=True,
         null=True,
-        help_text="Dejar vacío para tratamiento indefinido; o indicar cantidad de días (ej: 7, 30)",
+        help_text="Dejar vacío para tratamiento indefinido; o indicar días (ej: 7, 30).",
     )
     instrucciones_llamada = models.TextField(
         "Instrucciones para la llamada",
         blank=True,
-        help_text="Contexto para la IA: 'Recordar con el desayuno', 'Preguntar efectos secundarios', etc.",
+        help_text="Contexto para la IA: 'Recordar con el desayuno', 'Preguntar efectos'.",
     )
     minutos_antes_llamada = models.PositiveSmallIntegerField(
         "Minutos antes para llamar",
@@ -84,7 +86,7 @@ class Medicamento(models.Model):
         ]
 
     def get_horarios_ordenados(self):
-        """Devuelve los horarios de toma ordenados (usa HorarioMedicamento o fallback a horario legacy)."""
+        """Horarios de toma ordenados (usa HorarioMedicamento o fallback a horario legacy)."""
         horarios = list(self.horarios.all().order_by("orden", "hora"))
         if horarios:
             return horarios

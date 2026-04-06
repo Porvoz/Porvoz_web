@@ -13,7 +13,10 @@ class Migration(migrations.Migration):
     """Elimina Notificacion del estado de llamadas sin tocar la BD."""
 
     dependencies = [
-        ("llamadas", "0002_rename_porvoz_noti_usuario_idx_porvoz_noti_usuario_4220f6_idx_and_more"),
+        (
+            "llamadas",
+            "0002_rename_porvoz_noti_usuario_idx_porvoz_noti_usuario_4220f6_idx_and_more",
+        ),
         # Debe correr después de que notificaciones adopte la tabla.
         ("notificaciones", "0001_initial"),
     ]

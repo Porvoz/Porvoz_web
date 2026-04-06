@@ -17,10 +17,16 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigAutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
-                ("nombre", models.CharField(max_length=200, verbose_name="Nombre completo")),
+                (
+                    "nombre",
+                    models.CharField(max_length=200, verbose_name="Nombre completo"),
+                ),
                 ("telefono", models.CharField(max_length=30, verbose_name="Teléfono")),
                 (
                     "es_usuario_mismo",
@@ -32,17 +38,26 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "fecha_nacimiento",
-                    models.DateField(blank=True, null=True, verbose_name="Fecha de nacimiento"),
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Fecha de nacimiento"
+                    ),
                 ),
-                ("notas", models.TextField(blank=True, verbose_name="Notas adicionales")),
+                (
+                    "notas",
+                    models.TextField(blank=True, verbose_name="Notas adicionales"),
+                ),
                 ("activo", models.BooleanField(default=True, verbose_name="Activo")),
                 (
                     "creado_en",
-                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Fecha de creación"
+                    ),
                 ),
                 (
                     "actualizado_en",
-                    models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización"),
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Fecha de actualización"
+                    ),
                 ),
                 (
                     "usuario",
@@ -61,7 +76,9 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="paciente",
-            index=models.Index(fields=["usuario", "activo"], name="porvoz_paci_usuario_idx"),
+            index=models.Index(
+                fields=["usuario", "activo"], name="porvoz_paci_usuario_idx"
+            ),
         ),
         migrations.AlterUniqueTogether(
             name="paciente",

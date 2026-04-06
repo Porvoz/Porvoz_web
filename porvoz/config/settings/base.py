@@ -1,6 +1,7 @@
 """
 Base Django settings for the Porvoz project.
 """
+
 from pathlib import Path
 import os
 

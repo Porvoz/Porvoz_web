@@ -3,7 +3,8 @@ Servicio para gestión de pacientes.
 """
 
 import unicodedata
-from typing import Optional
+from datetime import date, datetime
+from typing import Optional, Tuple
 
 from django.contrib.auth.models import User
 
@@ -30,7 +31,8 @@ class PacienteService:
         return [
             p
             for p in pacientes
-            if buscar_norm in PacienteService.normalizar_busqueda(p.get_display_nombre())
+            if buscar_norm
+            in PacienteService.normalizar_busqueda(p.get_display_nombre())
         ]
 
     @staticmethod
@@ -78,7 +80,11 @@ class PacienteService:
 
     @staticmethod
     def crear_paciente(
-        usuario: User, nombre: str, telefono: str, es_usuario_mismo: bool = False, **kwargs
+        usuario: User,
+        nombre: str,
+        telefono: str,
+        es_usuario_mismo: bool = False,
+        **kwargs,
     ) -> Paciente:
         """Crea un nuevo paciente."""
         return Paciente.objects.create(
@@ -116,6 +122,34 @@ class PacienteService:
             return paciente, None
 
     @staticmethod
+    def parsear_fecha_diagnostico(
+        fecha_str: str,
+    ) -> Tuple[Optional[date], Optional[str]]:
+        """Parsea y valida una fecha de diagnóstico.
+
+        Returns:
+            (date, None) si es válida, (None, mensaje_error) si no lo es.
+        """
+        if not fecha_str:
+            return None, None
+        try:
+            fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+            if fecha > date.today():
+                return None, "La fecha de diagnóstico no puede ser futura."
+            return fecha, None
+        except ValueError:
+            return None, None
+
+    @staticmethod
+    def reemplazar_enfermedades(paciente: Paciente, condiciones: list) -> None:
+        """Elimina todas las enfermedades del paciente y crea las nuevas."""
+        paciente.enfermedades.all().delete()
+        for nombre_condicion in condiciones:
+            Enfermedad.objects.create(
+                paciente=paciente, nombre=nombre_condicion, descripcion=""
+            )
+
+    @staticmethod
     def copiar_foto_perfil_a_paciente(paciente: Paciente, perfil) -> None:
         """Copia la foto del perfil del usuario al paciente si no tiene foto propia."""
         if perfil and perfil.profile_image and not paciente.foto:
@@ -127,9 +161,8 @@ class PacienteService:
                     imagen = perfil.profile_image.open("rb")
                     contenido = BytesIO(imagen.read())
                     contenido.seek(0)
-                    nombre_archivo = (
-                        f"paciente_{paciente.id}_{perfil.profile_image.name.split('/')[-1]}"
-                    )
+                    img_name = perfil.profile_image.name.split("/")[-1]
+                    nombre_archivo = f"paciente_{paciente.id}_{img_name}"
                     paciente.foto.save(nombre_archivo, ImageFile(contenido), save=True)
                     imagen.close()
             except (IOError, OSError):

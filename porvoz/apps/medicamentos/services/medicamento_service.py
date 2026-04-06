@@ -1,6 +1,7 @@
 """
 Servicio para gestión de medicamentos.
 """
+
 from datetime import datetime
 from typing import Optional
 
@@ -8,7 +9,6 @@ from django.contrib.auth.models import User
 
 from apps.medicamentos.models import HorarioMedicamento, Medicamento
 from apps.pacientes.models import Paciente
-from apps.shared.exceptions import MedicamentoError
 
 
 class MedicamentoService:
@@ -132,6 +132,8 @@ class MedicamentoService:
             if h:
                 try:
                     hora = datetime.strptime(h, "%H:%M").time()
-                    HorarioMedicamento.objects.create(medicamento=medicamento, hora=hora, orden=i)
+                    HorarioMedicamento.objects.create(
+                        medicamento=medicamento, hora=hora, orden=i
+                    )
                 except ValueError:
                     pass

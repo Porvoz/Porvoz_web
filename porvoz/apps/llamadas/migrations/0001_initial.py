@@ -20,7 +20,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigAutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 (
@@ -56,20 +59,28 @@ class Migration(migrations.Migration):
                 ("mensaje", models.TextField(blank=True, verbose_name="Mensaje")),
                 (
                     "fecha_programada",
-                    models.DateTimeField(blank=True, null=True, verbose_name="Fecha programada"),
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="Fecha programada"
+                    ),
                 ),
                 (
                     "fecha_enviada",
-                    models.DateTimeField(blank=True, null=True, verbose_name="Fecha enviada"),
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="Fecha enviada"
+                    ),
                 ),
                 (
                     "fecha_atendida",
-                    models.DateTimeField(blank=True, null=True, verbose_name="Fecha atendida"),
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="Fecha atendida"
+                    ),
                 ),
                 ("leida", models.BooleanField(default=False, verbose_name="Leída")),
                 (
                     "creado_en",
-                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Fecha de creación"
+                    ),
                 ),
                 (
                     "medicamento",
@@ -112,11 +123,15 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="notificacion",
-            index=models.Index(fields=["usuario", "leida"], name="porvoz_noti_usuario_idx"),
+            index=models.Index(
+                fields=["usuario", "leida"], name="porvoz_noti_usuario_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="notificacion",
-            index=models.Index(fields=["usuario", "tipo"], name="porvoz_noti_usuario_tipo_idx"),
+            index=models.Index(
+                fields=["usuario", "tipo"], name="porvoz_noti_usuario_tipo_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="notificacion",
@@ -124,6 +139,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="notificacion",
-            index=models.Index(fields=["fecha_programada"], name="porvoz_noti_fecha_pr_idx"),
+            index=models.Index(
+                fields=["fecha_programada"], name="porvoz_noti_fecha_pr_idx"
+            ),
         ),
     ]

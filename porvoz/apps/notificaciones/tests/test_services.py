@@ -102,8 +102,12 @@ class NotificacionServiceEliminarTest(TestCase):
         self.assertFalse(resultado)
 
     def test_eliminar_multiples(self):
-        n1 = NotificacionService.crear_notificacion_sistema(usuario=self.user, titulo="N1")
-        n2 = NotificacionService.crear_notificacion_sistema(usuario=self.user, titulo="N2")
+        n1 = NotificacionService.crear_notificacion_sistema(
+            usuario=self.user, titulo="N1"
+        )
+        n2 = NotificacionService.crear_notificacion_sistema(
+            usuario=self.user, titulo="N2"
+        )
         count = NotificacionService.eliminar_notificaciones([n1.id, n2.id], self.user)
         self.assertEqual(count, 2)
 

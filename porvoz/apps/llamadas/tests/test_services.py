@@ -2,6 +2,7 @@
 Tests para servicios de llamadas.
 Ejecutar: python manage.py test apps.llamadas
 """
+
 from datetime import timedelta
 
 from django.contrib.auth.models import User
@@ -66,7 +67,9 @@ class LlamadaServiceTest(TestCase):
         )
         self.assertIsNotNone(respuesta)
         self.assertEqual(respuesta.como_respondio, RespuestaLlamada.RESPUESTA_ATENDIDA)
-        self.assertEqual(Notificacion.objects.filter(tipo=Notificacion.TIPO_ALERTA).count(), 0)
+        self.assertEqual(
+            Notificacion.objects.filter(tipo=Notificacion.TIPO_ALERTA).count(), 0
+        )
 
     def test_registrar_respuesta_no_atendida_crea_alerta(self):
         """Respuesta no_atendida crea una Notificación de ALERTA."""
@@ -119,7 +122,9 @@ class LlamadaServiceTest(TestCase):
             call_sid="CA_test_status",
             estado=Llamada.ESTADO_EN_CURSO,
         )
-        LlamadaService.registrar_estado_final("CA_test_status", "completed", duracion=45)
+        LlamadaService.registrar_estado_final(
+            "CA_test_status", "completed", duracion=45
+        )
         llamada = Llamada.objects.get(call_sid="CA_test_status")
         self.assertEqual(llamada.estado, Llamada.ESTADO_COMPLETADA)
         self.assertEqual(llamada.duracion, 45)
@@ -146,3 +151,42 @@ class LlamadaServiceTest(TestCase):
             como_respondio=RespuestaLlamada.RESPUESTA_ATENDIDA,
         )
         self.assertIsNone(resultado)
+
+    def test_programar_llamadas_sin_instrucciones_no_crea(self):
+        """Medicamento sin instrucciones_llamada no genera Llamadas."""
+        self.medicamento.instrucciones_llamada = ""
+        self.medicamento.save()
+        creadas = LlamadaService.programar_llamadas_medicamento(
+            self.medicamento, self.usuario
+        )
+        self.assertEqual(creadas, [])
+        self.assertEqual(Llamada.objects.count(), 0)
+
+    def test_programar_llamadas_crea_llamada_por_horario(self):
+        """Medicamento con instrucciones y horario genera una Llamada programada."""
+        from apps.medicamentos.models import HorarioMedicamento
+        from datetime import time
+
+        HorarioMedicamento.objects.create(
+            medicamento=self.medicamento, hora=time(9, 0), orden=0
+        )
+        creadas = LlamadaService.programar_llamadas_medicamento(
+            self.medicamento, self.usuario
+        )
+        self.assertEqual(len(creadas), 1)
+        self.assertEqual(creadas[0].estado, Llamada.ESTADO_PROGRAMADA)
+        self.assertEqual(creadas[0].medicamento, self.medicamento)
+
+    def test_programar_llamadas_reprogramar_cancela_anteriores(self):
+        """Al reprogramar, las llamadas 'programada' anteriores se eliminan."""
+        from apps.medicamentos.models import HorarioMedicamento
+        from datetime import time
+
+        HorarioMedicamento.objects.create(
+            medicamento=self.medicamento, hora=time(9, 0), orden=0
+        )
+        LlamadaService.programar_llamadas_medicamento(self.medicamento, self.usuario)
+        LlamadaService.programar_llamadas_medicamento(self.medicamento, self.usuario)
+        self.assertEqual(
+            Llamada.objects.filter(estado=Llamada.ESTADO_PROGRAMADA).count(), 1
+        )

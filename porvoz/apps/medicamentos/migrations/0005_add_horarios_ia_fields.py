@@ -8,7 +8,9 @@ def migrar_horarios_legacy(apps, schema_editor):
     """Copia horario existente a HorarioMedicamento para medicamentos con frecuencia horario."""
     Medicamento = apps.get_model("medicamentos", "Medicamento")
     HorarioMedicamento = apps.get_model("medicamentos", "HorarioMedicamento")
-    for med in Medicamento.objects.filter(frecuencia_tipo="horario", horario__isnull=False):
+    for med in Medicamento.objects.filter(
+        frecuencia_tipo="horario", horario__isnull=False
+    ):
         HorarioMedicamento.objects.create(medicamento=med, hora=med.horario, orden=0)
 
 
@@ -17,7 +19,11 @@ def reverse_migrar_horarios(apps, schema_editor):
     Medicamento = apps.get_model("medicamentos", "Medicamento")
     HorarioMedicamento = apps.get_model("medicamentos", "HorarioMedicamento")
     for med in Medicamento.objects.filter(frecuencia_tipo="horario"):
-        first = HorarioMedicamento.objects.filter(medicamento=med).order_by("orden", "hora").first()
+        first = (
+            HorarioMedicamento.objects.filter(medicamento=med)
+            .order_by("orden", "hora")
+            .first()
+        )
         if first:
             med.horario = first.hora
             med.save(update_fields=["horario"])
@@ -75,11 +81,17 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigAutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("hora", models.TimeField(verbose_name="Hora de toma")),
-                ("orden", models.PositiveSmallIntegerField(default=0, verbose_name="Orden")),
+                (
+                    "orden",
+                    models.PositiveSmallIntegerField(default=0, verbose_name="Orden"),
+                ),
                 (
                     "medicamento",
                     models.ForeignKey(

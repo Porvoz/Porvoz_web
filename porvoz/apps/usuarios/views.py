@@ -20,7 +20,9 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
         nuevo_plan = request.POST.get("plan", "").strip()
         success, error_msg = PerfilService.cambiar_plan(perfil, nuevo_plan)
         if success:
-            messages.success(request, f"Plan actualizado a {perfil.get_plan_display()}.")
+            messages.success(
+                request, f"Plan actualizado a {perfil.get_plan_display()}."
+            )
             return redirect(f"{reverse('edit_profile')}?tab=planes")
         else:
             messages.error(request, error_msg)
@@ -37,8 +39,12 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
         document_number = request.POST.get("document_number", "").strip()
         date_of_birth_str = request.POST.get("date_of_birth", "").strip()
         emergency_contact_name = request.POST.get("emergency_contact_name", "").strip()
-        emergency_country = request.POST.get("emergency_contact_phone_country", "+57").strip()
-        emergency_number = request.POST.get("emergency_contact_phone_number", "").strip()
+        emergency_country = request.POST.get(
+            "emergency_contact_phone_country", "+57"
+        ).strip()
+        emergency_number = request.POST.get(
+            "emergency_contact_phone_number", ""
+        ).strip()
         profile_image = request.FILES.get("profile_image")
 
         success, error_msg = PerfilService.actualizar_perfil(
@@ -108,11 +114,15 @@ def change_password_view(request: HttpRequest) -> HttpResponse:
         elif not request.user.check_password(old_password):
             messages.error(request, "La contraseña actual es incorrecta.")
         elif len(new_password) < 8:
-            messages.error(request, "La nueva contraseña debe tener al menos 8 caracteres.")
+            messages.error(
+                request, "La nueva contraseña debe tener al menos 8 caracteres."
+            )
         elif new_password != confirm_password:
             messages.error(request, "Las nuevas contraseñas no coinciden.")
         elif old_password == new_password:
-            messages.error(request, "La nueva contraseña debe ser diferente a la actual.")
+            messages.error(
+                request, "La nueva contraseña debe ser diferente a la actual."
+            )
         else:
             request.user.set_password(new_password)
             request.user.save()

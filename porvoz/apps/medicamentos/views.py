@@ -1,13 +1,75 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
-from .models import Medicamento, HorarioMedicamento
+from .models import Medicamento
 from .services import MedicamentoService
+from apps.llamadas.services.llamada_service import LlamadaService
 from apps.pacientes.models import Paciente
 from apps.core.models import Perfil
 from apps.notificaciones.services import NotificacionService
+
+
+def _extraer_campos_medicamento(request: HttpRequest) -> dict:
+    """Extrae y limpia los campos del formulario de medicamento."""
+    return {
+        "nombre": request.POST.get("nombre", "").strip(),
+        "dosis": request.POST.get("dosis", "").strip(),
+        "frecuencia_tipo": request.POST.get(
+            "frecuencia_tipo", Medicamento.FRECUENCIA_HORARIO
+        ),
+        "horarios_raw": [
+            h.strip() for h in request.POST.getlist("horario") if h and h.strip()
+        ],
+        "cada_x_horas": request.POST.get("cada_x_horas", "").strip(),
+        "hora_inicio": request.POST.get("hora_inicio", "").strip(),
+        "fecha_inicio_str": request.POST.get("fecha_inicio_tratamiento", "").strip(),
+        "duracion_tipo": request.POST.get("duracion_tipo", "indefinido"),
+        "duracion_dias_str": request.POST.get("duracion_dias", "").strip(),
+        "instrucciones_llamada": request.POST.get("instrucciones_llamada", "").strip(),
+        "minutos_antes_str": request.POST.get("minutos_antes_llamada", "0").strip(),
+    }
+
+
+def _validar_campos_medicamento(campos: dict) -> str | None:
+    """Valida los campos del medicamento. Retorna mensaje de error o None."""
+    if not campos["nombre"] or not campos["dosis"]:
+        return "El nombre y la dosis son obligatorios."
+    if (
+        campos["frecuencia_tipo"] == Medicamento.FRECUENCIA_HORARIO
+        and not campos["horarios_raw"]
+    ):
+        return "Debes especificar al menos un horario de toma."
+    if campos["frecuencia_tipo"] == Medicamento.FRECUENCIA_CADA_X_HORAS and (
+        not campos["cada_x_horas"] or not campos["hora_inicio"]
+    ):
+        return "Debes especificar cada cuántas horas y la hora de inicio."
+    d = campos["duracion_dias_str"]
+    if campos["duracion_tipo"] == "dias" and (not d or not d.isdigit() or int(d) < 1):
+        return "Indica cuántos días de tratamiento (número mayor a 0)."
+    return None
+
+
+def _campos_a_kwargs(campos: dict) -> dict:
+    """Convierte los campos extraídos a kwargs para el servicio."""
+    d = campos["duracion_dias_str"]
+    return {
+        "nombre": campos["nombre"],
+        "dosis": campos["dosis"],
+        "frecuencia_tipo": campos["frecuencia_tipo"],
+        "horarios": campos["horarios_raw"],
+        "cada_x_horas": int(campos["cada_x_horas"]) if campos["cada_x_horas"] else None,
+        "hora_inicio": campos["hora_inicio"] or None,
+        "fecha_inicio": campos["fecha_inicio_str"],
+        "duracion_dias": int(d) if campos["duracion_tipo"] == "dias" and d else None,
+        "instrucciones_llamada": campos["instrucciones_llamada"],
+        "minutos_antes": (
+            min(120, max(0, int(campos["minutos_antes_str"])))
+            if campos["minutos_antes_str"].isdigit()
+            else 0
+        ),
+    }
 
 
 @login_required
@@ -17,64 +79,29 @@ def agregar_medicamento_view(request: HttpRequest, paciente_id: int) -> HttpResp
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
 
     if request.method == "POST":
-        nombre = request.POST.get("nombre", "").strip()
-        dosis = request.POST.get("dosis", "").strip()
-        frecuencia_tipo = request.POST.get("frecuencia_tipo", Medicamento.FRECUENCIA_HORARIO)
-        horarios_raw = [h.strip() for h in request.POST.getlist("horario") if h and h.strip()]
-        cada_x_horas = request.POST.get("cada_x_horas", "").strip()
-        hora_inicio = request.POST.get("hora_inicio", "").strip()
-        fecha_inicio_str = request.POST.get("fecha_inicio_tratamiento", "").strip()
-        duracion_tipo = request.POST.get("duracion_tipo", "indefinido")
-        duracion_dias_str = request.POST.get("duracion_dias", "").strip()
-        instrucciones_llamada = request.POST.get("instrucciones_llamada", "").strip()
-        minutos_antes_str = request.POST.get("minutos_antes_llamada", "0").strip()
-
-        if not nombre or not dosis:
-            messages.error(request, "El nombre y la dosis son obligatorios.")
-        elif frecuencia_tipo == Medicamento.FRECUENCIA_HORARIO and not horarios_raw:
-            messages.error(request, "Debes especificar al menos un horario de toma.")
-        elif frecuencia_tipo == Medicamento.FRECUENCIA_CADA_X_HORAS and (
-            not cada_x_horas or not hora_inicio
-        ):
-            messages.error(request, "Debes especificar cada cuántas horas y la hora de inicio.")
-        elif duracion_tipo == "dias" and (
-            not duracion_dias_str or not duracion_dias_str.isdigit() or int(duracion_dias_str) < 1
-        ):
-            messages.error(request, "Indica cuántos días de tratamiento (número mayor a 0).")
+        campos = _extraer_campos_medicamento(request)
+        error = _validar_campos_medicamento(campos)
+        if error:
+            messages.error(request, error)
         else:
-            duracion_dias = (
-                int(duracion_dias_str) if duracion_tipo == "dias" and duracion_dias_str else None
-            )
-            minutos_antes = (
-                min(120, max(0, int(minutos_antes_str))) if minutos_antes_str.isdigit() else 0
-            )
-
             medicamento = MedicamentoService.crear_medicamento(
-                paciente=paciente,
-                nombre=nombre,
-                dosis=dosis,
-                frecuencia_tipo=frecuencia_tipo,
-                horarios=horarios_raw,
-                cada_x_horas=int(cada_x_horas) if cada_x_horas else None,
-                hora_inicio=hora_inicio or None,
-                fecha_inicio=fecha_inicio_str,
-                duracion_dias=duracion_dias,
-                instrucciones_llamada=instrucciones_llamada,
-                minutos_antes=minutos_antes,
+                paciente=paciente, **_campos_a_kwargs(campos)
             )
+            LlamadaService.programar_llamadas_medicamento(medicamento, request.user)
+            nombre_pac = paciente.get_display_nombre()
+            titulo = f'Medicamento "{campos["nombre"]}" agregado para {nombre_pac}'
             NotificacionService.crear_notificacion_sistema(
                 usuario=request.user,
-                titulo=f'Medicamento "{nombre}" agregado para {paciente.get_display_nombre()}',
+                titulo=titulo,
                 paciente=paciente,
                 medicamento=medicamento,
             )
-            messages.success(request, f"Medicamento '{nombre}' agregado correctamente.")
+            messages.success(
+                request, f"Medicamento '{campos['nombre']}' agregado correctamente."
+            )
             return redirect("detalle_paciente", paciente_id=paciente.id)
 
-    context = {
-        "perfil": perfil,
-        "paciente": paciente,
-    }
+    context = {"perfil": perfil, "paciente": paciente}
     return render(request, "medicamentos/agregar_medicamento.html", context)
 
 
@@ -88,65 +115,29 @@ def editar_medicamento_view(
     medicamento = get_object_or_404(Medicamento, id=medicamento_id, paciente=paciente)
 
     if request.method == "POST":
-        nombre = request.POST.get("nombre", "").strip()
-        dosis = request.POST.get("dosis", "").strip()
-        frecuencia_tipo = request.POST.get("frecuencia_tipo", Medicamento.FRECUENCIA_HORARIO)
-        horarios_raw = [h.strip() for h in request.POST.getlist("horario") if h and h.strip()]
-        cada_x_horas = request.POST.get("cada_x_horas", "").strip()
-        hora_inicio = request.POST.get("hora_inicio", "").strip()
-        fecha_inicio_str = request.POST.get("fecha_inicio_tratamiento", "").strip()
-        duracion_tipo = request.POST.get("duracion_tipo", "indefinido")
-        duracion_dias_str = request.POST.get("duracion_dias", "").strip()
-        instrucciones_llamada = request.POST.get("instrucciones_llamada", "").strip()
-        minutos_antes_str = request.POST.get("minutos_antes_llamada", "0").strip()
-
-        if not nombre or not dosis:
-            messages.error(request, "El nombre y la dosis son obligatorios.")
-        elif frecuencia_tipo == Medicamento.FRECUENCIA_HORARIO and not horarios_raw:
-            messages.error(request, "Debes especificar al menos un horario de toma.")
-        elif frecuencia_tipo == Medicamento.FRECUENCIA_CADA_X_HORAS and (
-            not cada_x_horas or not hora_inicio
-        ):
-            messages.error(request, "Debes especificar cada cuántas horas y la hora de inicio.")
-        elif duracion_tipo == "dias" and (
-            not duracion_dias_str or not duracion_dias_str.isdigit() or int(duracion_dias_str) < 1
-        ):
-            messages.error(request, "Indica cuántos días de tratamiento (número mayor a 0).")
+        campos = _extraer_campos_medicamento(request)
+        error = _validar_campos_medicamento(campos)
+        if error:
+            messages.error(request, error)
         else:
-            duracion_dias = (
-                int(duracion_dias_str) if duracion_tipo == "dias" and duracion_dias_str else None
-            )
-            minutos_antes = (
-                min(120, max(0, int(minutos_antes_str))) if minutos_antes_str.isdigit() else 0
-            )
-
             MedicamentoService.actualizar_medicamento(
-                medicamento=medicamento,
-                nombre=nombre,
-                dosis=dosis,
-                frecuencia_tipo=frecuencia_tipo,
-                horarios=horarios_raw,
-                cada_x_horas=int(cada_x_horas) if cada_x_horas else None,
-                hora_inicio=hora_inicio or None,
-                fecha_inicio=fecha_inicio_str,
-                duracion_dias=duracion_dias,
-                instrucciones_llamada=instrucciones_llamada,
-                minutos_antes=minutos_antes,
+                medicamento=medicamento, **_campos_a_kwargs(campos)
             )
+            LlamadaService.programar_llamadas_medicamento(medicamento, request.user)
+            nombre_pac = paciente.get_display_nombre()
+            titulo = f'Medicamento "{campos["nombre"]}" actualizado para {nombre_pac}'
             NotificacionService.crear_notificacion_sistema(
                 usuario=request.user,
-                titulo=f'Medicamento "{nombre}" actualizado para {paciente.get_display_nombre()}',
+                titulo=titulo,
                 paciente=paciente,
                 medicamento=medicamento,
             )
-            messages.success(request, f"Medicamento '{nombre}' actualizado correctamente.")
+            messages.success(
+                request, f"Medicamento '{campos['nombre']}' actualizado correctamente."
+            )
             return redirect("detalle_paciente", paciente_id=paciente.id)
 
-    context = {
-        "perfil": perfil,
-        "paciente": paciente,
-        "medicamento": medicamento,
-    }
+    context = {"perfil": perfil, "paciente": paciente, "medicamento": medicamento}
     return render(request, "medicamentos/editar_medicamento.html", context)
 
 
@@ -187,11 +178,10 @@ def eliminar_medicamento_view(
             titulo=f'Medicamento "{nombre_med}" eliminado para {paciente.get_display_nombre()}',
             paciente=paciente,
         )
-        messages.success(request, f"Medicamento '{nombre_med}' eliminado correctamente.")
+        messages.success(
+            request, f"Medicamento '{nombre_med}' eliminado correctamente."
+        )
         return redirect("detalle_paciente", paciente_id=paciente_id)
 
-    context = {
-        "paciente": paciente,
-        "medicamento": medicamento,
-    }
+    context = {"paciente": paciente, "medicamento": medicamento}
     return render(request, "medicamentos/eliminar_medicamento.html", context)

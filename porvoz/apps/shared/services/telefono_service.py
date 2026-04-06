@@ -53,7 +53,9 @@ class TelefonoService:
         if telefono.startswith("+"):
             parts = telefono.split(" ", 1)
             if len(parts) == 2:
-                return TelefonoParseado(pais=parts[0], numero=parts[1], completo=telefono)
+                return TelefonoParseado(
+                    pais=parts[0], numero=parts[1], completo=telefono
+                )
             return TelefonoParseado(pais="+57", numero=telefono[1:], completo=telefono)
 
         return TelefonoParseado(pais="+57", numero=telefono, completo=f"+57 {telefono}")

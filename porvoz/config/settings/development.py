@@ -12,5 +12,3 @@ ALLOWED_HOSTS = ["*"]
 Development settings for Porvoz.
 """
 from .base import *  # noqa
-
-

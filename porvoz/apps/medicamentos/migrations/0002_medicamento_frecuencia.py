@@ -11,7 +11,10 @@ class Migration(migrations.Migration):
             model_name="medicamento",
             name="frecuencia_tipo",
             field=models.CharField(
-                choices=[("horario", "Horario específico"), ("cada_x_horas", "Cada X horas")],
+                choices=[
+                    ("horario", "Horario específico"),
+                    ("cada_x_horas", "Cada X horas"),
+                ],
                 default="horario",
                 max_length=20,
                 verbose_name="Tipo de frecuencia",

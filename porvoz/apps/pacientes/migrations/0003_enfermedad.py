@@ -14,26 +14,40 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigAutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 (
                     "nombre",
-                    models.CharField(max_length=200, verbose_name="Nombre de la enfermedad"),
+                    models.CharField(
+                        max_length=200, verbose_name="Nombre de la enfermedad"
+                    ),
                 ),
-                ("descripcion", models.TextField(blank=True, verbose_name="Descripción")),
+                (
+                    "descripcion",
+                    models.TextField(blank=True, verbose_name="Descripción"),
+                ),
                 (
                     "diagnostico_fecha",
-                    models.DateField(blank=True, null=True, verbose_name="Fecha de diagnóstico"),
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Fecha de diagnóstico"
+                    ),
                 ),
                 ("activa", models.BooleanField(default=True, verbose_name="Activa")),
                 (
                     "creado_en",
-                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Fecha de creación"
+                    ),
                 ),
                 (
                     "actualizado_en",
-                    models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización"),
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Fecha de actualización"
+                    ),
                 ),
                 (
                     "paciente",
@@ -52,6 +66,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="enfermedad",
-            index=models.Index(fields=["paciente", "activa"], name="porvoz_enfe_paciente_idx"),
+            index=models.Index(
+                fields=["paciente", "activa"], name="porvoz_enfe_paciente_idx"
+            ),
         ),
     ]

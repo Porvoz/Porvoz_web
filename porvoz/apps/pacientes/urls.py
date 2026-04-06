@@ -11,8 +11,14 @@ urlpatterns = [
         views.historial_llamadas_paciente_view,
         name="historial_llamadas_paciente",
     ),
-    path("<int:paciente_id>/editar/", views.editar_paciente_view, name="editar_paciente"),
-    path("<int:paciente_id>/eliminar/", views.eliminar_paciente_view, name="eliminar_paciente"),
+    path(
+        "<int:paciente_id>/editar/", views.editar_paciente_view, name="editar_paciente"
+    ),
+    path(
+        "<int:paciente_id>/eliminar/",
+        views.eliminar_paciente_view,
+        name="eliminar_paciente",
+    ),
     path(
         "<int:paciente_id>/enfermedad/agregar/",
         views.agregar_enfermedad_view,

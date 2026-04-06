@@ -56,7 +56,9 @@ class MedicamentoServiceCrearTest(TestCase):
             cada_x_horas=8,
             hora_inicio="08:00",
         )
-        self.assertEqual(medicamento.frecuencia_tipo, Medicamento.FRECUENCIA_CADA_X_HORAS)
+        self.assertEqual(
+            medicamento.frecuencia_tipo, Medicamento.FRECUENCIA_CADA_X_HORAS
+        )
         self.assertEqual(medicamento.cada_x_horas, 8)
 
     def test_crear_medicamento_activo_por_defecto(self):

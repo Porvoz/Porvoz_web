@@ -63,7 +63,9 @@ class Notificacion(models.Model):
         ordering = ["-creado_en"]
         indexes = [
             models.Index(fields=["usuario", "leida"], name="porvoz_noti_usuario_idx"),
-            models.Index(fields=["usuario", "tipo"], name="porvoz_noti_usuario_tipo_idx"),
+            models.Index(
+                fields=["usuario", "tipo"], name="porvoz_noti_usuario_tipo_idx"
+            ),
             models.Index(fields=["paciente"], name="porvoz_noti_paciente_idx"),
             models.Index(fields=["fecha_programada"], name="porvoz_noti_fecha_pr_idx"),
         ]

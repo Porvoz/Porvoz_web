@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 
 from apps.pacientes.services import PacienteService
-from apps.pacientes.models import Paciente, Enfermedad
+from apps.pacientes.models import Paciente
 
 
 class PacienteServiceCrearTest(TestCase):
@@ -123,15 +123,21 @@ class PacienteServiceBusquedaTest(TestCase):
 
 class PacienteServiceTelefonoTest(TestCase):
     def test_es_telefono_usuario_mismo_coincidencia(self):
-        resultado = PacienteService.es_telefono_usuario_mismo("+573001234567", "+573001234567")
+        resultado = PacienteService.es_telefono_usuario_mismo(
+            "+573001234567", "+573001234567"
+        )
         self.assertTrue(resultado)
 
     def test_es_telefono_usuario_mismo_sin_prefijo(self):
-        resultado = PacienteService.es_telefono_usuario_mismo("+573001234567", "3001234567")
+        resultado = PacienteService.es_telefono_usuario_mismo(
+            "+573001234567", "3001234567"
+        )
         self.assertTrue(resultado)
 
     def test_es_telefono_usuario_mismo_diferente(self):
-        resultado = PacienteService.es_telefono_usuario_mismo("+573001234567", "+573009999999")
+        resultado = PacienteService.es_telefono_usuario_mismo(
+            "+573001234567", "+573009999999"
+        )
         self.assertFalse(resultado)
 
     def test_es_telefono_usuario_mismo_vacio(self):

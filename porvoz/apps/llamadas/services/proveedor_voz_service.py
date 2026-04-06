@@ -6,6 +6,7 @@ Responsabilidades:
 - Generar respuestas de IA via Gemini
 - Construir TwiML (XML que Twilio ejecuta)
 """
+
 import html
 import logging
 import os
@@ -35,6 +36,7 @@ class ProveedorVozService:
                     "TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN son obligatorios"
                 )
             from twilio.rest import Client
+
             _twilio_client = Client(account_sid, auth_token)
         return _twilio_client
 
@@ -43,6 +45,7 @@ class ProveedorVozService:
         global _twilio_phone
         if _twilio_phone is None:
             import re
+
             numero = os.environ.get("TWILIO_PHONE_NUMBER", "")
             numero = numero.strip()
             if re.match(r"^\+\d{7,15}$", numero):
@@ -96,6 +99,7 @@ class ProveedorVozService:
             if not api_key:
                 raise RuntimeError("GEMINI_API_KEY es obligatoria")
             import google.generativeai as genai
+
             genai.configure(api_key=api_key)
             _gemini_model = genai.GenerativeModel("gemini-1.5-flash")
         return _gemini_model
@@ -134,19 +138,25 @@ class ProveedorVozService:
                     f"{system_prompt}\n\n"
                     f"Recordatorio original: {mensaje_recordatorio}\n\n"
                     f"Historial:\n{historial}\n\n"
-                    f"El paciente acaba de decir: \"{input_usuario}\"\n\n"
+                    f'El paciente acaba de decir: "{input_usuario}"\n\n'
                     "Responde de forma natural y breve."
                 )
 
             response = model.generate_content(prompt)
             text = getattr(response, "text", None)
             if not text:
-                return f"Hola, le llamo de Porvoz para recordarle: {mensaje_recordatorio}. ¿Ya lo tomó?"
+                return (
+                    f"Hola, le llamo de Porvoz para recordarle: {mensaje_recordatorio}. "
+                    "¿Ya lo tomó?"
+                )
             return text.strip()
 
         except Exception as e:
             logger.error(f"[Gemini] Error generando respuesta: {e}")
-            return f"Hola, le llamo de Porvoz para recordarle: {mensaje_recordatorio}. ¿Ya tomó su medicamento?"
+            return (
+                f"Hola, le llamo de Porvoz para recordarle: {mensaje_recordatorio}. "
+                "¿Ya tomó su medicamento?"
+            )
 
     # ------------------------------------------------------------------
     # TwiML builders

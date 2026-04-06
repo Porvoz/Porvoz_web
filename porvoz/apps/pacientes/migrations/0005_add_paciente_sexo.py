@@ -18,7 +18,12 @@ class Migration(migrations.Migration):
             name="sexo",
             field=models.CharField(
                 blank=True,
-                choices=[("M", "Mujer"), ("H", "Hombre"), ("O", "Otro"), ("", "Prefiero no decir")],
+                choices=[
+                    ("M", "Mujer"),
+                    ("H", "Hombre"),
+                    ("O", "Otro"),
+                    ("", "Prefiero no decir"),
+                ],
                 default="",
                 max_length=1,
                 verbose_name="Sexo",

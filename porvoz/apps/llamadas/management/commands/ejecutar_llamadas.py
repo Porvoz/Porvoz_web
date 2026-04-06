@@ -8,6 +8,7 @@ Uso:
 En producción, programar con cron:
     */5 * * * * cd /ruta/al/proyecto && python manage.py ejecutar_llamadas
 """
+
 import time
 
 from django.core.management.base import BaseCommand
@@ -34,7 +35,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options["loop"]:
             intervalo = options["intervalo"]
-            self.stdout.write(f"[ejecutar_llamadas] Modo bucle — cada {intervalo}s. Ctrl+C para salir.")
+            self.stdout.write(
+                f"[ejecutar_llamadas] Modo bucle — cada {intervalo}s. Ctrl+C para salir."
+            )
             while True:
                 self._ejecutar()
                 time.sleep(intervalo)

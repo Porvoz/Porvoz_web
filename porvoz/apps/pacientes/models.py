@@ -59,7 +59,7 @@ class Paciente(models.Model):
         max_length=50,
         default="America/Bogota",
         blank=True,
-        help_text="Ej: America/Bogota, America/Mexico_City. Para programar llamadas en la hora local del paciente.",
+        help_text="Ej: America/Bogota, America/Mexico_City. Para programar llamadas en hora local.",
     )
     activo = models.BooleanField("Activo", default=True)
     creado_en = models.DateTimeField("Fecha de creación", auto_now_add=True)

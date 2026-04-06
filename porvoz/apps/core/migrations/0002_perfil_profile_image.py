@@ -11,7 +11,10 @@ class Migration(migrations.Migration):
             model_name="perfil",
             name="profile_image",
             field=models.ImageField(
-                blank=True, null=True, upload_to="profile_images/", verbose_name="Foto de perfil"
+                blank=True,
+                null=True,
+                upload_to="profile_images/",
+                verbose_name="Foto de perfil",
             ),
         ),
     ]

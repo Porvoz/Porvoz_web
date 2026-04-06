@@ -98,6 +98,8 @@ class CambiarPasswordForm(forms.Form):
             self.add_error("confirm_password", "Las contraseñas no coinciden.")
 
         if new_password and old_password and new_password == old_password:
-            self.add_error("new_password", "La nueva contraseña debe ser diferente a la actual.")
+            self.add_error(
+                "new_password", "La nueva contraseña debe ser diferente a la actual."
+            )
 
         return cleaned
