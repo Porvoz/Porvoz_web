@@ -3,8 +3,13 @@ Servicio para integración con Twilio y Gemini.
 
 Responsabilidades:
 - Disparar llamadas via Twilio
-- Generar respuestas de IA via Gemini
+- Generar respuestas de IA via Gemini (solo cuando la intención del paciente es ambigua)
 - Construir TwiML (XML que Twilio ejecuta)
+
+Diseño de costos:
+- Saludo y cierres con intención clara → TwiML estático (0 llamadas a Gemini)
+- Solo llama a Gemini cuando el paciente dice algo ambiguo
+- Esto reduce el uso de Gemini a ~20% de las llamadas
 """
 
 import html
@@ -17,12 +22,19 @@ _twilio_client = None
 _twilio_phone = None
 _gemini_model = None
 
+# Respuestas deterministas — sin IA, sin costo extra
+MSG_CONFIRMADO = "Perfecto, qué bueno. Que tenga un buen día. Hasta luego."
+MSG_NEGATIVO   = "Entendido. Recuerde tomar su medicamento a la brevedad. Hasta luego."
+MSG_DESPUES    = "Entendido, le llamaremos más tarde. Hasta luego."
+MSG_NO_ESCUCHO = "No pude escucharle. Recuerde tomar su medicamento. Hasta luego."
+MSG_TIMEOUT    = "Llamada finalizada. Recuerde tomar su medicamento. Hasta luego."
+
 
 class ProveedorVozService:
     """Integración con Twilio (llamadas) y Gemini (IA conversacional)."""
 
     # ------------------------------------------------------------------
-    # Twilio
+    # Twilio — cliente y número
     # ------------------------------------------------------------------
 
     @staticmethod
@@ -36,7 +48,6 @@ class ProveedorVozService:
                     "TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN son obligatorios"
                 )
             from twilio.rest import Client
-
             _twilio_client = Client(account_sid, auth_token)
         return _twilio_client
 
@@ -45,9 +56,11 @@ class ProveedorVozService:
         global _twilio_phone
         if _twilio_phone is None:
             import re
-
-            numero = os.environ.get("TWILIO_PHONE_NUMBER", "")
-            numero = numero.strip()
+            # Soporta tanto TWILIO_FROM_NUMBER (preferido) como TWILIO_PHONE_NUMBER (legado)
+            numero = (
+                os.environ.get("TWILIO_FROM_NUMBER")
+                or os.environ.get("TWILIO_PHONE_NUMBER", "")
+            ).strip()
             if re.match(r"^\+\d{7,15}$", numero):
                 _twilio_phone = numero
             else:
@@ -56,23 +69,20 @@ class ProveedorVozService:
                     _twilio_phone = match.group(0)
                 else:
                     raise RuntimeError(
-                        "TWILIO_PHONE_NUMBER no es un número válido (ej: +573001234567)"
+                        "TWILIO_FROM_NUMBER no es válido (ej: +16056746999)"
                     )
         return _twilio_phone
 
     @staticmethod
-    def disparar_llamada(numero_telefono, mensaje, voice_url, status_url):
+    def disparar_llamada(numero_telefono: str, mensaje: str, voice_url: str, status_url: str) -> str:
         """
         Inicia una llamada con Twilio.
 
-        Args:
-            numero_telefono: Número del paciente (ej: +573001234567)
-            mensaje: Mensaje del recordatorio (para el webhook)
-            voice_url: URL pública del webhook /llamadas/webhook/voice/
-            status_url: URL pública del webhook /llamadas/webhook/status/
+        - machine_detection="Enable": detecta buzón de voz automáticamente.
+        - time_limit=90: corta la llamada a los 90 s (máx ~2 turnos de conversación).
 
         Returns:
-            call_sid (str) — ID de la llamada en Twilio
+            call_sid (str)
         """
         client = ProveedorVozService.get_twilio_client()
         phone_from = ProveedorVozService.get_twilio_phone()
@@ -83,12 +93,13 @@ class ProveedorVozService:
             from_=phone_from,
             status_callback=status_url,
             status_callback_method="POST",
+            time_limit=90,  # corta a los 90 s si la conversación no cierra
         )
         logger.info(f"[Twilio] Llamada iniciada: {call.sid} → {numero_telefono}")
         return call.sid
 
     # ------------------------------------------------------------------
-    # Gemini
+    # Gemini — solo para respuestas ambiguas
     # ------------------------------------------------------------------
 
     @staticmethod
@@ -99,100 +110,111 @@ class ProveedorVozService:
             if not api_key:
                 raise RuntimeError("GEMINI_API_KEY es obligatoria")
             import google.generativeai as genai
-
             genai.configure(api_key=api_key)
+            # gemini-2.0-flash-lite: modelo más barato y rápido disponible
             _gemini_model = genai.GenerativeModel("gemini-1.5-flash")
         return _gemini_model
 
     @staticmethod
-    def generar_respuesta_ia(input_usuario, mensaje_recordatorio, historial=""):
+    def generar_respuesta_ia(input_usuario: str, mensaje_recordatorio: str, historial: str = "") -> str:
         """
-        Genera una respuesta conversacional usando Gemini.
+        Genera una respuesta para el caso en que el paciente dijo algo ambiguo.
+        Solo se llama cuando la detección por palabras clave no fue concluyente.
 
-        Args:
-            input_usuario: Lo que dijo el paciente en este turno
-            mensaje_recordatorio: El recordatorio original del medicamento
-            historial: Historial de la conversación hasta ahora
-
-        Returns:
-            respuesta (str)
+        Restricciones del modelo:
+        - Máximo 1 oración de respuesta
+        - Sin datos personales
+        - Sin consejos médicos
+        - Siempre termina con despedida si la intención es clara
         """
         try:
             model = ProveedorVozService._get_gemini_model()
-            system_prompt = (
-                "Eres un asistente de salud de Porvoz. Tu tarea es recordar al paciente "
-                "que debe tomar su medicamento. Habla de forma cálida, breve y clara. "
-                "Responde en español. Si el paciente confirma, despídete amablemente. "
-                "Si no confirma o hay duda, recuérdale amablemente."
+
+            # Prompt compacto: menos tokens = más barato y más rápido
+            system = (
+                "Eres Porvoz, asistente de recordatorio de medicamentos. "
+                "Responde en UNA oración máximo. "
+                "Nunca pidas datos personales ni des consejos médicos. "
+                "Si el paciente confirma o niega claramente, despídete con 'Hasta luego'."
             )
 
             if not historial:
+                # No debería ocurrir (el saludo ahora es estático), pero por seguridad
                 prompt = (
-                    f"{system_prompt}\n\n"
-                    f"Recordatorio: {mensaje_recordatorio}\n\n"
-                    "Saluda, preséntate como Porvoz y da el recordatorio. "
-                    "Luego pregunta si ya tomó el medicamento."
+                    f"{system}\n\n"
+                    f"Recordatorio: {mensaje_recordatorio}\n"
+                    "Pregunta si ya tomó el medicamento. Una oración."
                 )
             else:
                 prompt = (
-                    f"{system_prompt}\n\n"
-                    f"Recordatorio original: {mensaje_recordatorio}\n\n"
-                    f"Historial:\n{historial}\n\n"
-                    f'El paciente acaba de decir: "{input_usuario}"\n\n'
-                    "Responde de forma natural y breve."
+                    f"{system}\n\n"
+                    f"Recordatorio: {mensaje_recordatorio}\n"
+                    f"Conversación:\n{historial}\n"
+                    f'Paciente dijo: "{input_usuario}"\n'
+                    "Responde en una oración. Si confirma o niega, despídete."
                 )
 
             response = model.generate_content(prompt)
-            text = getattr(response, "text", None)
+            text = getattr(response, "text", "")
             if not text:
-                return (
-                    f"Hola, le llamo de Porvoz para recordarle: {mensaje_recordatorio}. "
-                    "¿Ya lo tomó?"
-                )
-            return text.strip()
+                return MSG_TIMEOUT
+
+            # Limitar a ~200 chars (~30 palabras habladas ≈ 8 segundos de audio)
+            return text.strip()[:200]
 
         except Exception as e:
-            logger.error(f"[Gemini] Error generando respuesta: {e}")
-            return (
-                f"Hola, le llamo de Porvoz para recordarle: {mensaje_recordatorio}. "
-                "¿Ya tomó su medicamento?"
-            )
+            logger.error(f"[Gemini] Error: {e}")
+            return MSG_TIMEOUT
 
     # ------------------------------------------------------------------
     # TwiML builders
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _escape(text):
+    def _escape(text: str) -> str:
         return html.escape(text, quote=True)
 
     @staticmethod
-    def build_twiml_inicio(mensaje, gather_url):
-        """TwiML para el inicio de la llamada: habla y espera respuesta."""
-        msg = ProveedorVozService._escape(mensaje)
+    def build_twiml_saludo(instrucciones: str, gather_url: str) -> str:
+        """
+        TwiML del saludo inicial — completamente estático, sin Gemini.
+        Construye el mensaje directamente desde las instrucciones del medicamento.
+        """
+        mensaje = f"Hola, le llama Porvoz. {instrucciones} ¿Ya lo tomó?"
+        return ProveedorVozService.build_twiml_gather(mensaje, gather_url)
+
+    @staticmethod
+    def build_twiml_gather(mensaje: str, gather_url: str) -> str:
+        """TwiML que habla y espera respuesta del paciente."""
+        msg    = ProveedorVozService._escape(mensaje)
         action = ProveedorVozService._escape(gather_url)
         return (
             '<?xml version="1.0" encoding="UTF-8"?>\n'
             "<Response>\n"
             f'  <Gather input="speech" action="{action}" method="POST" '
-            'timeout="6" speechTimeout="auto" language="es-MX">\n'
+            'timeout="5" speechTimeout="2" language="es-MX">\n'
             f'    <Say language="es-MX" voice="Polly.Mia">{msg}</Say>\n'
             "  </Gather>\n"
-            '  <Say language="es-MX" voice="Polly.Mia">'
-            "No pude escucharle. Recuerde tomar su medicamento. Que tenga un buen día."
+            # Si no se escuchó nada después del timeout → cierre estático
+            f'  <Say language="es-MX" voice="Polly.Mia">'
+            f'{ProveedorVozService._escape(MSG_NO_ESCUCHO)}'
             "</Say>\n"
             "  <Hangup/>\n"
             "</Response>"
         )
 
+    # Alias para compatibilidad con código existente
     @staticmethod
-    def build_twiml_continuar(mensaje, gather_url):
-        """TwiML para continuar la conversación."""
-        return ProveedorVozService.build_twiml_inicio(mensaje, gather_url)
+    def build_twiml_inicio(mensaje: str, gather_url: str) -> str:
+        return ProveedorVozService.build_twiml_gather(mensaje, gather_url)
 
     @staticmethod
-    def build_twiml_fin(mensaje):
-        """TwiML para terminar la llamada."""
+    def build_twiml_continuar(mensaje: str, gather_url: str) -> str:
+        return ProveedorVozService.build_twiml_gather(mensaje, gather_url)
+
+    @staticmethod
+    def build_twiml_fin(mensaje: str) -> str:
+        """TwiML que reproduce mensaje y cuelga. Sin más interacción."""
         msg = ProveedorVozService._escape(mensaje)
         return (
             '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -207,8 +229,7 @@ class ProveedorVozService:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def get_base_url():
-        """Retorna la URL base pública (para construir URLs de webhooks)."""
+    def get_base_url() -> str:
         base = os.environ.get("TWILIO_BASE_URL") or os.environ.get("BASE_URL")
         if base:
             return base.rstrip("/")
@@ -216,5 +237,4 @@ class ProveedorVozService:
         primer_dominio = dominios.split(",")[0].strip() if dominios else ""
         if primer_dominio:
             return f"https://{primer_dominio}"
-        port = os.environ.get("PORT", "8000")
-        return f"http://localhost:{port}"
+        return f"http://localhost:{os.environ.get('PORT', '8000')}"

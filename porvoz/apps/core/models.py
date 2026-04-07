@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.db import models
-from django.utils import timezone
 
 
 class Perfil(models.Model):
@@ -49,9 +48,9 @@ class Perfil(models.Model):
     PLAN_GROWTH = "growth"
     PLAN_MULTI_BUSINESS = "multi_business"
     PLAN_CHOICES = [
-        (PLAN_FREEMIUM, "Prueba"),
-        (PLAN_GROWTH, "Growth"),
-        (PLAN_MULTI_BUSINESS, "Multi-cuidador"),
+        (PLAN_FREEMIUM, "Básico"),
+        (PLAN_GROWTH, "Familiar"),
+        (PLAN_MULTI_BUSINESS, "Profesional"),
     ]
     plan = models.CharField(
         "Plan",
@@ -77,11 +76,3 @@ class Perfil(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user.username}"
-
-    def get_dias_restantes_plan(self):
-        """Días restantes del plan. Si no hay fecha de vencimiento, usa 365 por defecto."""
-        if self.plan_expiration:
-            hoy = timezone.now().date()
-            delta = (self.plan_expiration - hoy).days
-            return max(0, delta)
-        return 365

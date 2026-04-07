@@ -120,6 +120,15 @@ class PerfilService:
         return True, None
 
     @staticmethod
+    def get_dias_restantes_plan(perfil: Perfil) -> int:
+        """Días restantes del plan. Si no hay fecha de vencimiento, retorna 365."""
+        if perfil.plan_expiration:
+            from django.utils import timezone
+            delta = (perfil.plan_expiration - timezone.now().date()).days
+            return max(0, delta)
+        return 365
+
+    @staticmethod
     def cambiar_plan(perfil: Perfil, nuevo_plan: str) -> Tuple[bool, Optional[str]]:
         """
         Cambia el plan del perfil a uno válido.

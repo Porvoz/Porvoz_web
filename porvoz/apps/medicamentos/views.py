@@ -9,6 +9,7 @@ from apps.llamadas.services.llamada_service import LlamadaService
 from apps.pacientes.models import Paciente
 from apps.core.models import Perfil
 from apps.notificaciones.services import NotificacionService
+from apps.usuarios.services.planes_service import PlanService
 
 
 def _extraer_campos_medicamento(request: HttpRequest) -> dict:
@@ -29,6 +30,8 @@ def _extraer_campos_medicamento(request: HttpRequest) -> dict:
         "duracion_dias_str": request.POST.get("duracion_dias", "").strip(),
         "instrucciones_llamada": request.POST.get("instrucciones_llamada", "").strip(),
         "minutos_antes_str": request.POST.get("minutos_antes_llamada", "0").strip(),
+        "max_reintentos_str": request.POST.get("max_reintentos", "1").strip(),
+        "minutos_reintentos_str": request.POST.get("minutos_entre_reintentos", "30").strip(),
     }
 
 
@@ -65,9 +68,19 @@ def _campos_a_kwargs(campos: dict) -> dict:
         "duracion_dias": int(d) if campos["duracion_tipo"] == "dias" and d else None,
         "instrucciones_llamada": campos["instrucciones_llamada"],
         "minutos_antes": (
-            min(120, max(0, int(campos["minutos_antes_str"])))
+            min(15, max(0, int(campos["minutos_antes_str"])))
             if campos["minutos_antes_str"].isdigit()
             else 0
+        ),
+        "max_reintentos": (
+            min(3, max(0, int(campos["max_reintentos_str"])))
+            if campos["max_reintentos_str"].isdigit()
+            else 1
+        ),
+        "minutos_entre_reintentos": (
+            min(10, max(5, int(campos["minutos_reintentos_str"])))
+            if campos["minutos_reintentos_str"].isdigit()
+            else 10
         ),
     }
 
@@ -79,6 +92,10 @@ def agregar_medicamento_view(request: HttpRequest, paciente_id: int) -> HttpResp
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
 
     if request.method == "POST":
+        puede, error_plan = PlanService.puede_agregar_medicamento(request.user, paciente)
+        if not puede:
+            messages.error(request, error_plan)
+            return redirect("detalle_paciente", paciente_id=paciente.id)
         campos = _extraer_campos_medicamento(request)
         error = _validar_campos_medicamento(campos)
         if error:

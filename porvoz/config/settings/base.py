@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     # Third-party
     "rest_framework",
     "corsheaders",
@@ -134,7 +135,26 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+SITE_ID = 1
+
 # Auth redirects
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
+
+# ------------------------------------------------------------------
+# Email (Gmail SMTP)
+# Requiere App Password de Google: myaccount.google.com → Seguridad
+# → Verificación en 2 pasos → Contraseñas de aplicaciones
+# ------------------------------------------------------------------
+
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "noreply@porvoz.com")
+PASSWORD_RESET_TIMEOUT = 3600  # el link expira en 1 hora
 LOGOUT_REDIRECT_URL = "login"

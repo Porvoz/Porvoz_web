@@ -61,16 +61,27 @@ class Medicamento(models.Model):
         null=True,
         help_text="Dejar vacío para tratamiento indefinido; o indicar días (ej: 7, 30).",
     )
-    instrucciones_llamada = models.TextField(
+    instrucciones_llamada = models.CharField(
         "Instrucciones para la llamada",
+        max_length=200,
         blank=True,
-        help_text="Contexto para la IA: 'Recordar con el desayuno', 'Preguntar efectos'.",
+        help_text="Máx 200 caracteres. No incluir datos médicos sensibles.",
     )
     minutos_antes_llamada = models.PositiveSmallIntegerField(
         "Minutos antes para llamar",
         default=0,
         blank=True,
         help_text="Llamar X minutos antes de la hora de toma (ej: 15)",
+    )
+    max_reintentos = models.PositiveSmallIntegerField(
+        "Reintentos automáticos",
+        default=1,
+        help_text="Intentos adicionales si no responde o dice que no tomó (0 = sin reintento, máx 3).",
+    )
+    minutos_entre_reintentos = models.PositiveSmallIntegerField(
+        "Minutos entre reintentos",
+        default=30,
+        help_text="Minutos de espera antes de reintentar la llamada.",
     )
     activo = models.BooleanField("Activo", default=True)
     creado_en = models.DateTimeField("Fecha de creación", auto_now_add=True)

@@ -136,3 +136,12 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
         "tipos": Notificacion.TIPO_CHOICES,
     }
     return render(request, "notificaciones/notifications.html", context)
+
+
+@login_required
+def marcar_leida_view(request: HttpRequest, notif_id: int) -> HttpResponse:
+    """Marca una notificación como leída y redirige a `next` (o a notificaciones)."""
+    if request.method == "POST":
+        NotificacionService.marcar_como_leida(notif_id, request.user)
+    next_url = request.POST.get("next") or request.GET.get("next") or reverse("notifications")
+    return redirect(next_url)

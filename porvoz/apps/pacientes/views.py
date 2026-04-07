@@ -10,6 +10,7 @@ from apps.dashboard.services import DashboardService
 from apps.llamadas.models import Llamada
 from apps.notificaciones.services import NotificacionService
 from apps.shared.services import TelefonoService
+from apps.usuarios.services.planes_service import PlanService
 
 
 @login_required
@@ -36,7 +37,10 @@ def agregar_paciente_view(request: HttpRequest) -> HttpResponse:
         es_usuario_mismo = request.POST.get("es_usuario_mismo") == "true"
         foto = request.FILES.get("foto")
 
-        if not nombre or not telefono:
+        puede, error_plan = PlanService.puede_agregar_paciente(request.user)
+        if not puede:
+            messages.error(request, error_plan)
+        elif not nombre or not telefono:
             messages.error(request, "El nombre y teléfono son obligatorios.")
         elif PacienteService.verificar_telefono_existente(request.user, telefono):
             messages.error(request, "Ya existe un paciente con ese número de teléfono.")
@@ -285,16 +289,23 @@ def historial_llamadas_paciente_view(
     """Historial de llamadas automáticas del paciente."""
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
+    medicamento_id = request.GET.get("medicamento", "")
     llamadas = (
         Llamada.objects.filter(paciente=paciente, usuario=request.user)
         .select_related("medicamento")
         .prefetch_related("respuesta")
         .order_by("-fecha_programada")
     )
+    if medicamento_id:
+        llamadas = llamadas.filter(medicamento_id=medicamento_id)
+
+    medicamentos = paciente.medicamentos.order_by("nombre")
     context = {
         "perfil": perfil,
         "paciente": paciente,
         "llamadas": llamadas,
+        "medicamentos": medicamentos,
+        "medicamento_filtro": medicamento_id,
     }
     return render(request, "pacientes/historial_llamadas_paciente.html", context)
 

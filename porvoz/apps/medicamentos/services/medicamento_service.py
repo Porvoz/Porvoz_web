@@ -26,6 +26,8 @@ class MedicamentoService:
         duracion_dias: int = None,
         instrucciones_llamada: str = "",
         minutos_antes: int = 0,
+        max_reintentos: int = 1,
+        minutos_entre_reintentos: int = 30,
     ) -> Medicamento:
         """Crea un medicamento con sus horarios."""
         horario_legacy, fecha_inicio_date = MedicamentoService._parsear_campos(
@@ -43,6 +45,8 @@ class MedicamentoService:
             duracion_dias=duracion_dias,
             instrucciones_llamada=instrucciones_llamada,
             minutos_antes_llamada=minutos_antes,
+            max_reintentos=max_reintentos,
+            minutos_entre_reintentos=minutos_entre_reintentos,
         )
         MedicamentoService._guardar_horarios(medicamento, horarios, frecuencia_tipo)
         return medicamento
@@ -60,6 +64,8 @@ class MedicamentoService:
         duracion_dias: int = None,
         instrucciones_llamada: str = "",
         minutos_antes: int = 0,
+        max_reintentos: int = 1,
+        minutos_entre_reintentos: int = 30,
     ) -> Medicamento:
         """Actualiza un medicamento con sus horarios."""
         horario_legacy, fecha_inicio_date = MedicamentoService._parsear_campos(
@@ -75,6 +81,8 @@ class MedicamentoService:
         medicamento.duracion_dias = duracion_dias
         medicamento.instrucciones_llamada = instrucciones_llamada
         medicamento.minutos_antes_llamada = minutos_antes
+        medicamento.max_reintentos = max_reintentos
+        medicamento.minutos_entre_reintentos = minutos_entre_reintentos
         medicamento.save()
 
         medicamento.horarios.all().delete()

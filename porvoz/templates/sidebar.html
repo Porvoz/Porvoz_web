@@ -28,10 +28,12 @@
             <i class="bi bi-people mr-2"></i><span class="label-text">Pacientes</span>
         </a>
         <a href="{% url 'notifications' %}" class="nav-link nav-link-notif px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'notifications' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold relative">
-            <i class="bi bi-bell mr-2"></i>
+            <i class="bi bi-{% if alertas_no_leidas %}bell-fill{% else %}bell{% endif %} mr-2{% if alertas_no_leidas %} text-red-500{% endif %}"></i>
             <span class="label-text">Notificaciones</span>
-            {% if no_leidas_notificaciones %}
-            <span class="nav-notif-badge flex items-center justify-center rounded-full bg-red-500 text-white font-bold shadow-sm flex-shrink-0">{% if no_leidas_notificaciones > 99 %}99+{% else %}{{ no_leidas_notificaciones }}{% endif %}</span>
+            {% if alertas_no_leidas %}
+            <span class="nav-notif-badge flex items-center justify-center rounded-full bg-red-500 text-white font-bold shadow-sm flex-shrink-0" title="{{ alertas_no_leidas }} alerta{{ alertas_no_leidas|pluralize }} sin leer">{% if alertas_no_leidas > 99 %}99+{% else %}{{ alertas_no_leidas }}{% endif %}</span>
+            {% elif no_leidas_notificaciones %}
+            <span class="nav-notif-badge flex items-center justify-center rounded-full bg-slate-400 text-white font-bold shadow-sm flex-shrink-0">{% if no_leidas_notificaciones > 99 %}99+{% else %}{{ no_leidas_notificaciones }}{% endif %}</span>
             {% endif %}
         </a>
         <a href="{% url 'historial_llamadas' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'historial_llamadas' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">

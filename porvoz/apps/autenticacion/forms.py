@@ -6,6 +6,7 @@ liberando a las vistas de lógica de validación.
 """
 
 from django import forms
+from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.models import User
 
 
@@ -68,6 +69,21 @@ class RegistroForm(forms.Form):
         if password and password2 and password != password2:
             self.add_error("password2", "Las contraseñas no coinciden.")
         return cleaned
+
+
+class PorvozPasswordResetForm(PasswordResetForm):
+    """
+    Extiende el form built-in de Django para mostrar error
+    si el correo no está registrado en Porvoz.
+    """
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email", "").strip().lower()
+        if not User.objects.filter(email__iexact=email, is_active=True).exists():
+            raise forms.ValidationError(
+                "No encontramos ninguna cuenta asociada a ese correo electrónico."
+            )
+        return email
 
 
 class CambiarPasswordForm(forms.Form):

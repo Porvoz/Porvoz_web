@@ -329,6 +329,18 @@
             }
         });
     }
+
+    // Loading state on form submit
+    const form = document.querySelector("form");
+    const submitBtn = form?.querySelector('[type="submit"]');
+    if (form && submitBtn) {
+        form.addEventListener("submit", function(e) {
+            if (!submitBtn.disabled) {
+                submitBtn.dataset.loadingText = submitBtn.textContent;
+                Loading.setLoading(submitBtn, true);
+            }
+        });
+    }
 })();
 </script>
 {% endblock %}

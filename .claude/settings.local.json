@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python manage.py check)",
+      "Bash(python manage.py showmigrations)",
+      "Bash(python manage.py show_urls)",
+      "Bash(python manage.py shell -c \"from django.urls import get_resolver; resolver = get_resolver\\(\\); print\\(''''\\\\n''''.join\\(sorted\\([p.pattern.regex.pattern if hasattr\\(p.pattern, ''''regex''''\\) else str\\(p.pattern\\) for p in resolver.url_patterns]\\)\\)\\)\")",
+      "Bash(python -c \":*)",
+      "Bash(grep -E \"\\\\.py$|requirements|\\\\.txt$|\\\\.md$\")",
+      "Bash(find \"C:/Users/matia/OneDrive/Desktop/Matías M/EAFIT ING DE SISTEMAS/semestre 5/proyecto 2/porvoz/apps\" -name \"*.py\" -type f ! -path \"*/migrations/*\" ! -path \"*/__pycache__/*\" -exec wc -l {} +)",
+      "Bash(find templates:*)",
+      "Bash(sed -i -e 's|\"\"core/login.html\"\"|\"\"autenticacion/login.html\"\"|g' -e 's|\"\"core/register.html\"\"|\"\"autenticacion/register.html\"\"|g' -e 's|\"\"core/reset_password.html\"\"|\"\"autenticacion/reset_password.html\"\"|g' autenticacion/views.py)",
+      "Bash(sed -i 's|\"\"core/dashboard.html\"\"|\"\"dashboard/dashboard.html\"\"|g' dashboard/views.py)",
+      "Bash(sed -i -e 's|\"\"core/edit_profile.html\"\"|\"\"usuarios/edit_profile.html\"\"|g' -e 's|\"\"core/change_password.html\"\"|\"\"usuarios/change_password.html\"\"|g' -e 's|\"\"core/plans.html\"\"|\"\"usuarios/plans.html\"\"|g' usuarios/views.py)",
+      "Bash(sed -i -e 's|\"\"core/legal_info.html\"\"|\"\"legal/legal_info.html\"\"|g' -e 's|\"\"core/terms.html\"\"|\"\"legal/terms.html\"\"|g' -e 's|\"\"core/privacy.html\"\"|\"\"legal/privacy.html\"\"|g' -e 's|\"\"core/contact.html\"\"|\"\"legal/contact.html\"\"|g' -e 's|\"\"core/guide.html\"\"|\"\"legal/guide.html\"\"|g' legal/views.py)",
+      "Bash(sed -i 's|\"\"core/notifications.html\"\"|\"\"notificaciones/notifications.html\"\"|g' notificaciones/views.py)",
+      "Bash(cd:*)",
+      "Bash(python manage.py test apps --verbosity=1)",
+      "Bash(python manage.py test apps --verbosity=2)",
+      "Bash(python manage.py test apps.core --verbosity=0)",
+      "Bash(python manage.py test apps.pacientes --verbosity=0)",
+      "Bash(python manage.py test apps.medicamentos --verbosity=0)",
+      "Bash(python manage.py test apps.notificaciones --verbosity=0)",
+      "Bash(python manage.py test apps.llamadas --verbosity=0)",
+      "Bash(find .. -name *.md -type f)",
+      "Bash(python manage.py test --verbosity=2)",
+      "Bash(pip install:*)",
+      "Bash(flake8 apps/ --count --statistics)",
+      "Bash(safety check:*)",
+      "Bash(pip list:*)",
+      "Bash(safety --version)",
+      "Bash(flake8:*)",
+      "Bash(black apps/ --line-length 100 -q)",
+      "Bash(python manage.py test apps --verbosity=0)",
+      "Bash(bandit -r apps/)",
+      "Bash(safety scan:*)",
+      "Bash(python manage.py test apps.notificaciones)"
+    ]
+  }
+}

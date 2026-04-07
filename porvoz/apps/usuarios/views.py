@@ -5,8 +5,8 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from apps.core.models import Perfil
-from apps.shared.services import TelefonoService, obtener_planes
-from apps.usuarios.services import PerfilService
+from apps.shared.services import TelefonoService
+from apps.usuarios.services import PerfilService, PlanService, obtener_planes
 
 
 @login_required
@@ -83,9 +83,11 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
     emergency_phone_number = emergency_parsed.numero
 
     planes = obtener_planes(plan_actual=perfil.plan)
+    uso_actual = PlanService.get_uso_actual(request.user)
 
     context = {
         "perfil": perfil,
+        "uso_actual": uso_actual,
         "first_name": first_name,
         "last_name": last_name,
         "phone_country": phone_country,

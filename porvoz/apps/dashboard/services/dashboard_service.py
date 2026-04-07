@@ -2,21 +2,26 @@
 Servicio para estadísticas y datos del dashboard.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User
 from django.db.models import Prefetch
+from django.utils import timezone
 
 from apps.core.models import Perfil
+from apps.llamadas.models import Llamada, RespuestaLlamada
 from apps.medicamentos.models import Medicamento
 from apps.notificaciones.models import Notificacion
 from apps.pacientes.models import Paciente
+from apps.usuarios.services.perfil_service import PerfilService
 
 
 class DashboardService:
 
     ICONOS = {
         "alerta": "exclamation-triangle",
+        "llamada_ok": "telephone-fill",
+        "llamada": "telephone",
         "recordatorio": "bell",
         "sistema_paciente": "person-plus",
         "sistema_medicamento": "capsule",
@@ -150,11 +155,16 @@ class DashboardService:
             return DashboardService.ICONOS["alerta"]
         if notif.tipo == "recordatorio":
             return DashboardService.ICONOS["recordatorio"]
+        if notif.tipo == "llamada":
+            tit = notif.titulo or ""
+            if "confirmada" in tit.lower():
+                return DashboardService.ICONOS["llamada_ok"]
+            return DashboardService.ICONOS["llamada"]
 
         tit = notif.titulo or ""
         if "Paciente" in tit:
             return DashboardService.ICONOS["sistema_paciente"]
-        if "Medicamento" in tit:
+        if "Medicamento" in tit or "medicamento" in tit:
             return DashboardService.ICONOS["sistema_medicamento"]
         if "Condición" in tit:
             return DashboardService.ICONOS["sistema_condicion"]
@@ -162,20 +172,76 @@ class DashboardService:
         return DashboardService.ICONOS["default"]
 
     @staticmethod
+    def obtener_alertas_activas(usuario: User, limite: int = 3) -> list:
+        """Últimas alertas no leídas para mostrar en el banner del dashboard."""
+        return list(
+            Notificacion.objects.filter(
+                usuario=usuario,
+                leida=False,
+                tipo=Notificacion.TIPO_ALERTA,
+            )
+            .select_related("paciente", "medicamento")
+            .order_by("-creado_en")[:limite]
+        )
+
+    @staticmethod
+    def obtener_proximas_llamadas(usuario: User, limite: int = 5) -> list:
+        """Próximas llamadas programadas (aún no ejecutadas) del usuario."""
+        ahora = timezone.now()
+        return list(
+            Llamada.objects.filter(
+                usuario=usuario,
+                estado=Llamada.ESTADO_PROGRAMADA,
+                fecha_programada__gte=ahora,
+            )
+            .select_related("medicamento", "paciente")
+            .order_by("fecha_programada")[:limite]
+        )
+
+    @staticmethod
+    def obtener_estadisticas_llamadas(usuario: User) -> dict:
+        """Estadísticas de llamadas de los últimos 7 días."""
+        hace_7_dias = timezone.now() - timedelta(days=7)
+        qs = Llamada.objects.filter(
+            usuario=usuario,
+            fecha_programada__gte=hace_7_dias,
+            estado__in=[Llamada.ESTADO_COMPLETADA, Llamada.ESTADO_FALLIDA],
+        )
+        total = qs.count()
+        atendidas = qs.filter(
+            respuesta__como_respondio=RespuestaLlamada.RESPUESTA_ATENDIDA
+        ).count()
+        adherencia = round((atendidas / total * 100) if total > 0 else 0)
+        return {
+            "llamadas_semana": total,
+            "llamadas_atendidas_semana": atendidas,
+            "llamadas_no_atendidas_semana": total - atendidas,
+            "adherencia_semana": adherencia,
+        }
+
+    @staticmethod
     def obtener_datos_completos(usuario: User, ordenar: str = "recientes") -> dict:
         """Obtiene todos los datos necesarios para el dashboard."""
         perfil, _ = Perfil.objects.get_or_create(user=usuario)
+        pacientes = DashboardService.obtener_pacientes(usuario, ordenar)
+        stats_llamadas = DashboardService.obtener_estadisticas_llamadas(usuario)
 
         return {
             "perfil": perfil,
-            "pacientes": DashboardService.obtener_pacientes(usuario, ordenar),
+            "pacientes": pacientes,
             "total_medicamentos": DashboardService.obtener_total_medicamentos(usuario),
             "proximos_recordatorios": DashboardService.obtener_proximos_recordatorios(
                 usuario
             ),
+            "alertas_activas": DashboardService.obtener_alertas_activas(usuario),
+            "proximas_llamadas": DashboardService.obtener_proximas_llamadas(usuario),
             "actividad_reciente": DashboardService.obtener_actividad_reciente(usuario),
-            "dias_restantes_plan": perfil.get_dias_restantes_plan(),
+            "dias_restantes_plan": PerfilService.get_dias_restantes_plan(perfil),
             "nombre_plan": perfil.get_plan_display(),
+            "pacientes_sin_medicamentos": [
+                p for p in pacientes if p.medicamentos.count() == 0
+            ],
+            **stats_llamadas,
             "opciones_ordenar": [
                 ("recientes", "Más recientes"),
                 ("nombre_asc", "Nombre A-Z"),

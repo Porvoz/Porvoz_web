@@ -27,6 +27,13 @@ def dashboard_unificado(request: HttpRequest) -> HttpResponse:
         "nombre_plan": datos["nombre_plan"],
         "ordenar_actual": ordenar,
         "opciones_ordenar": datos["opciones_ordenar"],
+        "llamadas_semana": datos["llamadas_semana"],
+        "llamadas_atendidas_semana": datos["llamadas_atendidas_semana"],
+        "llamadas_no_atendidas_semana": datos["llamadas_no_atendidas_semana"],
+        "adherencia_semana": datos["adherencia_semana"],
+        "pacientes_sin_medicamentos": datos["pacientes_sin_medicamentos"],
+        "alertas_activas": datos["alertas_activas"],
+        "proximas_llamadas": datos["proximas_llamadas"],
     }
 
     return render(request, "dashboard/dashboard.html", context)

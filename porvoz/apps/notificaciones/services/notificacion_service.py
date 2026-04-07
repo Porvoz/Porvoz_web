@@ -28,6 +28,7 @@ class NotificacionService:
             Notificacion.TIPO_SISTEMA,
             Notificacion.TIPO_RECORDATORIO,
             Notificacion.TIPO_ALERTA,
+            Notificacion.TIPO_LLAMADA,
         }
         if tipo not in tipos_validos:
             raise NotificacionError(f"Tipo '{tipo}' no válido. Usar: {tipos_validos}")
@@ -91,6 +92,24 @@ class NotificacionService:
         return NotificacionService.crear_notificacion(
             usuario=usuario,
             tipo=Notificacion.TIPO_ALERTA,
+            titulo=titulo,
+            mensaje=mensaje,
+            paciente=paciente,
+            medicamento=medicamento,
+        )
+
+    @staticmethod
+    def crear_notificacion_llamada(
+        usuario: User,
+        titulo: str,
+        mensaje: str = "",
+        paciente=None,
+        medicamento=None,
+    ) -> Notificacion:
+        """Crea una notificación de tipo llamada (eventos informativos de llamadas)."""
+        return NotificacionService.crear_notificacion(
+            usuario=usuario,
+            tipo=Notificacion.TIPO_LLAMADA,
             titulo=titulo,
             mensaje=mensaje,
             paciente=paciente,
