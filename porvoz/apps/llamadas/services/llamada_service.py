@@ -20,6 +20,7 @@ from django.utils import timezone
 from apps.llamadas.models import Llamada, RespuestaLlamada, AuditoriaLog
 from apps.medicamentos.models import Medicamento
 from apps.notificaciones.services.notificacion_service import NotificacionService
+from apps.notificaciones.services.email_service import EmailService
 from apps.pacientes.models import Paciente
 
 logger = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ class LlamadaService:
         ).delete()
 
         ahora = timezone.now()
-        hoy = ahora.date()
+        hoy = timezone.localtime(ahora).date()  # fecha en hora local (Bogotá), no UTC
         offset = timedelta(minutes=medicamento.minutos_antes_llamada or 0)
         creadas = []
 
@@ -78,9 +79,16 @@ class LlamadaService:
                 hora = LlamadaService._as_time(h.hora)
                 if hora is None:
                     continue
-                dt_hoy = timezone.make_aware(datetime.combine(hoy, hora)) - offset
-                dt_manana = dt_hoy + timedelta(days=1)
-                fecha = dt_hoy if dt_hoy > ahora else dt_manana
+                dt_toma_hoy = timezone.make_aware(datetime.combine(hoy, hora))
+                dt_hoy = dt_toma_hoy - offset
+                dt_manana = dt_toma_hoy + timedelta(days=1) - offset
+
+                if dt_toma_hoy > ahora:
+                    # La hora de toma aún no llegó — llamar lo antes posible
+                    fecha = max(dt_hoy, ahora + timedelta(minutes=1))
+                else:
+                    # La hora de toma ya pasó hoy — programar para mañana
+                    fecha = dt_manana
 
                 llamada = LlamadaService.crear_llamada_programada(
                     medicamento=medicamento,
@@ -195,17 +203,21 @@ class LlamadaService:
             llamada.save(update_fields=["estado"])
             return
 
-        mensaje_raw = (
+        nombre_med      = medicamento.nombre if medicamento else "su medicamento"
+        instrucciones   = LlamadaService._sanitizar_mensaje(
             medicamento.instrucciones_llamada
             if medicamento and medicamento.instrucciones_llamada
-            else f"Recuerde tomar {medicamento.nombre if medicamento else 'su medicamento'}."
+            else ""
         )
-        mensaje = LlamadaService._sanitizar_mensaje(mensaje_raw)
+        nombre_paciente = paciente.nombre if paciente else ""
 
         try:
             voice_url = (
                 f"{base_url}/llamadas/webhook/voice/"
-                f"?llamada_id={llamada.id}&mensaje={urllib.parse.quote(mensaje)}"
+                f"?llamada_id={llamada.id}"
+                f"&nombre_med={urllib.parse.quote(nombre_med)}"
+                f"&instrucciones={urllib.parse.quote(instrucciones)}"
+                f"&nombre_paciente={urllib.parse.quote(nombre_paciente)}"
             )
             status_url = f"{base_url}/llamadas/webhook/status/"
 
@@ -410,6 +422,12 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
+        # Enviar email de toma confirmada
+        EmailService.enviar_email_toma_confirmada(
+            usuario=llamada.usuario,
+            paciente_nombre=llamada.paciente.nombre,
+            medicamento_nombre=med_nombre,
+        )
 
     @staticmethod
     def _crear_alerta_escalada(llamada: Llamada):
@@ -443,6 +461,12 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
+        # Enviar email de toma no confirmada
+        EmailService.enviar_email_toma_no_confirmada(
+            usuario=llamada.usuario,
+            paciente_nombre=llamada.paciente.nombre,
+            medicamento_nombre=med_nombre,
+        )
 
     @staticmethod
     def _crear_alerta_despues(llamada: Llamada, palabras_paciente: str = ""):
@@ -460,6 +484,12 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
+        # Enviar email de toma aplazada
+        EmailService.enviar_email_toma_aplazada(
+            usuario=llamada.usuario,
+            paciente_nombre=llamada.paciente.nombre,
+            medicamento_nombre=med_nombre,
+        )
 
     @staticmethod
     def _crear_alerta_no_atendida(llamada: Llamada):
@@ -475,6 +505,12 @@ class LlamadaService:
             ),
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
+        )
+        # Enviar email de llamada no atendida
+        EmailService.enviar_email_llamada_no_atendida(
+            usuario=llamada.usuario,
+            paciente_nombre=llamada.paciente.nombre,
+            medicamento_nombre=med_nombre,
         )
 
     @staticmethod

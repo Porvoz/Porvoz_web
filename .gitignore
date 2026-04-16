@@ -46,3 +46,14 @@ backend/
 frontend/
 /LogoPorvoz.jpeg
 
+# Local configuration (no versionear)
+.claude/
+porvoz/.claude/
+
+# Scripts de desarrollo local
+porvoz/ngrok_run.py
+
+# Generated documentation (local work)
+ESTADO_IMPLEMENTACIONES.md
+RESUMEN_IMPLEMENTACIONES_FINALES.md
+

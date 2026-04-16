@@ -116,43 +116,48 @@ class ProveedorVozService:
         return _gemini_model
 
     @staticmethod
-    def generar_respuesta_ia(input_usuario: str, mensaje_recordatorio: str, historial: str = "") -> str:
+    def generar_respuesta_ia(
+        input_usuario: str,
+        nombre_med: str,
+        instrucciones: str = "",
+        nombre_paciente: str = "",
+        historial: str = "",
+    ) -> str:
         """
-        Genera una respuesta para el caso en que el paciente dijo algo ambiguo.
-        Solo se llama cuando la detección por palabras clave no fue concluyente.
+        Genera una respuesta conversacional cuando la intención del paciente es ambigua.
 
-        Restricciones del modelo:
-        - Máximo 1 oración de respuesta
-        - Sin datos personales
-        - Sin consejos médicos
-        - Siempre termina con despedida si la intención es clara
+        Recibe contexto completo del medicamento y paciente para responder
+        de forma natural. Gemini NO lee las instrucciones en voz alta — las
+        usa como contexto silencioso para entender el medicamento.
         """
         try:
             model = ProveedorVozService._get_gemini_model()
 
-            # Prompt compacto: menos tokens = más barato y más rápido
+            contexto_med = f"Medicamento: {nombre_med}."
+            if instrucciones:
+                contexto_med += f" Contexto: {instrucciones}."
+
+            nombre_display = nombre_paciente if nombre_paciente else "el paciente"
+
             system = (
-                "Eres Porvoz, asistente de recordatorio de medicamentos. "
-                "Responde en UNA oración máximo. "
-                "Nunca pidas datos personales ni des consejos médicos. "
-                "Si el paciente confirma o niega claramente, despídete con 'Hasta luego'."
+                f"Eres Porvoz, asistente de voz para recordatorio de medicamentos. "
+                f"Estás hablando con {nombre_display}. {contexto_med} "
+                "Tu objetivo es confirmar si tomó el medicamento. "
+                "Responde de forma natural y breve (máximo 2 oraciones). "
+                "Puedes usar el contexto del medicamento para responder preguntas simples. "
+                "NUNCA des consejos médicos, dosis exactas ni información de diagnóstico. "
+                "Si confirma que lo tomó → despídete con 'Hasta luego'. "
+                "Si dice que no lo tomó → anímalo a tomarlo y despídete. "
+                "Si es ambiguo → pregunta directamente: '¿Ya lo tomó, sí o no?'. "
+                "Si pregunta algo que no puedes responder → di que consulte a su médico y despídete."
             )
 
-            if not historial:
-                # No debería ocurrir (el saludo ahora es estático), pero por seguridad
-                prompt = (
-                    f"{system}\n\n"
-                    f"Recordatorio: {mensaje_recordatorio}\n"
-                    "Pregunta si ya tomó el medicamento. Una oración."
-                )
-            else:
-                prompt = (
-                    f"{system}\n\n"
-                    f"Recordatorio: {mensaje_recordatorio}\n"
-                    f"Conversación:\n{historial}\n"
-                    f'Paciente dijo: "{input_usuario}"\n'
-                    "Responde en una oración. Si confirma o niega, despídete."
-                )
+            prompt = (
+                f"{system}\n\n"
+                f"Conversación hasta ahora:\n{historial}\n"
+                f'El paciente acaba de decir: "{input_usuario}"\n'
+                "Responde en máximo 2 oraciones."
+            )
 
             response = model.generate_content(prompt)
             text = getattr(response, "text", "")
@@ -192,7 +197,7 @@ class ProveedorVozService:
             '<?xml version="1.0" encoding="UTF-8"?>\n'
             "<Response>\n"
             f'  <Gather input="speech" action="{action}" method="POST" '
-            'timeout="5" speechTimeout="2" language="es-MX">\n'
+            'timeout="8" speechTimeout="3" language="es-MX">\n'
             f'    <Say language="es-MX" voice="Polly.Mia">{msg}</Say>\n'
             "  </Gather>\n"
             # Si no se escuchó nada después del timeout → cierre estático

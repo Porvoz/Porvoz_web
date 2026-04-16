@@ -100,14 +100,22 @@ class DashboardService:
 
     @staticmethod
     def obtener_proximos_recordatorios(usuario: User, limite: int = 5) -> list:
-        """Obtiene los próximos recordatorios de medicamentos."""
-        hoy = datetime.now().date()
+        """
+        Obtiene los recordatorios de medicamentos para hoy.
+        Incluye frecuencia horario fijo y cada X horas.
+        Adjunta el estado de la última llamada ejecutada hoy para cada medicamento.
+        """
+        from apps.llamadas.models import Llamada, RespuestaLlamada
+
+        ahora = timezone.now()
+        hoy = timezone.localtime(ahora).date()
+        inicio_hoy = timezone.make_aware(datetime.combine(hoy, datetime.min.time()))
+        fin_hoy = inicio_hoy + timedelta(hours=24)
 
         medicamentos = (
             Medicamento.objects.filter(
                 paciente__usuario=usuario,
                 activo=True,
-                frecuencia_tipo=Medicamento.FRECUENCIA_HORARIO,
             )
             .prefetch_related("horarios")
             .select_related("paciente")
@@ -115,17 +123,48 @@ class DashboardService:
 
         items = []
         for med in medicamentos:
-            horarios = med.get_horarios_ordenados()
-            if not horarios:
-                continue
-            for h in horarios:
-                items.append(
-                    {
+            if med.frecuencia_tipo == Medicamento.FRECUENCIA_HORARIO:
+                horarios = med.get_horarios_ordenados()
+                if not horarios:
+                    continue
+                for h in horarios:
+                    items.append({
                         "medicamento": med,
                         "horario": h.hora,
                         "fecha": hoy,
-                    }
+                    })
+
+            elif med.frecuencia_tipo == Medicamento.FRECUENCIA_CADA_X_HORAS:
+                if not med.hora_inicio or not med.cada_x_horas:
+                    continue
+                dt_base = timezone.make_aware(datetime.combine(hoy, med.hora_inicio))
+                intervalo = timedelta(hours=med.cada_x_horas)
+                # Próxima toma que no haya pasado aún
+                dt_siguiente = dt_base
+                while dt_siguiente <= ahora:
+                    dt_siguiente += intervalo
+                # Solo mostrar si es hoy
+                if timezone.localtime(dt_siguiente).date() == hoy:
+                    items.append({
+                        "medicamento": med,
+                        "horario": timezone.localtime(dt_siguiente).time(),
+                        "fecha": hoy,
+                    })
+
+        # Adjuntar estado de la última llamada ejecutada hoy para cada medicamento
+        for item in items:
+            llamada_hoy = (
+                Llamada.objects.filter(
+                    medicamento=item["medicamento"],
+                    fecha_programada__gte=inicio_hoy,
+                    fecha_programada__lt=fin_hoy,
+                    estado__in=[Llamada.ESTADO_COMPLETADA, Llamada.ESTADO_FALLIDA],
                 )
+                .select_related("respuesta")
+                .order_by("-fecha_programada")
+                .first()
+            )
+            item["llamada_hoy"] = llamada_hoy
 
         items.sort(key=lambda x: x["horario"])
         return items[:limite]

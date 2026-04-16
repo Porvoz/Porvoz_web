@@ -9,101 +9,180 @@
 
     <main class="{% if user.is_authenticated %}main-content-responsive lg:ml-64 {% endif %}flex-1 min-w-0 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 bg-slate-100 flex flex-col">
         {% if user.is_authenticated %}
-        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
-            <i class="bi bi-list text-xl"></i>
+        <button type="button" class="btn-mobile-menu" data-mobile-menu-toggle>
+            <i class="bi bi-list"></i>
         </button>
         {% endif %}
 
-        <div class="w-full min-w-0 flex-1 {% if user.is_authenticated %}mt-12 lg:mt-0{% endif %}">
+        <div class="w-full min-w-0 flex-1">
             <!-- Header -->
-            <header class="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Centro de Ayuda</h1>
-                    <p class="text-sm text-slate-600 mt-1">Todo lo que necesitas para usar Porvoz</p>
+            <header class="mb-8 {% if user.is_authenticated %}mt-12 lg:mt-0{% endif %}">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-700 text-white shadow-lg">
+                            <i class="bi bi-question-circle text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Centro de Ayuda</h1>
+                            <p class="text-sm text-slate-600 mt-0.5">Aprende cómo usar Porvoz para recordatorios de medicamentos</p>
+                        </div>
+                    </div>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors shadow-sm self-start sm:self-center">
+                        <i class="bi bi-house"></i>
+                        Volver a panel principal
+                    </a>
+                    {% endif %}
                 </div>
-                {% if user.is_authenticated %}
-                <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors self-start sm:self-center">
-                    <i class="bi bi-house"></i>Volver a panel principal
-                </a>
-                {% endif %}
             </header>
 
             <!-- Navegación horizontal (anclas) -->
-            <nav class="sticky top-0 z-10 -mx-4 px-4 py-3 mb-8 bg-slate-100/95 backdrop-blur border-b border-slate-200 flex flex-wrap gap-2">
-                <a href="#inicio" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-sm">Inicio</a>
-                <a href="#pacientes" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-sm">Pacientes</a>
-                <a href="#medicamentos" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-sm">Medicamentos</a>
-                <a href="#llamadas" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-sm">Llamadas</a>
-                <a href="#preguntas" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-sm">Preguntas</a>
-                <a href="{% url 'contact' %}" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-sm">Contacto</a>
+            <nav class="sticky top-0 z-10 -mx-4 px-4 py-4 mb-8 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+                <div class="flex flex-wrap gap-2">
+                    <a href="#inicio" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-rocket-takeoff"></i>Inicio
+                    </a>
+                    <a href="#pacientes" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-people"></i>Pacientes
+                    </a>
+                    <a href="#medicamentos" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-capsule"></i>Medicamentos
+                    </a>
+                    <a href="#llamadas" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-telephone"></i>Llamadas
+                    </a>
+                    <a href="#preguntas" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-question-circle"></i>FAQ
+                    </a>
+                    <a href="{% url 'contact' %}" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-envelope"></i>Contacto
+                    </a>
+                </div>
             </nav>
 
             <div class="space-y-8">
                 <!-- Inicio Rápido -->
                 <section id="inicio" class="scroll-mt-24">
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:p-8">
-                        <h2 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2"><i class="bi bi-rocket-takeoff text-slate-600"></i>Inicio Rápido</h2>
-                        <ol class="space-y-4">
-                            <li class="flex gap-4">
-                                <span class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">1</span>
-                                <div>
-                                    <h3 class="font-semibold text-slate-900">Regístrate</h3>
-                                    <p class="text-sm text-slate-600 mt-0.5">Crea tu cuenta con correo y contraseña. Completa tu perfil (nombre, teléfono, fecha de nacimiento).</p>
+                        <h2 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-3">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                <i class="bi bi-rocket-takeoff"></i>
+                            </div>
+                            Inicio Rápido en 4 pasos
+                        </h2>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">1</div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                            <i class="bi bi-pencil-square text-slate-700"></i>Regístrate
+                                        </h3>
+                                        <p class="text-sm text-slate-600 mt-1.5">Crea tu cuenta con correo y contraseña. Completa tu perfil con nombre, teléfono y fecha de nacimiento.</p>
+                                    </div>
                                 </div>
-                            </li>
-                            <li class="flex gap-4">
-                                <span class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">2</span>
-                                <div>
-                                    <h3 class="font-semibold text-slate-900">Agrega pacientes</h3>
-                                    <p class="text-sm text-slate-600 mt-0.5">Usa <strong>"Agregarme a mí"</strong> si eres tú quien toma medicamentos, o agrega a familiares con su nombre y teléfono.</p>
+                            </div>
+                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">2</div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                            <i class="bi bi-person-plus text-slate-700"></i>Agrega pacientes
+                                        </h3>
+                                        <p class="text-sm text-slate-600 mt-1.5">Usa "<strong>Agregarme a mí</strong>" o agrega familiares con nombre y teléfono.</p>
+                                    </div>
                                 </div>
-                            </li>
-                            <li class="flex gap-4">
-                                <span class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">3</span>
-                                <div>
-                                    <h3 class="font-semibold text-slate-900">Registra medicamentos</h3>
-                                    <p class="text-sm text-slate-600 mt-0.5">Para cada paciente: nombre, dosis, horario (8:00 AM) o cada X horas. Opcional: duración en días.</p>
+                            </div>
+                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">3</div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                            <i class="bi bi-capsule text-slate-700"></i>Medicamentos
+                                        </h3>
+                                        <p class="text-sm text-slate-600 mt-1.5">Nombre, dosis, horario (8:00 AM) o cada X horas. Duración en días opcional.</p>
+                                    </div>
                                 </div>
-                            </li>
-                            <li class="flex gap-4">
-                                <span class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">4</span>
-                                <div>
-                                    <h3 class="font-semibold text-slate-900">Listo</h3>
-                                    <p class="text-sm text-slate-600 mt-0.5">Las llamadas se realizan en los horarios configurados. Revisa el historial en <strong>Notificaciones</strong>.</p>
+                            </div>
+                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">4</div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                            <i class="bi bi-check-circle text-slate-700"></i>¡Listo!
+                                        </h3>
+                                        <p class="text-sm text-slate-600 mt-1.5">Las llamadas se realizan automáticamente. Revisa el historial en Notificaciones.</p>
+                                    </div>
                                 </div>
-                            </li>
-                        </ol>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
                 <!-- Pacientes -->
                 <section id="pacientes" class="scroll-mt-24">
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:p-8">
-                        <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><i class="bi bi-people text-slate-600"></i>Gestión de Pacientes</h2>
-                        <div class="space-y-4 text-sm text-slate-600">
-                            <p><strong class="text-slate-900">Agregar paciente:</strong> Menú Pacientes → Nuevo Paciente. Nombre y teléfono (obligatorios). Fecha de nacimiento, foto y descripción son opcionales.</p>
-                            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                                <p class="font-semibold text-slate-900">Agregarte a ti mismo</p>
-                                <p class="mt-1">El botón <strong>"Agregarme a mí"</strong> pre-llena el formulario con tu perfil. Ideal si tú eres quien necesita los recordatorios.</p>
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-6 py-6 lg:px-8 lg:py-8 border-b border-slate-200 bg-slate-50">
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-3">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+                                Gestión de Pacientes
+                            </h2>
+                        </div>
+                        <div class="px-6 py-6 lg:px-8 lg:py-8 space-y-4">
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                    <i class="bi bi-plus-circle text-slate-700"></i>Agregar paciente
+                                </h3>
+                                <p class="text-sm text-slate-600">Menú Pacientes → Nuevo Paciente. Nombre y teléfono son obligatorios. Fecha de nacimiento, foto y descripción son opcionales.</p>
                             </div>
-                            <p><strong class="text-slate-900">Condiciones médicas:</strong> En la ficha del paciente usa <strong>"Agregar condición"</strong> para registrar enfermedades (hipertensión, diabetes, etc.).</p>
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                    <i class="bi bi-star text-slate-700"></i>Agregarte a ti mismo
+                                </h3>
+                                <p class="text-sm text-slate-600">El botón <strong>"Agregarme a mí"</strong> pre-llena el formulario con tu perfil. Ideal si tú necesitas recordatorios.</p>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                    <i class="bi bi-heart text-slate-700"></i>Condiciones médicas
+                                </h3>
+                                <p class="text-sm text-slate-600">En la ficha del paciente, usa "<strong>Agregar condición</strong>" para registrar enfermedades (hipertensión, diabetes, asma, etc.).</p>
+                            </div>
                         </div>
                     </div>
                 </section>
 
                 <!-- Medicamentos -->
                 <section id="medicamentos" class="scroll-mt-24">
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:p-8">
-                        <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><i class="bi bi-capsule text-slate-600"></i>Medicamentos</h2>
-                        <p class="text-sm text-slate-600 mb-4">Desde la ficha del paciente → <strong>Agregar medicamento</strong>. Necesitas: nombre, dosis, frecuencia (horario fijo o cada X horas) y opcional duración.</p>
-                        <div class="grid sm:grid-cols-2 gap-4">
-                            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                                <h4 class="font-semibold text-slate-900 flex items-center gap-2"><i class="bi bi-clock text-slate-600"></i>Horario fijo</h4>
-                                <p class="text-sm text-slate-600 mt-1">Misma hora cada día: 8:00, 14:00, 20:00.</p>
-                            </div>
-                            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                                <h4 class="font-semibold text-slate-900 flex items-center gap-2"><i class="bi bi-arrow-repeat text-slate-600"></i>Cada X horas</h4>
-                                <p class="text-sm text-slate-600 mt-1">Intervalos regulares: cada 6h, 8h o 12h. Indica la hora de inicio.</p>
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-6 py-6 lg:px-8 lg:py-8 border-b border-slate-200 bg-slate-50">
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-3">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                    <i class="bi bi-capsule-pill"></i>
+                                </div>
+                                Registrar Medicamentos
+                            </h2>
+                        </div>
+                        <div class="px-6 py-6 lg:px-8 lg:py-8 space-y-4">
+                            <p class="text-sm text-slate-600 bg-slate-50 rounded-lg border border-slate-200 p-4">
+                                Desde la ficha del paciente → <strong>Agregar medicamento</strong>. Necesitas: <strong>nombre, dosis, frecuencia</strong> y opcionalmente duración.
+                            </p>
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div class="p-5 rounded-xl bg-slate-50 border border-slate-200 hover:shadow-md transition-shadow">
+                                    <h4 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                        <i class="bi bi-clock-fill text-slate-700"></i>Horario fijo
+                                    </h4>
+                                    <p class="text-sm text-slate-600">Misma hora cada día: 8:00, 14:00, 20:00, etc.</p>
+                                    <p class="text-xs text-slate-500 mt-2 bg-slate-100 rounded px-2 py-1 inline-block">Ej: "Todos los días a las 8:00"</p>
+                                </div>
+                                <div class="p-5 rounded-xl bg-slate-50 border border-slate-200 hover:shadow-md transition-shadow">
+                                    <h4 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                        <i class="bi bi-arrow-repeat text-slate-700"></i>Cada X horas
+                                    </h4>
+                                    <p class="text-sm text-slate-600">Intervalos regulares: 6h, 8h, 12h.</p>
+                                    <p class="text-xs text-slate-500 mt-2 bg-slate-100 rounded px-2 py-1 inline-block">Ej: "Cada 8 horas desde las 8:00"</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -111,32 +190,92 @@
 
                 <!-- Llamadas -->
                 <section id="llamadas" class="scroll-mt-24">
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:p-8">
-                        <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><i class="bi bi-telephone text-slate-600"></i>Llamadas automatizadas</h2>
-                        <p class="text-sm text-slate-600">Porvoz realiza llamadas automáticas en los horarios configurados. En <strong>Notificaciones</strong> verás el historial (atendidas, no atendidas, fallidas) para seguimiento de adherencia.</p>
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-6 py-6 lg:px-8 lg:py-8 border-b border-slate-200 bg-slate-50">
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-3">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                    <i class="bi bi-telephone-fill"></i>
+                                </div>
+                                Llamadas Automatizadas
+                            </h2>
+                        </div>
+                        <div class="px-6 py-6 lg:px-8 lg:py-8">
+                            <div class="space-y-4">
+                                <p class="text-sm text-slate-600 bg-slate-50 rounded-lg border border-slate-200 p-4">
+                                    Porvoz realiza <strong>llamadas automáticas</strong> en los horarios que configuraste. El sistema llama, lee el medicamento y espera confirmación.
+                                </p>
+                                <div class="grid sm:grid-cols-3 gap-3">
+                                    <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-4 text-center">
+                                        <i class="bi bi-check-circle text-2xl text-emerald-600 mb-2"></i>
+                                        <p class="font-semibold text-sm text-slate-900">Confirmada</p>
+                                        <p class="text-xs text-slate-600 mt-1">Se tomó el medicamento</p>
+                                    </div>
+                                    <div class="rounded-lg bg-red-50 border border-red-200 p-4 text-center">
+                                        <i class="bi bi-x-circle text-2xl text-red-600 mb-2"></i>
+                                        <p class="font-semibold text-sm text-slate-900">No atendida</p>
+                                        <p class="text-xs text-slate-600 mt-1">No contestan</p>
+                                    </div>
+                                    <div class="rounded-lg bg-amber-50 border border-amber-200 p-4 text-center">
+                                        <i class="bi bi-clock text-2xl text-amber-600 mb-2"></i>
+                                        <p class="font-semibold text-sm text-slate-900">Después</p>
+                                        <p class="text-xs text-slate-600 mt-1">Lo toma más tarde</p>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-slate-600 mt-4">
+                                    Revisa el <strong>Historial de Llamadas</strong> para ver el estado de cada llamada y la adherencia de tus pacientes.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
                 <!-- Preguntas Frecuentes -->
                 <section id="preguntas" class="scroll-mt-24">
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:p-8">
-                        <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><i class="bi bi-question-circle text-slate-600"></i>Preguntas frecuentes</h2>
-                        <div class="space-y-2">
-                            <details class="rounded-xl border border-slate-200 overflow-hidden group">
-                                <summary class="px-4 py-3 cursor-pointer font-medium text-slate-900 hover:bg-slate-50 flex items-center justify-between"><span>¿Puedo tener varios pacientes?</span> <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-500"></i></summary>
-                                <p class="px-4 py-3 text-sm text-slate-600 border-t border-slate-200 bg-slate-50">Sí. Puedes gestionar múltiples pacientes. El límite depende de tu plan.</p>
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-6 py-6 lg:px-8 lg:py-8 border-b border-slate-200 bg-slate-50">
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-3">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                    <i class="bi bi-question-circle-fill"></i>
+                                </div>
+                                Preguntas Frecuentes
+                            </h2>
+                        </div>
+                        <div class="px-6 py-6 lg:px-8 lg:py-8 space-y-2">
+                            <details class="rounded-xl border border-slate-200 overflow-hidden group hover:shadow-md transition-shadow">
+                                <summary class="px-5 py-4 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 flex items-center justify-between group-open:bg-slate-50 transition-colors">
+                                    <span class="flex items-center gap-2">
+                                        <i class="bi bi-people text-slate-700"></i>¿Puedo tener varios pacientes?
+                                    </span>
+                                    <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-500"></i>
+                                </summary>
+                                <p class="px-5 py-4 text-sm text-slate-600 border-t border-slate-200 bg-slate-50">Sí. Puedes gestionar múltiples pacientes simultáneamente. El número máximo depende de tu plan actual.</p>
                             </details>
-                            <details class="rounded-xl border border-slate-200 overflow-hidden group">
-                                <summary class="px-4 py-3 cursor-pointer font-medium text-slate-900 hover:bg-slate-50 flex items-center justify-between"><span>¿Qué pasa si no contestan?</span> <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-500"></i></summary>
-                                <p class="px-4 py-3 text-sm text-slate-600 border-t border-slate-200 bg-slate-50">Se registra en Notificaciones. Puedes hacer seguimiento de la adherencia.</p>
+                            <details class="rounded-xl border border-slate-200 overflow-hidden group hover:shadow-md transition-shadow">
+                                <summary class="px-5 py-4 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 flex items-center justify-between group-open:bg-slate-50 transition-colors">
+                                    <span class="flex items-center gap-2">
+                                        <i class="bi bi-telephone-x text-slate-700"></i>¿Qué pasa si no contestan?
+                                    </span>
+                                    <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-500"></i>
+                                </summary>
+                                <p class="px-5 py-4 text-sm text-slate-600 border-t border-slate-200 bg-slate-50">Se registra como "No atendida" en Notificaciones. Puedes revisar el historial para hacer seguimiento de la adherencia.</p>
                             </details>
-                            <details class="rounded-xl border border-slate-200 overflow-hidden group">
-                                <summary class="px-4 py-3 cursor-pointer font-medium text-slate-900 hover:bg-slate-50 flex items-center justify-between"><span>¿Puedo cambiar horarios?</span> <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-500"></i></summary>
-                                <p class="px-4 py-3 text-sm text-slate-600 border-t border-slate-200 bg-slate-50">Sí. Edita el medicamento desde la ficha del paciente.</p>
+                            <details class="rounded-xl border border-slate-200 overflow-hidden group hover:shadow-md transition-shadow">
+                                <summary class="px-5 py-4 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 flex items-center justify-between group-open:bg-slate-50 transition-colors">
+                                    <span class="flex items-center gap-2">
+                                        <i class="bi bi-clock text-slate-700"></i>¿Puedo cambiar horarios?
+                                    </span>
+                                    <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-500"></i>
+                                </summary>
+                                <p class="px-5 py-4 text-sm text-slate-600 border-t border-slate-200 bg-slate-50">Sí. Edita el medicamento desde la ficha del paciente. Los cambios aplican a los próximos recordatorios.</p>
                             </details>
-                            <details class="rounded-xl border border-slate-200 overflow-hidden group">
-                                <summary class="px-4 py-3 cursor-pointer font-medium text-slate-900 hover:bg-slate-50 flex items-center justify-between"><span>¿Cómo actualizo mi perfil?</span> <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-500"></i></summary>
-                                <p class="px-4 py-3 text-sm text-slate-600 border-t border-slate-200 bg-slate-50">Mi cuenta → Perfil → Editar perfil.</p>
+                            <details class="rounded-xl border border-slate-200 overflow-hidden group hover:shadow-md transition-shadow">
+                                <summary class="px-5 py-4 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 flex items-center justify-between group-open:bg-slate-50 transition-colors">
+                                    <span class="flex items-center gap-2">
+                                        <i class="bi bi-person-gear text-slate-600"></i>¿Cómo actualizo mi perfil?
+                                    </span>
+                                    <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-500"></i>
+                                </summary>
+                                <p class="px-5 py-4 text-sm text-slate-600 border-t border-slate-200 bg-slate-50">Menú superior → Mi cuenta → Perfil → Editar perfil. Aquí puedes cambiar nombre, teléfono, foto y contraseña.</p>
                             </details>
                         </div>
                     </div>

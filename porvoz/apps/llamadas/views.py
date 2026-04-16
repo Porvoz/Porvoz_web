@@ -1,22 +1,15 @@
 import logging
-from time import time
-from functools import lru_cache
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.core.cache import cache
 
 from apps.llamadas.models import Llamada, RespuestaLlamada
 from apps.llamadas.services.llamada_service import LlamadaService
 from apps.llamadas.services.proveedor_voz_service import ProveedorVozService
-from apps.llamadas.decorators import (
-    verify_twilio_signature,
-    rate_limit_by_key,
-    deduplicate_webhook,
-)
+from apps.llamadas.decorators import verify_twilio_signature, deduplicate_webhook
 from apps.medicamentos.models import Medicamento
 from apps.pacientes.models import Paciente
 
@@ -25,7 +18,7 @@ logger = logging.getLogger(__name__)
 # Almacén en memoria de conversaciones activas {call_sid: {history, mensaje, turnos, resultado}}
 _conversaciones = {}
 
-MAX_TURNOS = 2           # máximo intercambios con Gemini (solo para respuestas ambiguas)
+MAX_TURNOS = 3           # máximo intercambios con Gemini (solo para respuestas ambiguas)
 MAX_HISTORIAL_LINEAS = 4  # líneas de historial enviadas a Gemini
 
 # Palabras clave para detectar la intención del paciente en su respuesta
@@ -36,6 +29,7 @@ _FRASES_NEGATIVAS = [
     "olvide", "olvidé", "se me olvido", "se me olvidó",
     "no lo tengo", "no tengo el medicamento",
     "no lo he tomado", "aun no lo he tomado",
+    "no me lo he tomado", "no me lo tomé",
 ]
 _FRASES_POSITIVAS = [
     # Con tilde y sin tilde (Twilio STT varía)
@@ -45,6 +39,11 @@ _FRASES_POSITIVAS = [
     "ya tome", "ya tomé",
     "tome el medicamento", "tomé el medicamento",
     "lo acabo de tomar", "acabo de tomarlo",
+    "me lo tome", "me lo tomé",
+    "si señor", "sí señor", "si señora", "sí señora",
+    "si claro", "sí claro",
+    "si ya", "sí ya",
+    "ya me lo tome", "ya me lo tomé",
     "si",   # sin tilde — Twilio STT frecuentemente omite tildes
     "sí",   # con tilde
     "claro", "correcto", "asi es", "así es",
@@ -64,7 +63,9 @@ def _detectar_resultado(speech: str) -> str | None:
     Analiza el texto del paciente y retorna la intención detectada o None si es ambigua.
     Prioridad: negativa > positiva > después > None.
     """
-    texto = speech.lower()
+    texto = speech.lower().strip()
+    if not texto:
+        return None
     if any(f in texto for f in _FRASES_NEGATIVAS):
         return RespuestaLlamada.RESULTADO_NEGATIVA
     if any(f in texto for f in _FRASES_POSITIVAS):
@@ -142,16 +143,34 @@ def webhook_voice(request):
     Maneja machine_detection de Twilio: si detecta buzón de voz, cierra
     inmediatamente y registra la llamada como 'buzon'.
     """
-    mensaje  = request.GET.get("mensaje", "Recuerde tomar su medicamento.")
-    call_sid = request.POST.get("CallSid", "")
+    # Detectar buzón de voz — colgar sin molestar
+    answered_by = request.POST.get("AnsweredBy", "")
+    if answered_by in ("machine_start", "machine_end_beep", "machine_end_silence", "fax"):
+        call_sid = request.POST.get("CallSid", "")
+        if call_sid:
+            LlamadaService.registrar_respuesta(
+                call_sid, "", RespuestaLlamada.RESPUESTA_BUZON
+            )
+        return HttpResponse(
+            ProveedorVozService.build_twiml_fin(""),
+            content_type="text/xml",
+        )
 
-    # Saludo estático — cero tokens de Gemini
-    saludo = f"Hola, le llama Porvoz. {mensaje} ¿Ya lo tomó?"
+    nombre_med      = request.GET.get("nombre_med", "su medicamento")
+    instrucciones   = request.GET.get("instrucciones", "")
+    nombre_paciente = request.GET.get("nombre_paciente", "")
+    call_sid        = request.POST.get("CallSid", "")
+
+    # Saludo natural — no lee las instrucciones en voz alta
+    saludo_inicio = f"Hola{' ' + nombre_paciente if nombre_paciente else ''}, le llama Porvoz."
+    saludo = f"{saludo_inicio} Es hora de tomar su {nombre_med}. ¿Ya lo tomó?"
 
     if call_sid:
         _conversaciones[call_sid] = {
             "history": f"Asistente: {saludo}",
-            "mensaje": mensaje,
+            "nombre_med": nombre_med,
+            "instrucciones": instrucciones,
+            "nombre_paciente": nombre_paciente,
             "resultado": None,
             "turnos": 0,
         }
@@ -167,20 +186,34 @@ def webhook_voice(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 @verify_twilio_signature
-@deduplicate_webhook(key_func=lambda r: r.POST.get("CallSid"), ttl=300)
-@rate_limit_by_key(key_func=lambda r: r.POST.get("CallSid"), rate="10/s")
 def webhook_gather(request):
     """Recibe lo que dijo el paciente y responde con IA."""
     call_sid = request.POST.get("CallSid", "")
-    speech = request.POST.get("SpeechResult", "")
+    speech   = request.POST.get("SpeechResult", "").strip()
 
     sesion = _conversaciones.get(
-        call_sid, {"history": "", "mensaje": "", "turnos": 0, "resultado": None}
+        call_sid, {"history": "", "nombre_med": "medicamento", "instrucciones": "", "nombre_paciente": "", "turnos": 0, "resultado": None}
     )
     historial        = sesion.get("history", "")
-    mensaje          = sesion.get("mensaje", "")
+    nombre_med       = sesion.get("nombre_med", "medicamento")
+    instrucciones    = sesion.get("instrucciones", "")
+    nombre_paciente  = sesion.get("nombre_paciente", "")
     turnos           = sesion.get("turnos", 0) + 1
     resultado_sesion = sesion.get("resultado", None)
+
+    # ------------------------------------------------------------------ #
+    # 0. Paciente no habló — colgar educadamente sin Gemini               #
+    # ------------------------------------------------------------------ #
+    if not speech:
+        _conversaciones.pop(call_sid, None)
+        LlamadaService.registrar_respuesta(
+            call_sid, historial,
+            RespuestaLlamada.RESPUESTA_ATENDIDA, RespuestaLlamada.RESULTADO_SIN_CONFIRMAR,
+        )
+        return HttpResponse(
+            ProveedorVozService.build_twiml_fin(ProveedorVozService.MSG_NO_ESCUCHO),
+            content_type="text/xml",
+        )
 
     historial_actualizado = (
         f"{historial}\nUsuario: {speech}" if historial else f"Usuario: {speech}"
@@ -247,12 +280,12 @@ def webhook_gather(request):
     # ------------------------------------------------------------------ #
     # 4. Solo aquí se llama a Gemini (respuesta ambigua, dentro del límite) #
     # ------------------------------------------------------------------ #
-    lineas           = historial_actualizado.split("\n")
+    lineas             = historial_actualizado.split("\n")
     historial_reducido = "\n".join(lineas[-MAX_HISTORIAL_LINEAS:])
 
     try:
         respuesta_ia = ProveedorVozService.generar_respuesta_ia(
-            speech, mensaje, historial_reducido
+            speech, nombre_med, instrucciones, nombre_paciente, historial_reducido
         )
     except Exception as e:
         logger.error(f"[webhook_gather] Error Gemini: {e}")
@@ -273,10 +306,6 @@ def webhook_gather(request):
         "turnos": turnos,
         "resultado": resultado_sesion,
     }
-
-    RespuestaLlamada.objects.filter(llamada__call_sid=call_sid).update(
-        transcripcion=nuevo_historial
-    )
 
     # Si Gemini incluyó despedida, cerrar aquí
     _DESPEDIDAS = ("hasta luego", "adiós", "adios", "que tenga", "cuídese", "buen día", "buen dia")
@@ -304,8 +333,8 @@ def webhook_gather(request):
 @deduplicate_webhook(key_func=lambda r: r.POST.get("CallSid"), ttl=600)
 def webhook_status(request):
     """Twilio notifica el estado final de la llamada."""
-    call_sid = request.POST.get("CallSid", "")
-    call_status = request.POST.get("CallStatus", "")
+    call_sid     = request.POST.get("CallSid", "")
+    call_status  = request.POST.get("CallStatus", "")
     call_duration = request.POST.get("CallDuration", "0")
 
     try:

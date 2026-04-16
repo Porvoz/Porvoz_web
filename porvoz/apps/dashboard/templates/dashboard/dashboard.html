@@ -6,8 +6,8 @@
     {% include "sidebar.html" %}
 
     <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20">
-        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
-            <i class="bi bi-list text-xl"></i>
+        <button type="button" class="btn-mobile-menu" data-mobile-menu-toggle>
+            <i class="bi bi-list"></i>
         </button>
 
         <!-- Banner: alertas activas de llamadas -->
@@ -130,69 +130,67 @@
                         </div>
                     </div>
                     {% if pacientes %}
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-slate-200 bg-slate-50">
-                                    <th class="text-left px-6 py-3 font-semibold text-slate-600">Nombre</th>
-                                    <th class="text-left px-6 py-3 font-semibold text-slate-600"># Medicamentos</th>
-                                    <th class="text-left px-6 py-3 font-semibold text-slate-600">Condición</th>
-                                    <th class="text-left px-6 py-3 font-semibold text-slate-600">Inicio tratamiento</th>
-                                    <th class="text-left px-6 py-3 font-semibold text-slate-600">Fin tratamiento</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for paciente in pacientes|slice:":5" %}
-                                <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4">
-                                        <a href="{% url 'editar_paciente' paciente.id %}" class="flex items-center gap-3 group">
-                                            {% if paciente.get_display_foto %}
-                                            <img src="{{ paciente.get_display_foto.url }}" alt="" class="h-10 w-10 rounded-full object-cover border-2 border-slate-200">
-                                            {% else %}
-                                            <div class="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-600">
-                                                {{ paciente.get_display_nombre|slice:":1"|upper }}
-                                            </div>
-                                            {% endif %}
-                                            <div>
-                                                <p class="font-semibold text-slate-900 group-hover:text-slate-700">{{ paciente.get_display_nombre }}</p>
-                                                <p class="text-xs text-slate-500">
-                                                    {% if paciente.es_usuario_mismo %}Yo{% elif paciente.fecha_nacimiento %}Nac. {{ paciente.fecha_nacimiento|date:"d/m/Y" }}{% else %}—{% endif %}
-                                                </p>
-                                            </div>
-                                        </a>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        {% with cnt=paciente.medicamentos.count %}
-                                        {% if cnt == 0 %}
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-700 text-xs font-semibold">
-                                            <i class="bi bi-exclamation-circle text-xs"></i>
-                                            Sin medicamentos
-                                        </span>
+                    <table class="table-responsive-stack">
+                        <thead>
+                            <tr>
+                                <th class="text-left font-semibold text-slate-600">Nombre</th>
+                                <th class="text-left font-semibold text-slate-600"># Medicamentos</th>
+                                <th class="text-left font-semibold text-slate-600">Condición</th>
+                                <th class="text-left font-semibold text-slate-600">Inicio tratamiento</th>
+                                <th class="text-left font-semibold text-slate-600">Fin tratamiento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for paciente in pacientes|slice:":5" %}
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td data-label="Nombre">
+                                    <a href="{% url 'editar_paciente' paciente.id %}" class="flex items-center gap-3 group">
+                                        {% if paciente.get_display_foto %}
+                                        <img src="{{ paciente.get_display_foto.url }}" alt="" class="h-10 w-10 rounded-full object-cover border-2 border-slate-200">
                                         {% else %}
-                                        <span class="font-medium text-slate-900">{{ cnt }}</span>
-                                        {% endif %}
-                                        {% endwith %}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        {% with conds=paciente.get_condiciones_activas %}
-                                        {% if conds %}
-                                        <div class="flex flex-wrap gap-1">
-                                            {% for c in conds %}
-                                            <span class="inline-flex px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-xs font-semibold">{{ c }}</span>
-                                            {% endfor %}
+                                        <div class="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-600">
+                                            {{ paciente.get_display_nombre|slice:":1"|upper }}
                                         </div>
-                                        {% else %}
-                                        <span class="text-slate-400 text-xs">No especificada</span>
                                         {% endif %}
-                                        {% endwith %}
-                                    </td>
-                                    <td class="px-6 py-4 text-slate-600">{% if paciente.get_inicio_tratamiento %}{{ paciente.get_inicio_tratamiento|date:"M j, Y" }}{% else %}—{% endif %}</td>
-                                    <td class="px-6 py-4 text-slate-500">{% if paciente.get_fin_tratamiento %}{{ paciente.get_fin_tratamiento|date:"M j, Y" }}{% else %}—{% endif %}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                        <div>
+                                            <p class="font-semibold text-slate-900 group-hover:text-slate-700">{{ paciente.get_display_nombre }}</p>
+                                            <p class="text-xs text-slate-500">
+                                                {% if paciente.es_usuario_mismo %}Yo{% elif paciente.fecha_nacimiento %}Nac. {{ paciente.fecha_nacimiento|date:"d/m/Y" }}{% else %}—{% endif %}
+                                            </p>
+                                        </div>
+                                    </a>
+                                </td>
+                                <td data-label="# Medicamentos">
+                                    {% with cnt=paciente.medicamentos.count %}
+                                    {% if cnt == 0 %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-700 text-sm sm:text-xs font-semibold">
+                                        <i class="bi bi-exclamation-circle text-xs"></i>
+                                        Sin medicamentos
+                                    </span>
+                                    {% else %}
+                                    <span class="font-medium text-slate-900">{{ cnt }}</span>
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td data-label="Condición">
+                                    {% with conds=paciente.get_condiciones_activas %}
+                                    {% if conds %}
+                                    <div class="flex flex-wrap gap-1">
+                                        {% for c in conds %}
+                                        <span class="inline-flex px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-sm sm:text-xs font-semibold">{{ c }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <span class="text-slate-400 text-sm sm:text-xs">No especificada</span>
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td data-label="Inicio tratamiento" class="text-slate-600">{% if paciente.get_inicio_tratamiento %}{{ paciente.get_inicio_tratamiento|date:"M j, Y" }}{% else %}—{% endif %}</td>
+                                <td data-label="Fin tratamiento" class="text-slate-500">{% if paciente.get_fin_tratamiento %}{{ paciente.get_fin_tratamiento|date:"M j, Y" }}{% else %}—{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                     {% else %}
                     <div class="px-6 py-12 text-center">
                         <i class="bi bi-people text-4xl text-slate-300 mb-3"></i>
@@ -255,10 +253,41 @@
                     {% for item in proximos_recordatorios %}
                     <li class="flex items-center gap-3 text-sm">
                         <span class="font-mono font-semibold text-slate-700 w-10 flex-shrink-0">{{ item.horario|time:"H:i" }}</span>
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
                             <p class="font-medium text-slate-800 truncate">{{ item.medicamento.nombre }}</p>
                             <p class="text-xs text-slate-400 truncate">{{ item.medicamento.paciente.get_display_nombre }}</p>
                         </div>
+                        {% if item.llamada_hoy %}
+                            {% with r=item.llamada_hoy.respuesta %}
+                            {% if r %}
+                                {% if r.resultado == "confirmada" %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
+                                    <i class="bi bi-check-circle-fill text-xs"></i> Tomado
+                                </span>
+                                {% elif r.resultado == "negativa" %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+                                    <i class="bi bi-x-circle-fill text-xs"></i> No tomado
+                                </span>
+                                {% elif r.resultado == "despues" %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+                                    <i class="bi bi-clock-fill text-xs"></i> Después
+                                </span>
+                                {% elif r.como_respondio == "no_atendida" or r.como_respondio == "buzon" %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">
+                                    <i class="bi bi-telephone-x-fill text-xs"></i> Sin respuesta
+                                </span>
+                                {% else %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">
+                                    <i class="bi bi-question-circle text-xs"></i> Sin confirmar
+                                </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">
+                                    <i class="bi bi-telephone-x-fill text-xs"></i> Sin respuesta
+                                </span>
+                            {% endif %}
+                            {% endwith %}
+                        {% endif %}
                     </li>
                     {% endfor %}
                 </ul>

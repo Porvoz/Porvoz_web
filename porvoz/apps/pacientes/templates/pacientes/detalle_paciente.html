@@ -94,7 +94,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {% for med in paciente.medicamentos.all %}
                 <div class="rounded-2xl border shadow-sm overflow-hidden {% if med.activo %}bg-white border-slate-200{% else %}bg-slate-50 border-slate-200{% endif %}">
                     <div class="p-4">

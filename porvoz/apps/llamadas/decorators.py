@@ -22,6 +22,10 @@ def verify_twilio_signature(view_func):
     """
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
+        # En desarrollo, saltarse la validación de firma
+        if settings.DEBUG:
+            return view_func(request, *args, **kwargs)
+
         # Obtener auth token
         auth_token = settings.TWILIO_AUTH_TOKEN
         if not auth_token:

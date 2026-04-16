@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 
 from apps.core.models import Perfil
 from apps.shared.services import TelefonoService
+from apps.notificaciones.services.email_service import EmailService
 
 
 class RegistroService:
@@ -89,5 +90,8 @@ class RegistroService:
             profile_completed=True,
             plan_expiration=plan_expiration,
         )
+
+        # Enviar email de bienvenida
+        EmailService.enviar_email_bienvenida(user)
 
         return user, perfil
