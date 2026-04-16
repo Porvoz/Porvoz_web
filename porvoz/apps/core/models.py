@@ -66,31 +66,31 @@ class Perfil(models.Model):
         help_text="Fecha hasta la cual el plan está activo",
     )
 
-    # Preferencias de notificación por email
+    # Preferencias de notificación por email (muy restrictivos por defecto)
     email_toma_confirmada = models.BooleanField(
         "Notificar cuando medicamento es tomado",
-        default=True,
+        default=False,
         help_text="Recibir email cuando se confirma que un medicamento fue tomado",
     )
     email_toma_no_confirmada = models.BooleanField(
         "Notificar cuando medicamento NO es tomado",
-        default=True,
+        default=False,
         help_text="Recibir email cuando se registra que un medicamento no fue tomado",
     )
     email_llamada_no_atendida = models.BooleanField(
         "Notificar llamadas no atendidas",
-        default=True,
+        default=False,
         help_text="Recibir email cuando una llamada de recordatorio no es atendida",
     )
     email_toma_aplazada = models.BooleanField(
         "Notificar cuando paciente aplaza medicamento",
-        default=True,
+        default=False,
         help_text="Recibir email cuando un paciente indica que tomará el medicamento después",
     )
     email_urgente_minimo = models.BooleanField(
-        "Notificar solo alertas críticas/urgentes",
+        "📌 Solo alertas críticas/urgentes (recomendado)",
         default=True,
-        help_text="Recibir solo notificaciones de prioridad crítica o urgente",
+        help_text="Ignorar otras preferencias - solo recibir emails de emergencias reales",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

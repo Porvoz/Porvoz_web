@@ -11,135 +11,73 @@
         </button>
 
         <!-- Header -->
-        <header class="mb-6 mt-12 lg:mt-0">
+        <header class="mb-4 mt-12 lg:mt-0">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div class="flex items-center gap-4">
-                    <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-slate-200 text-slate-700 flex-shrink-0">
-                        <i class="bi bi-bell text-xl"></i>
+                    <div class="flex items-center justify-center w-12 h-12 rounded-2xl bg-slate-200 text-slate-700 flex-shrink-0">
+                        <i class="bi bi-bell"></i>
                     </div>
                     <div>
                         <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Notificaciones</h1>
-                        <p class="text-slate-600 mt-0.5 text-sm">
-                            <span class="font-semibold text-slate-800">{{ total_notificaciones }}</span> notificación{{ total_notificaciones|pluralize }}
+                        <p class="text-slate-600 mt-0.5 text-xs">
+                            {{ total_notificaciones }} total • {{ no_leidas }} sin leer
                         </p>
                     </div>
                 </div>
-                <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors shadow-sm self-start sm:self-center">
-                    <i class="bi bi-house"></i>
-                    Volver a panel principal
+                <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 px-3 py-2 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm self-start sm:self-center">
+                    <i class="bi bi-house-fill"></i>
+                    Panel
                 </a>
             </div>
         </header>
 
-        <!-- Métricas superiores (clickeables) -->
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
-            <a href="{% url 'notifications' %}" class="group">
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group-hover:bg-slate-50">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center group-hover:bg-slate-300 transition-colors">
-                        <i class="bi bi-bell text-xl text-slate-700"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total</p>
-                        <p class="text-2xl font-black text-slate-900">{{ total_notificaciones }}</p>
-                    </div>
-                </div>
-            </a>
-            <a href="{% url 'notifications' %}?solo_no_leidas=1" class="group">
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group-hover:bg-slate-50">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center group-hover:bg-slate-300 transition-colors">
-                        <i class="bi bi-envelope text-xl text-slate-700"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Sin leer</p>
-                        <p class="text-2xl font-black text-slate-900">{{ no_leidas }}</p>
-                    </div>
-                </div>
-            </a>
-            <a href="{% url 'notifications' %}?tipo=recordatorio" class="group">
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group-hover:bg-slate-50">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
-                        <i class="bi bi-clock text-xl text-amber-600"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Recordatorios</p>
-                        <p class="text-2xl font-black text-slate-900">{{ total_recordatorios|default:"0" }}</p>
-                    </div>
-                </div>
-            </a>
-            <a href="{% url 'notifications' %}?tipo=alerta" class="group">
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group-hover:bg-slate-50">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                        <i class="bi bi-exclamation-triangle text-xl text-red-600"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Alertas</p>
-                        <p class="text-2xl font-black text-slate-900">{{ total_alertas|default:"0" }}</p>
-                    </div>
-                </div>
-            </a>
-            <a href="{% url 'notifications' %}?prioridad=critica" class="group">
-                <div class="bg-white rounded-2xl border border-red-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md hover:border-red-300 transition-all cursor-pointer group-hover:bg-red-50">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                        <i class="bi bi-exclamation-circle-fill text-xl text-red-700"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Críticas</p>
-                        <p class="text-2xl font-black text-slate-900">{{ alertas_criticas|default:"0" }}</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
         {% if messages %}
-        <div class="mb-6 space-y-2">
+        <div class="mb-3 space-y-2">
             {% for message in messages %}
-            <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-green-200 bg-green-50 text-green-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+            <div class="rounded-lg border px-3 py-2 text-xs font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-green-200 bg-green-50 text-green-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
                 {{ message }}
             </div>
             {% endfor %}
         </div>
         {% endif %}
 
-        <!-- Panel de filtros -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
-            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 space-y-3">
-                <!-- Botones de tipo -->
-                <div class="flex flex-wrap gap-2">
-                    <a href="{% url 'notifications' %}{% if buscar %}?buscar={{ buscar|urlencode }}{% endif %}" class="px-4 py-2 rounded-xl text-xs font-semibold transition-colors {% if not tipo_seleccionado and not solo_no_leidas %}bg-slate-900 text-white{% else %}bg-white border border-slate-300 text-slate-700 hover:bg-slate-100{% endif %}">
+        <!-- Filtros Compactos -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-4">
+            <div class="space-y-2">
+                <!-- Botones de tipo (una fila compacta) -->
+                <div class="flex flex-wrap gap-1.5">
+                    <a href="{% url 'notifications' %}" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if not tipo_seleccionado and not solo_no_leidas %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
                         Todas
                     </a>
-                    <a href="{% url 'notifications' %}?tipo=llamada{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" class="px-4 py-2 rounded-xl text-xs font-semibold transition-colors {% if tipo_seleccionado == 'llamada' %}bg-slate-700 text-white{% else %}bg-white border border-slate-300 text-slate-700 hover:bg-slate-100{% endif %}">
-                        <i class="bi bi-telephone text-sm mr-1"></i>Llamadas
+                    <a href="{% url 'notifications' %}?tipo=alerta" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if tipo_seleccionado == 'alerta' %}bg-red-600 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
+                        Alertas
                     </a>
-                    <a href="{% url 'notifications' %}?tipo=recordatorio{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" class="px-4 py-2 rounded-xl text-xs font-semibold transition-colors {% if tipo_seleccionado == 'recordatorio' %}bg-amber-600 text-white{% else %}bg-white border border-slate-300 text-slate-700 hover:bg-slate-100{% endif %}">
-                        <i class="bi bi-clock text-sm mr-1"></i>Recordatorios
+                    <a href="{% url 'notifications' %}?tipo=llamada" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if tipo_seleccionado == 'llamada' %}bg-indigo-600 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
+                        Llamadas
                     </a>
-                    <a href="{% url 'notifications' %}?tipo=alerta{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" class="px-4 py-2 rounded-xl text-xs font-semibold transition-colors {% if tipo_seleccionado == 'alerta' %}bg-red-600 text-white{% else %}bg-white border border-slate-300 text-slate-700 hover:bg-slate-100{% endif %}">
-                        <i class="bi bi-exclamation-circle text-sm mr-1"></i>Alertas
+                    <a href="{% url 'notifications' %}?tipo=recordatorio" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if tipo_seleccionado == 'recordatorio' %}bg-amber-600 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
+                        Recordatorios
                     </a>
-                    <a href="{% url 'notifications' %}?tipo=sistema{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" class="px-4 py-2 rounded-xl text-xs font-semibold transition-colors {% if tipo_seleccionado == 'sistema' %}bg-slate-600 text-white{% else %}bg-white border border-slate-300 text-slate-700 hover:bg-slate-100{% endif %}">
-                        <i class="bi bi-gear text-sm mr-1"></i>Sistema
-                    </a>
-                    <a href="{% url 'notifications' %}?solo_no_leidas=1{% if tipo_seleccionado %}&tipo={{ tipo_seleccionado }}{% endif %}{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" class="px-4 py-2 rounded-xl text-xs font-semibold transition-colors {% if solo_no_leidas %}bg-slate-700 text-white{% else %}bg-white border border-slate-300 text-slate-700 hover:bg-slate-100{% endif %}">
+                    <a href="{% url 'notifications' %}?solo_no_leidas=1" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if solo_no_leidas %}bg-slate-700 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
                         Sin leer{% if no_leidas %} ({{ no_leidas }}){% endif %}
                     </a>
                 </div>
 
-                <!-- Búsqueda y filtro paciente -->
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <form method="get" class="flex-1">
+                <!-- Búsqueda y paciente en una fila -->
+                <div class="flex gap-2">
+                    <form method="get" class="flex-1 flex">
                         <input type="hidden" name="tipo" value="{{ tipo_seleccionado|default:'' }}">
                         <input type="hidden" name="solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
                         {% if paciente_seleccionado and paciente_seleccionado != "None" %}<input type="hidden" name="paciente" value="{{ paciente_seleccionado }}">{% endif %}
-                        <div class="relative">
-                            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" name="buscar" value="{{ buscar }}" placeholder="Buscar notificaciones..." class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all">
+                        <div class="relative flex-1">
+                            <i class="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" name="buscar" value="{{ buscar }}" placeholder="Buscar..." class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all">
                         </div>
                     </form>
 
                     {% if pacientes %}
-                    <select onchange="if(this.value){ window.location.href=this.value; }" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent cursor-pointer hover:bg-slate-50 transition-all">
-                        <option value="{% url 'notifications' %}{% if tipo_seleccionado %}?tipo={{ tipo_seleccionado }}{% if solo_no_leidas %}&solo_no_leidas=1{% endif %}{% elif solo_no_leidas %}?solo_no_leidas=1{% endif %}{% if buscar %}{% if tipo_seleccionado or solo_no_leidas %}&{% else %}?{% endif %}buscar={{ buscar|urlencode }}{% endif %}">Todos los pacientes</option>
+                    <select onchange="if(this.value){ window.location.href=this.value; }" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent cursor-pointer hover:bg-slate-50 transition-all">
+                        <option value="{% url 'notifications' %}{% if tipo_seleccionado %}?tipo={{ tipo_seleccionado }}{% if solo_no_leidas %}&solo_no_leidas=1{% endif %}{% elif solo_no_leidas %}?solo_no_leidas=1{% endif %}{% if buscar %}{% if tipo_seleccionado or solo_no_leidas %}&{% else %}?{% endif %}buscar={{ buscar|urlencode }}{% endif %}">Pacientes</option>
                         {% for p in pacientes %}
                         <option value="{% url 'notifications' %}?paciente={{ p.id }}{% if tipo_seleccionado %}&tipo={{ tipo_seleccionado }}{% endif %}{% if solo_no_leidas %}&solo_no_leidas=1{% endif %}{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" {% if paciente_seleccionado == p.id|stringformat:'s' %}selected{% endif %}>{{ p.get_display_nombre }}</option>
                         {% endfor %}
