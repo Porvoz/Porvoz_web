@@ -155,6 +155,51 @@
                     </div>
                 </div>
 
+                <!-- Preferencias de notificación por email -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-4">Preferencias de Notificación</h2>
+                    <p class="text-sm text-slate-600 mb-4">Controla qué notificaciones deseas recibir por email</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="email_toma_confirmada" {% if perfil.email_toma_confirmada %}checked{% endif %} class="w-5 h-5 rounded-lg border-2 border-slate-300 text-slate-600 focus:ring-2 focus:ring-offset-0 focus:ring-slate-400">
+                            <div>
+                                <p class="text-sm font-medium text-slate-900">Medicamento confirmado</p>
+                                <p class="text-xs text-slate-500">Recibir email cuando se confirma que se tomó un medicamento</p>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="email_toma_no_confirmada" {% if perfil.email_toma_no_confirmada %}checked{% endif %} class="w-5 h-5 rounded-lg border-2 border-slate-300 text-slate-600 focus:ring-2 focus:ring-offset-0 focus:ring-slate-400">
+                            <div>
+                                <p class="text-sm font-medium text-slate-900">Medicamento NO confirmado</p>
+                                <p class="text-xs text-slate-500">Recibir email cuando no se confirma la toma de un medicamento</p>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="email_llamada_no_atendida" {% if perfil.email_llamada_no_atendida %}checked{% endif %} class="w-5 h-5 rounded-lg border-2 border-slate-300 text-slate-600 focus:ring-2 focus:ring-offset-0 focus:ring-slate-400">
+                            <div>
+                                <p class="text-sm font-medium text-slate-900">Llamada no atendida</p>
+                                <p class="text-xs text-slate-500">Recibir email cuando una llamada de recordatorio no es atendida</p>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="email_toma_aplazada" {% if perfil.email_toma_aplazada %}checked{% endif %} class="w-5 h-5 rounded-lg border-2 border-slate-300 text-slate-600 focus:ring-2 focus:ring-offset-0 focus:ring-slate-400">
+                            <div>
+                                <p class="text-sm font-medium text-slate-900">Medicamento aplazado</p>
+                                <p class="text-xs text-slate-500">Recibir email cuando el paciente aplaza la toma de un medicamento</p>
+                            </div>
+                        </label>
+                        <div class="pt-3 border-t border-slate-200">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" name="email_urgente_minimo" {% if perfil.email_urgente_minimo %}checked{% endif %} class="w-5 h-5 rounded-lg border-2 border-orange-300 text-orange-600 focus:ring-2 focus:ring-offset-0 focus:ring-orange-400">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-900">📌 Solo alertas críticas/urgentes</p>
+                                    <p class="text-xs text-slate-500">Activar esto ignora las otras preferencias y solo recibe notificaciones de prioridad crítica o urgente</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Botones -->
                 <div class="flex items-center justify-between gap-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                     <a href="{% url 'edit_profile' %}?tab=perfil" class="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors">Cancelar</a>

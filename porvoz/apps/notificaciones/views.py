@@ -133,6 +133,7 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
         "no_leidas": stats["no_leidas"],
         "total_recordatorios": stats["total_recordatorios"],
         "total_alertas": stats["total_alertas"],
+        "alertas_criticas": stats["alertas_criticas"],
         "tipos": Notificacion.TIPO_CHOICES,
     }
     return render(request, "notificaciones/notifications.html", context)

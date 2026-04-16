@@ -47,6 +47,13 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
         ).strip()
         profile_image = request.FILES.get("profile_image")
 
+        # Extraer preferencias de email (checkboxes)
+        email_toma_confirmada = "email_toma_confirmada" in request.POST
+        email_toma_no_confirmada = "email_toma_no_confirmada" in request.POST
+        email_llamada_no_atendida = "email_llamada_no_atendida" in request.POST
+        email_toma_aplazada = "email_toma_aplazada" in request.POST
+        email_urgente_minimo = "email_urgente_minimo" in request.POST
+
         success, error_msg = PerfilService.actualizar_perfil(
             perfil,
             first_name=first_name,
@@ -61,6 +68,11 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
             emergency_contact_phone_country=emergency_country,
             emergency_contact_phone_number=emergency_number,
             profile_image=profile_image,
+            email_toma_confirmada=email_toma_confirmada,
+            email_toma_no_confirmada=email_toma_no_confirmada,
+            email_llamada_no_atendida=email_llamada_no_atendida,
+            email_toma_aplazada=email_toma_aplazada,
+            email_urgente_minimo=email_urgente_minimo,
         )
 
         if success:

@@ -25,6 +25,17 @@ class Notificacion(models.Model):
         (TIPO_LLAMADA, "Llamada"),
     ]
 
+    PRIORIDAD_BAJA = "baja"
+    PRIORIDAD_NORMAL = "normal"
+    PRIORIDAD_URGENTE = "urgente"
+    PRIORIDAD_CRITICA = "critica"
+    PRIORIDAD_CHOICES = [
+        (PRIORIDAD_BAJA, "Baja"),
+        (PRIORIDAD_NORMAL, "Normal"),
+        (PRIORIDAD_URGENTE, "Urgente"),
+        (PRIORIDAD_CRITICA, "Crítica"),
+    ]
+
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -52,8 +63,15 @@ class Notificacion(models.Model):
     )
     titulo = models.CharField("Título", max_length=200)
     mensaje = models.TextField("Mensaje", blank=True)
+    prioridad = models.CharField(
+        "Prioridad",
+        max_length=20,
+        choices=PRIORIDAD_CHOICES,
+        default=PRIORIDAD_NORMAL,
+    )
     fecha_programada = models.DateTimeField("Fecha programada", null=True, blank=True)
     leida = models.BooleanField("Leída", default=False)
+    url_detalle = models.URLField("URL detalle", blank=True, null=True, help_text="Enlace al evento relacionado")
     creado_en = models.DateTimeField("Fecha de creación", auto_now_add=True)
 
     class Meta:

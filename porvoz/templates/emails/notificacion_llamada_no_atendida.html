@@ -1,0 +1,33 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>📞 Llamada No Atendida</h2>
+
+<div class="alert urgente">
+    <strong style="color: #f59e0b;">📵 Sin Respuesta</strong>
+    <p style="margin-top: 10px;">{{ mensaje|linebreaks }}</p>
+</div>
+
+{% if paciente %}
+<div class="info-block">
+    <strong>Paciente:</strong>
+    {{ paciente.nombre }}
+</div>
+{% endif %}
+
+{% if medicamento %}
+<div class="info-block">
+    <strong>Medicamento:</strong>
+    {{ medicamento.nombre }}
+    {% if medicamento.dosis %}<br><em>Dosis: {{ medicamento.dosis }}</em>{% endif %}
+</div>
+{% endif %}
+
+<p>El paciente no contestó la llamada de recordatorio. Puedes intentar comunicarte directamente o programar un recordatorio para más tarde.</p>
+
+{% if url_detalle %}
+<a href="{{ url_detalle }}" class="cta-button">Ver Detalles de la Llamada</a>
+{% else %}
+<a href="{{ url_app }}" class="cta-button">Ir a Porvoz</a>
+{% endif %}
+{% endblock %}

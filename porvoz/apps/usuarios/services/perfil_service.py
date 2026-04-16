@@ -62,6 +62,11 @@ class PerfilService:
         emergency_contact_phone_country: str = "+57",
         emergency_contact_phone_number: str = "",
         profile_image=None,
+        email_toma_confirmada: bool = None,
+        email_toma_no_confirmada: bool = None,
+        email_llamada_no_atendida: bool = None,
+        email_toma_aplazada: bool = None,
+        email_urgente_minimo: bool = None,
     ) -> Tuple[bool, Optional[str]]:
         """
         Actualiza los datos del perfil y del usuario asociado.
@@ -80,6 +85,11 @@ class PerfilService:
             emergency_contact_phone_country: Código país contacto
             emergency_contact_phone_number: Número contacto
             profile_image: Archivo de imagen (opcional)
+            email_toma_confirmada: Recibir email cuando medicamento es confirmado
+            email_toma_no_confirmada: Recibir email cuando medicamento NO es confirmado
+            email_llamada_no_atendida: Recibir email cuando llamada no es atendida
+            email_toma_aplazada: Recibir email cuando se aplaza medicamento
+            email_urgente_minimo: Solo notificaciones críticas/urgentes
 
         Returns:
             Tuple[bool, Optional[str]] — (éxito, mensaje_error)
@@ -104,6 +114,18 @@ class PerfilService:
         perfil.emergency_contact_phone = TelefonoService.formatear_completo(
             emergency_contact_phone_country, emergency_contact_phone_number
         )
+
+        # Actualizar preferencias de email
+        if email_toma_confirmada is not None:
+            perfil.email_toma_confirmada = email_toma_confirmada
+        if email_toma_no_confirmada is not None:
+            perfil.email_toma_no_confirmada = email_toma_no_confirmada
+        if email_llamada_no_atendida is not None:
+            perfil.email_llamada_no_atendida = email_llamada_no_atendida
+        if email_toma_aplazada is not None:
+            perfil.email_toma_aplazada = email_toma_aplazada
+        if email_urgente_minimo is not None:
+            perfil.email_urgente_minimo = email_urgente_minimo
 
         if profile_image:
             perfil.profile_image = profile_image

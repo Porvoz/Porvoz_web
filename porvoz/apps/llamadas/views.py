@@ -78,6 +78,9 @@ def _detectar_resultado(speech: str) -> str | None:
 @login_required
 def historial_llamadas(request):
     """Historial global de llamadas del usuario."""
+    from django.utils import timezone
+    from datetime import timedelta
+
     qs = (
         Llamada.objects.filter(usuario=request.user)
         .select_related("paciente", "medicamento")
@@ -109,6 +112,30 @@ def historial_llamadas(request):
 
     hay_filtros = any([estado, paciente_id, medicamento_id, fecha_desde, fecha_hasta])
 
+    # Estadísticas generales (sin filtros)
+    ahora = timezone.now()
+    hace_7_dias = ahora - timedelta(days=7)
+
+    total_llamadas = Llamada.objects.filter(usuario=request.user).count()
+    llamadas_semana = Llamada.objects.filter(
+        usuario=request.user,
+        fecha_programada__gte=hace_7_dias,
+        estado__in=[Llamada.ESTADO_COMPLETADA, Llamada.ESTADO_FALLIDA],
+    ).count()
+    atendidas_semana = Llamada.objects.filter(
+        usuario=request.user,
+        fecha_programada__gte=hace_7_dias,
+        respuesta__como_respondio=RespuestaLlamada.RESPUESTA_ATENDIDA,
+    ).count()
+    sin_respuesta = Llamada.objects.filter(
+        usuario=request.user,
+        respuesta__como_respondio__in=[
+            RespuestaLlamada.RESPUESTA_NO_ATENDIDA,
+            RespuestaLlamada.RESPUESTA_BUZON,
+        ],
+    ).count()
+    adherencia = round((atendidas_semana / llamadas_semana * 100) if llamadas_semana > 0 else 0)
+
     return render(
         request,
         "llamadas/historial.html",
@@ -124,6 +151,11 @@ def historial_llamadas(request):
             "estados": Llamada.ESTADO_CHOICES,
             "total": qs.count(),
             "hay_filtros": hay_filtros,
+            "total_llamadas": total_llamadas,
+            "llamadas_semana": llamadas_semana,
+            "atendidas_semana": atendidas_semana,
+            "sin_respuesta": sin_respuesta,
+            "adherencia": adherencia,
         },
     )
 

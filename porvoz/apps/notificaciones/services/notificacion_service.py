@@ -22,6 +22,8 @@ class NotificacionService:
         paciente=None,
         medicamento=None,
         fecha_programada: datetime = None,
+        prioridad: str = None,
+        url_detalle: str = None,
     ) -> Notificacion:
         """Crea una notificación de cualquier tipo."""
         tipos_validos = {
@@ -32,6 +34,10 @@ class NotificacionService:
         }
         if tipo not in tipos_validos:
             raise NotificacionError(f"Tipo '{tipo}' no válido. Usar: {tipos_validos}")
+
+        if prioridad is None:
+            prioridad = Notificacion.PRIORIDAD_NORMAL
+
         return Notificacion.objects.create(
             usuario=usuario,
             paciente=paciente,
@@ -40,6 +46,8 @@ class NotificacionService:
             titulo=titulo,
             mensaje=mensaje,
             fecha_programada=fecha_programada,
+            prioridad=prioridad,
+            url_detalle=url_detalle,
         )
 
     @staticmethod
@@ -49,6 +57,8 @@ class NotificacionService:
         mensaje: str = "",
         paciente=None,
         medicamento=None,
+        prioridad: str = None,
+        url_detalle: str = None,
     ) -> Notificacion:
         """Crea una notificación de tipo sistema."""
         return NotificacionService.crear_notificacion(
@@ -58,6 +68,8 @@ class NotificacionService:
             mensaje=mensaje,
             paciente=paciente,
             medicamento=medicamento,
+            prioridad=prioridad,
+            url_detalle=url_detalle,
         )
 
     @staticmethod
@@ -68,6 +80,8 @@ class NotificacionService:
         paciente=None,
         medicamento=None,
         fecha_programada: datetime = None,
+        prioridad: str = None,
+        url_detalle: str = None,
     ) -> Notificacion:
         """Crea una notificación de tipo recordatorio."""
         return NotificacionService.crear_notificacion(
@@ -78,6 +92,8 @@ class NotificacionService:
             paciente=paciente,
             medicamento=medicamento,
             fecha_programada=fecha_programada,
+            prioridad=prioridad,
+            url_detalle=url_detalle,
         )
 
     @staticmethod
@@ -87,8 +103,12 @@ class NotificacionService:
         mensaje: str = "",
         paciente=None,
         medicamento=None,
+        prioridad: str = None,
+        url_detalle: str = None,
     ) -> Notificacion:
-        """Crea una notificación de tipo alerta."""
+        """Crea una notificación de tipo alerta. Por defecto con prioridad URGENTE."""
+        if prioridad is None:
+            prioridad = Notificacion.PRIORIDAD_URGENTE
         return NotificacionService.crear_notificacion(
             usuario=usuario,
             tipo=Notificacion.TIPO_ALERTA,
@@ -96,6 +116,8 @@ class NotificacionService:
             mensaje=mensaje,
             paciente=paciente,
             medicamento=medicamento,
+            prioridad=prioridad,
+            url_detalle=url_detalle,
         )
 
     @staticmethod
@@ -105,6 +127,8 @@ class NotificacionService:
         mensaje: str = "",
         paciente=None,
         medicamento=None,
+        prioridad: str = None,
+        url_detalle: str = None,
     ) -> Notificacion:
         """Crea una notificación de tipo llamada (eventos informativos de llamadas)."""
         return NotificacionService.crear_notificacion(
@@ -114,6 +138,8 @@ class NotificacionService:
             mensaje=mensaje,
             paciente=paciente,
             medicamento=medicamento,
+            prioridad=prioridad,
+            url_detalle=url_detalle,
         )
 
     @staticmethod
@@ -177,9 +203,14 @@ class NotificacionService:
         if tipo == "None":
             tipo = None
 
+        prioridad = datos.get("prioridad") or None
+        if prioridad == "None":
+            prioridad = None
+
         return {
             "paciente_id": paciente_id,
             "tipo": tipo,
+            "prioridad": prioridad,
             "fecha_desde": datos.get("fecha_desde"),
             "fecha_hasta": datos.get("fecha_hasta"),
             "solo_no_leidas": datos.get("solo_no_leidas") == "1",
@@ -193,6 +224,8 @@ class NotificacionService:
             queryset = queryset.filter(paciente_id=filtros["paciente_id"])
         if filtros.get("tipo"):
             queryset = queryset.filter(tipo=filtros["tipo"])
+        if filtros.get("prioridad"):
+            queryset = queryset.filter(prioridad=filtros["prioridad"])
         if filtros.get("fecha_desde"):
             try:
                 fecha = datetime.strptime(filtros["fecha_desde"], "%Y-%m-%d").date()
@@ -225,4 +258,7 @@ class NotificacionService:
                 tipo=Notificacion.TIPO_RECORDATORIO
             ).count(),
             "total_alertas": base_qs.filter(tipo=Notificacion.TIPO_ALERTA).count(),
+            "alertas_criticas": base_qs.filter(
+                prioridad=Notificacion.PRIORIDAD_CRITICA
+            ).count(),
         }

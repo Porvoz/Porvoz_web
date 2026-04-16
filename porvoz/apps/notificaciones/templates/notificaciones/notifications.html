@@ -32,7 +32,7 @@
         </header>
 
         <!-- Métricas superiores (clickeables) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
             <a href="{% url 'notifications' %}" class="group">
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group-hover:bg-slate-50">
                     <div class="flex-shrink-0 w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center group-hover:bg-slate-300 transition-colors">
@@ -74,6 +74,17 @@
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Alertas</p>
                         <p class="text-2xl font-black text-slate-900">{{ total_alertas|default:"0" }}</p>
+                    </div>
+                </div>
+            </a>
+            <a href="{% url 'notifications' %}?prioridad=critica" class="group">
+                <div class="bg-white rounded-2xl border border-red-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md hover:border-red-300 transition-all cursor-pointer group-hover:bg-red-50">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                        <i class="bi bi-exclamation-circle-fill text-xl text-red-700"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Críticas</p>
+                        <p class="text-2xl font-black text-slate-900">{{ alertas_criticas|default:"0" }}</p>
                     </div>
                 </div>
             </a>
@@ -161,21 +172,22 @@
             {% if notificaciones %}
             <div class="divide-y divide-slate-100">
                 {% for notificacion in notificaciones %}
-                <div class="px-6 py-4 flex gap-4 hover:bg-slate-50 transition-colors {% if not notificacion.leida %}bg-blue-50/40{% endif %}">
+                <div class="px-6 py-4 flex gap-4 hover:bg-slate-50 transition-colors group {% if not notificacion.leida %}bg-blue-50/40{% endif %}">
                     <!-- Icono de tipo -->
                     <div class="flex-shrink-0 mt-0.5">
-                        <div class="w-9 h-9 rounded-full flex items-center justify-center
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold
                             {% if notificacion.tipo == 'recordatorio' %}bg-amber-100 text-amber-600
                             {% elif notificacion.tipo == 'alerta' %}bg-red-100 text-red-600
+                            {% elif notificacion.tipo == 'llamada' %}bg-indigo-100 text-indigo-600
                             {% else %}bg-slate-200 text-slate-700{% endif %}">
                             {% if notificacion.tipo == 'llamada' %}
-                            <i class="bi bi-telephone text-sm"></i>
+                            <i class="bi bi-telephone"></i>
                             {% elif notificacion.tipo == 'recordatorio' %}
-                            <i class="bi bi-clock text-sm"></i>
+                            <i class="bi bi-clock"></i>
                             {% elif notificacion.tipo == 'alerta' %}
-                            <i class="bi bi-exclamation-triangle text-sm"></i>
+                            <i class="bi bi-exclamation-triangle"></i>
                             {% else %}
-                            <i class="bi bi-gear text-sm"></i>
+                            <i class="bi bi-gear"></i>
                             {% endif %}
                         </div>
                     </div>
@@ -183,12 +195,12 @@
                     <!-- Contenido -->
                     <div class="flex-1 min-w-0">
                         <!-- Título + indicador no leída -->
-                        <div class="flex items-start justify-between gap-2 mb-0.5">
+                        <div class="flex items-center gap-2 mb-1">
                             <p class="text-sm {% if not notificacion.leida %}font-bold text-slate-900{% else %}font-medium text-slate-700{% endif %}">
                                 {{ notificacion.titulo }}
                             </p>
                             {% if not notificacion.leida %}
-                            <span class="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-1.5"></span>
+                            <span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></span>
                             {% endif %}
                         </div>
 
@@ -197,11 +209,12 @@
                         <p class="text-sm text-slate-500 mb-2 leading-snug">{{ notificacion.mensaje }}</p>
                         {% endif %}
 
-                        <!-- Badge de tipo -->
+                        <!-- Badges de tipo y prioridad -->
                         <div class="flex flex-wrap items-center gap-1.5 mb-2">
                             <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold
                                 {% if notificacion.tipo == 'recordatorio' %}bg-amber-100 text-amber-700
                                 {% elif notificacion.tipo == 'alerta' %}bg-red-100 text-red-700
+                                {% elif notificacion.tipo == 'llamada' %}bg-indigo-100 text-indigo-700
                                 {% else %}bg-slate-100 text-slate-600{% endif %}">
                                 {% if notificacion.tipo == 'llamada' %}<i class="bi bi-telephone text-xs"></i> Llamada
                                 {% elif notificacion.tipo == 'recordatorio' %}<i class="bi bi-clock text-xs"></i> Recordatorio
@@ -209,6 +222,19 @@
                                 {% else %}<i class="bi bi-gear text-xs"></i> Sistema
                                 {% endif %}
                             </span>
+                            {% if notificacion.prioridad %}
+                            <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold
+                                {% if notificacion.prioridad == 'critica' %}bg-red-100 text-red-800 border border-red-300
+                                {% elif notificacion.prioridad == 'urgente' %}bg-orange-100 text-orange-800 border border-orange-300
+                                {% elif notificacion.prioridad == 'normal' %}bg-blue-100 text-blue-800 border border-blue-300
+                                {% else %}bg-green-100 text-green-800 border border-green-300{% endif %}">
+                                {% if notificacion.prioridad == 'critica' %}<i class="bi bi-exclamation-circle-fill"></i> CRÍTICA
+                                {% elif notificacion.prioridad == 'urgente' %}<i class="bi bi-exclamation-circle"></i> URGENTE
+                                {% elif notificacion.prioridad == 'normal' %}<i class="bi bi-info-circle"></i> Normal
+                                {% else %}<i class="bi bi-check-circle"></i> Baja
+                                {% endif %}
+                            </span>
+                            {% endif %}
                         </div>
 
                         <!-- Metadata -->
@@ -229,8 +255,8 @@
                         </div>
                     </div>
 
-                    <!-- Acciones -->
-                    <div class="flex-shrink-0 flex gap-0.5">
+                    <!-- Acciones (Derecha, grupo para ver en hover) -->
+                    <div class="flex-shrink-0 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         {% if not notificacion.leida %}
                         <form method="post" class="inline">
                             {% csrf_token %}
@@ -240,8 +266,8 @@
                             <input type="hidden" name="redirect_paciente" value="{{ paciente_seleccionado|default:'' }}">
                             <input type="hidden" name="redirect_solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
                             <input type="hidden" name="redirect_buscar" value="{{ buscar }}">
-                            <button type="submit" class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title="Marcar como leída">
-                                <i class="bi bi-check-circle"></i>
+                            <button type="submit" class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Marcar como leída">
+                                <i class="bi bi-check-circle text-sm"></i>
                             </button>
                         </form>
                         {% endif %}
@@ -253,8 +279,8 @@
                             <input type="hidden" name="redirect_paciente" value="{{ paciente_seleccionado|default:'' }}">
                             <input type="hidden" name="redirect_solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
                             <input type="hidden" name="redirect_buscar" value="{{ buscar }}">
-                            <button type="button" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors btn-delete-notif" title="Eliminar">
-                                <i class="bi bi-trash2"></i>
+                            <button type="button" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors btn-delete-notif" title="Eliminar">
+                                <i class="bi bi-trash2 text-sm"></i>
                             </button>
                         </form>
                     </div>
