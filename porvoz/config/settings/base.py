@@ -1,5 +1,7 @@
 """
-Base Django settings for the Porvoz project.
+Base Django settings for Porvoz project.
+Shared settings used by all environments (dev, production).
+Environment-specific overrides are in development.py and production.py.
 """
 
 from pathlib import Path
@@ -7,18 +9,11 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-change-me")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
-
-ALLOWED_HOSTS: list[str] = ["*"]
-
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -30,6 +25,8 @@ INSTALLED_APPS = [
     # Third-party
     "rest_framework",
     "corsheaders",
+    "django_celery_beat",
+    "django_celery_results",
     # Project apps - Core
     "apps.core",
     "apps.shared",
@@ -77,20 +74,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-
-# Database
-# Simple SQLite for local development
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
-
-
 # Password validation
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -107,54 +91,33 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-
 LANGUAGE_CODE = "es-co"
-
 TIME_ZONE = "America/Bogota"
-
 USE_I18N = True
-
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-
 STATIC_URL = "/static/"
-
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 SITE_ID = 1
 
-# Auth redirects
+# Auth
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
+LOGOUT_REDIRECT_URL = "login"
+PASSWORD_RESET_TIMEOUT = 3600
 
-# ------------------------------------------------------------------
-# Email (Gmail SMTP)
-# Requiere App Password de Google: myaccount.google.com → Seguridad
-# → Verificación en 2 pasos → Contraseñas de aplicaciones
-# ------------------------------------------------------------------
-
-EMAIL_BACKEND = os.getenv(
-    "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
-)
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+# Email (defaults, overridden in dev/prod)
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "noreply@porvoz.com")
-PASSWORD_RESET_TIMEOUT = 3600  # el link expira en 1 hora
-LOGOUT_REDIRECT_URL = "login"
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@porvoz.com")

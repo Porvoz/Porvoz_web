@@ -34,7 +34,27 @@
       "Bash(python manage.py test apps --verbosity=0)",
       "Bash(bandit -r apps/)",
       "Bash(safety scan:*)",
-      "Bash(python manage.py test apps.notificaciones)"
+      "Bash(python manage.py test apps.notificaciones)",
+      "Bash(python manage.py test apps)",
+      "Bash(git stash *)",
+      "Bash(git checkout *)",
+      "Bash(python manage.py test apps.llamadas})",
+      "Bash(python manage.py test apps.notificaciones apps.llamadas)",
+      "Bash(python manage.py makemigrations core --name=\"email_prefs_defaults_reintentos\")",
+      "Bash(python manage.py makemigrations --name=\"email_prefs_defaults_reintentos\")",
+      "Bash(python manage.py migrate)",
+      "Bash(python manage.py test apps.autenticacion apps.shared apps.usuarios apps.dashboard)",
+      "Bash(python manage.py test apps.autenticacion.tests.RegistroServiceTest.test_crear_usuario_valido)",
+      "Bash(python manage.py test apps.shared.tests.TelefonoServiceTest.test_normalizar_telefono)",
+      "Bash(python manage.py test apps.shared.tests.RateLimitDecoratorTest.test_rate_limit_blocks_exceeded)",
+      "Bash(python manage.py test apps.dashboard.tests.DashboardServiceTest.test_obtener_datos_completos)",
+      "Bash(python -c \"from apps.pacientes.models import Paciente; print\\([f.name for f in Paciente._meta.fields]\\)\")",
+      "Bash(python manage.py test apps.usuarios.tests.PlanServiceTest.test_paciente_limit_growth)",
+      "Bash(awk '{print $2}')",
+      "Bash(python manage.py makemigrations llamadas)",
+      "Bash(python manage.py test apps.llamadas apps.notificaciones --verbosity=1)",
+      "Bash(python manage.py test apps.pacientes apps.medicamentos apps.usuarios apps.shared --verbosity=1)",
+      "Bash(DJANGO_SETTINGS_MODULE=config.settings.production python -c \"from django.conf import settings; print\\('LOADED', settings.DEBUG\\)\")"
     ]
   }
 }

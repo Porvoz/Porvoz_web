@@ -69,6 +69,27 @@
             transition: transform 0.3s ease;
         }
 
+        .btn-dashboard-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-dashboard-primary:hover {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #94a3b8;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+
         /* Badge notificaciones: colapsado = bolita esquina (como antes) */
         .sidebar.collapsed .nav-notif-badge {
             position: absolute;
@@ -320,6 +341,43 @@
     <script src="{% static 'js/utils.js' %}"></script>
     <script src="{% static 'js/autocomplete.js' %}"></script>
     <script src="{% static 'js/charts.js' %}"></script>
+
+    {% if user.is_authenticated %}
+    {% url 'dashboard' as url_dashboard %}
+    {% url 'listar_pacientes' as url_pacientes %}
+    {% url 'notifications' as url_notif %}
+    {% url 'edit_profile' as url_perfil %}
+    <!-- Navegación inferior móvil -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-lg">
+        <div class="grid grid-cols-4 h-16">
+            <a href="{{ url_dashboard }}" class="relative flex flex-col items-center justify-center gap-1 transition-colors {% if request.path == url_dashboard %}text-slate-900{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                {% if request.path == url_dashboard %}<span class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-slate-900 rounded-full"></span>{% endif %}
+                <i class="bi {% if request.path == url_dashboard %}bi-house-fill{% else %}bi-house{% endif %} text-xl leading-none"></i>
+                <span class="text-xs font-medium">Inicio</span>
+            </a>
+            <a href="{{ url_pacientes }}" class="relative flex flex-col items-center justify-center gap-1 transition-colors {% if url_pacientes in request.path %}text-slate-900{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                {% if url_pacientes in request.path %}<span class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-slate-900 rounded-full"></span>{% endif %}
+                <i class="bi {% if url_pacientes in request.path %}bi-people-fill{% else %}bi-people{% endif %} text-xl leading-none"></i>
+                <span class="text-xs font-medium">Pacientes</span>
+            </a>
+            <a href="{{ url_notif }}" class="relative flex flex-col items-center justify-center gap-1 transition-colors {% if url_notif in request.path %}text-slate-900{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                {% if url_notif in request.path %}<span class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-slate-900 rounded-full"></span>{% endif %}
+                <i class="bi {% if url_notif in request.path %}bi-bell-fill{% else %}bi-bell{% endif %} text-xl leading-none"></i>
+                {% if no_leidas > 0 %}
+                <span class="absolute top-1.5 right-5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-red-600 text-white text-[10px] font-bold px-1">{{ no_leidas }}</span>
+                {% endif %}
+                <span class="text-xs font-medium">Alertas</span>
+            </a>
+            <a href="{{ url_perfil }}" class="relative flex flex-col items-center justify-center gap-1 transition-colors {% if url_perfil in request.path %}text-slate-900{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                {% if url_perfil in request.path %}<span class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-slate-900 rounded-full"></span>{% endif %}
+                <i class="bi {% if url_perfil in request.path %}bi-person-fill{% else %}bi-person{% endif %} text-xl leading-none"></i>
+                <span class="text-xs font-medium">Mi cuenta</span>
+            </a>
+        </div>
+    </nav>
+    <!-- Espaciador para que el contenido no quede detrás del nav inferior en móvil -->
+    <div class="lg:hidden h-16"></div>
+    {% endif %}
 </body>
 </html>
 

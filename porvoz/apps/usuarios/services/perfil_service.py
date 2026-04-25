@@ -66,7 +66,7 @@ class PerfilService:
         email_toma_no_confirmada: bool = None,
         email_llamada_no_atendida: bool = None,
         email_toma_aplazada: bool = None,
-        email_urgente_minimo: bool = None,
+        email_reintentos_agotados: bool = None,
     ) -> Tuple[bool, Optional[str]]:
         """
         Actualiza los datos del perfil y del usuario asociado.
@@ -89,7 +89,7 @@ class PerfilService:
             email_toma_no_confirmada: Recibir email cuando medicamento NO es confirmado
             email_llamada_no_atendida: Recibir email cuando llamada no es atendida
             email_toma_aplazada: Recibir email cuando se aplaza medicamento
-            email_urgente_minimo: Solo notificaciones críticas/urgentes
+            email_reintentos_agotados: Recibir email cuando se agotan reintentos
 
         Returns:
             Tuple[bool, Optional[str]] — (éxito, mensaje_error)
@@ -124,8 +124,8 @@ class PerfilService:
             perfil.email_llamada_no_atendida = email_llamada_no_atendida
         if email_toma_aplazada is not None:
             perfil.email_toma_aplazada = email_toma_aplazada
-        if email_urgente_minimo is not None:
-            perfil.email_urgente_minimo = email_urgente_minimo
+        if email_reintentos_agotados is not None:
+            perfil.email_reintentos_agotados = email_reintentos_agotados
 
         if profile_image:
             perfil.profile_image = profile_image

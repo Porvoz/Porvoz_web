@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block body %}
-<div class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100 w-full max-w-full overflow-x-hidden">
+<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
     {% if user.is_authenticated %}
         {% include "sidebar.html" %}
     {% else %}
@@ -47,7 +47,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                 {% for plan in planes %}
-                <article class="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 {% if plan.destacado %}ring-2 ring-slate-600 ring-offset-4 shadow-xl z-10 bg-white{% else %}bg-white border border-slate-200 shadow-sm hover:shadow-lg hover:border-slate-300{% endif %}">
+                <article class="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 {% if plan.destacado %}ring-2 ring-slate-600 ring-offset-4 shadow-md z-10 bg-white{% else %}bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300{% endif %}">
                     {% if plan.destacado %}
                     <div class="absolute top-0 left-0 right-0 bg-slate-600 text-white text-center py-2 text-xs font-bold uppercase tracking-wider">Más popular</div>
                     <div class="flex-1 flex flex-col bg-slate-600 text-white pt-8 pb-8">
@@ -88,7 +88,7 @@
                 {% endfor %}
             </div>
 
-            <p class="text-center text-sm text-slate-500 mt-10">Todos los planes incluyen soporte por correo. <a href="{% url 'contact' %}" class="text-slate-700 font-medium hover:text-slate-900 underline">Contáctanos</a> para dudas.</p>
+            <p class="text-center text-sm text-slate-500 mt-10">Todos los planes incluyen soporte por correo. <a href="{% url 'contact' %}" class="text-slate-700 font-medium hover:text-slate-900 underline">Escríbenos</a> para dudas.</p>
         </div>
     </main>
 </div>

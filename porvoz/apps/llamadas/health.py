@@ -29,6 +29,7 @@ def health_check(request):
         "timestamp": datetime.utcnow().isoformat(),
         "services": {
             "database": "unknown",
+            "cache": "unknown",
             "twilio": "unknown",
             "gemini": "unknown",
         },
@@ -44,7 +45,20 @@ def health_check(request):
         status["services"]["database"] = "error"
         status["status"] = "degraded"
 
-    # 2. Twilio
+    # 2. Cache
+    try:
+        from django.core.cache import cache
+        cache.set("__health_check__", "ok", 10)
+        val = cache.get("__health_check__")
+        status["services"]["cache"] = "ok" if val == "ok" else "error"
+        if val != "ok":
+            status["status"] = "degraded"
+    except Exception as e:
+        logger.error(f"[Health] Cache error: {e}")
+        status["services"]["cache"] = "error"
+        status["status"] = "degraded"
+
+    # 3. Twilio
     try:
         from apps.llamadas.services.proveedor_voz_service import ProveedorVozService
         client = ProveedorVozService.get_twilio_client()

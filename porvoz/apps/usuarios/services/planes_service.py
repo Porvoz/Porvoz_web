@@ -175,9 +175,19 @@ class PlanService:
         from apps.llamadas.models import Llamada
 
         perfil = usuario.perfil
+        hoy = date.today()
+
+        # Verificar expiración del plan (solo para planes de pago)
+        if perfil.plan != Perfil.PLAN_FREEMIUM and perfil.plan_expiration:
+            if perfil.plan_expiration < hoy:
+                return (
+                    False,
+                    f"Tu plan {perfil.get_plan_display()} venció el {perfil.plan_expiration.strftime('%d/%m/%Y')}. "
+                    "Renuévalo para continuar realizando llamadas.",
+                )
+
         limites = PlanService.get_limites(perfil.plan)
         max_l = limites["max_llamadas_mes"]
-        hoy = date.today()
         llamadas_mes = Llamada.objects.filter(
             usuario=usuario,
             fecha_programada__year=hoy.year,

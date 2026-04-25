@@ -8,6 +8,7 @@ liberando a las vistas de lógica de validación.
 from django import forms
 
 from .models import Paciente
+from apps.shared.services.telefono_service import TelefonoService
 
 
 class PacienteForm(forms.Form):
@@ -45,6 +46,14 @@ class PacienteForm(forms.Form):
         if sexo not in opciones_validas:
             return ""
         return sexo
+
+    def clean_telefono(self):
+        telefono = self.cleaned_data.get("telefono", "").strip()
+        if telefono and not TelefonoService.es_numero_valido(telefono):
+            raise forms.ValidationError(
+                "Número de teléfono inválido. Usa formato E.164: +57 3001234567 o 3001234567."
+            )
+        return telefono
 
 
 class EnfermedadForm(forms.Form):

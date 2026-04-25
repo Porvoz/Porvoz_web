@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "porvoz"
+version = "0.3.0"
+description = "Porvoz — Django medication-reminder platform with automated voice calls."
+readme = "../README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [{ name = "Porvoz Team" }]
+
+# Runtime dependencies. Pinned versions live in requirements.txt — that file
+# is the install source for Docker builds and CI.
+dependencies = [
+    "Django>=5.2,<5.3",
+    "djangorestframework>=3.16",
+    "django-cors-headers>=4.9",
+    "django-celery-beat>=2.6",
+    "django-celery-results>=2.5",
+    "celery[redis]>=5.3",
+    "redis>=5.0",
+    "psycopg2-binary>=2.9",
+    "Pillow>=12.0",
+    "twilio>=9.0",
+    "google-generativeai>=0.8",
+    "gunicorn>=21.0",
+    "reportlab>=4.0",
+    "python-dotenv>=1.0",
+    "python-decouple>=3.8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.6",
+    "ipython>=8",
+    "django-debug-toolbar>=4.4",
+    "flower>=2.0",
+]
+test = [
+    "pytest>=8",
+    "pytest-django>=4.8",
+    "coverage>=7.6",
+    "factory-boy>=3.3",
+]
+
+# -----------------------------------------------------------------------------
+# Tooling — ruff replaces flake8/setup.cfg. Same 100-char limit.
+# -----------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [
+    "venv",
+    ".venv",
+    "**/migrations/**",
+    "__pycache__",
+    ".git",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+ignore = ["E203", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/settings/*.py" = ["F405", "F403"]
+
+# -----------------------------------------------------------------------------
+# pytest — opt-in alternative to ./manage.py test
+# -----------------------------------------------------------------------------
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.development"
+python_files = ["test_*.py", "tests.py"]
+addopts = "--reuse-db -ra"
+
+# -----------------------------------------------------------------------------
+# coverage
+# -----------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["apps", "config"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "manage.py",
+    "config/wsgi.py",
+    "config/asgi.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

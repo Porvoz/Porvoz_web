@@ -6,272 +6,336 @@
     {% include "sidebar.html" %}
 
     <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
-        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-sm hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
             <i class="bi bi-list text-xl"></i>
         </button>
 
+        <!-- Header -->
         <header class="mb-6 mt-12 lg:mt-0">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white shadow-lg">
-                    <i class="bi bi-capsule text-xl"></i>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-600 text-white shadow-sm flex-shrink-0">
+                    <i class="bi bi-pencil-square text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Editar Medicamento</h1>
-                    <p class="text-sm text-slate-600 mt-0.5"><strong>{{ medicamento.nombre }}</strong> · {{ paciente.get_display_nombre }}</p>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Editar recordatorio</h1>
+                    <p class="text-sm text-slate-600 mt-0.5">Ajusta la configuración de <strong>{{ medicamento.nombre }}</strong></p>
                 </div>
             </div>
         </header>
 
         {% if messages %}
-        <div class="mb-6 space-y-2">
+        <div class="mb-5 space-y-2">
             {% for message in messages %}
-                <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
+                <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
                     {{ message }}
                 </div>
             {% endfor %}
         </div>
         {% endif %}
 
-        <div class="max-w-3xl mx-auto">
-            <div class="mb-6 p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-slate-50 border border-indigo-200">
-                <div class="flex items-center gap-3">
-                    {% if paciente.get_display_foto %}
-                    <img src="{{ paciente.get_display_foto.url }}" alt="{{ paciente.get_display_nombre }}" class="h-12 w-12 rounded-lg object-cover border-2 border-indigo-200">
-                    {% else %}
-                    <div class="h-12 w-12 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold border-2 border-indigo-200">
-                        {{ paciente.get_display_nombre|slice:":1"|upper }}
-                    </div>
-                    {% endif %}
-                    <div>
-                        <p class="text-sm font-semibold text-slate-600">Paciente</p>
-                        <p class="text-base font-bold text-slate-900">{{ paciente.get_display_nombre }}</p>
-                    </div>
+        <div class="max-w-5xl mx-auto">
+
+            <!-- Contexto paciente -->
+            <div class="mb-5 px-4 py-3 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-3">
+                {% if paciente.get_display_foto %}
+                <img src="{{ paciente.get_display_foto.url }}" alt="{{ paciente.get_display_nombre }}" class="h-10 w-10 rounded-xl object-cover border border-slate-200 flex-shrink-0">
+                {% else %}
+                <div class="h-10 w-10 rounded-xl bg-slate-700 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    {{ paciente.get_display_nombre|slice:":1"|upper }}
                 </div>
+                {% endif %}
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Paciente</p>
+                    <p class="text-sm font-bold text-slate-900 truncate">{{ paciente.get_display_nombre }}</p>
+                </div>
+                <span class="inline-flex items-center gap-1 rounded-md bg-amber-100 text-amber-800 px-2.5 py-1 text-xs font-semibold flex-shrink-0">
+                    <i class="bi bi-pencil-fill"></i> Editando
+                </span>
             </div>
 
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
-                <form method="post" class="divide-y divide-slate-200">
-                    {% csrf_token %}
+            <!-- Formulario -->
+            <form method="post">
+                {% csrf_token %}
 
-                    <div class="p-6 lg:p-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600">
-                                <i class="bi bi-capsule text-lg"></i>
+                <!-- Fila superior: Info + Frecuencia (2 columnas en desktop) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+
+                    <!-- Sección 1: Información del medicamento -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="px-6 py-5 border-b border-slate-200 flex items-center gap-3">
+                            <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex-shrink-0">
+                                <i class="bi bi-capsule"></i>
                             </div>
-                            <h2 class="text-xl font-black text-slate-900">Información del medicamento</h2>
-                        </div>
-
-                        <div class="space-y-5">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Nombre del medicamento <span class="text-red-500">*</span></label>
+                                <h2 class="text-base font-black text-slate-900">Medicamento</h2>
+                                <p class="text-xs text-slate-500">Nombre, dosis y duración</p>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                                    Nombre <span class="text-red-500">*</span>
+                                </label>
                                 <div class="relative">
-                                    <i class="bi bi-capsule absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                    <i class="bi bi-capsule absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                     <input name="nombre" type="text" required value="{{ medicamento.nombre }}"
                                         placeholder="Ej: Losartán, Metformina..."
-                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
+                                        class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                                 </div>
                             </div>
+
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Dosis <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                                    Dosis <span class="text-red-500">*</span>
+                                </label>
                                 <div class="relative">
-                                    <i class="bi bi-droplet absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                    <i class="bi bi-droplet absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                     <input name="dosis" type="text" required value="{{ medicamento.dosis }}"
                                         placeholder="Ej: 1 tableta, 500mg..."
-                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
+                                        class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                                 </div>
                             </div>
+
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-3">Duración del tratamiento</label>
-                                <div class="grid grid-cols-2 gap-3">
+                                <label class="block text-base font-semibold text-slate-800 mb-2">Duración del tratamiento</label>
+                                <div class="grid grid-cols-2 gap-2">
                                     <label class="relative cursor-pointer">
                                         <input type="radio" name="duracion_tipo" value="indefinido" class="peer sr-only" id="duracion_indefinido" {% if not medicamento.duracion_dias %}checked{% endif %}>
-                                        <div class="rounded-xl border-2 border-slate-300 bg-white p-4 text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all hover:border-emerald-400">
-                                            <i class="bi bi-infinity text-2xl text-slate-600 peer-checked:text-emerald-600 mb-2"></i>
-                                            <p class="text-sm font-semibold text-slate-700 peer-checked:text-emerald-700">Indefinido</p>
+                                        <div class="rounded-xl border-2 border-slate-200 bg-white px-3 py-3 text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all hover:border-slate-400">
+                                            <i class="bi bi-infinity text-xl text-slate-500 peer-checked:text-emerald-600 block mb-1"></i>
+                                            <p class="text-xs font-semibold text-slate-700 peer-checked:text-emerald-700">Indefinido</p>
                                         </div>
                                     </label>
                                     <label class="relative cursor-pointer">
                                         <input type="radio" name="duracion_tipo" value="dias" class="peer sr-only" id="duracion_dias_radio" {% if medicamento.duracion_dias %}checked{% endif %}>
-                                        <div class="rounded-xl border-2 border-slate-300 bg-white p-4 text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all hover:border-emerald-400">
-                                            <i class="bi bi-calendar-range text-2xl text-slate-600 peer-checked:text-emerald-600 mb-2"></i>
-                                            <p class="text-sm font-semibold text-slate-700 peer-checked:text-emerald-700">X días</p>
+                                        <div class="rounded-xl border-2 border-slate-200 bg-white px-3 py-3 text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all hover:border-slate-400">
+                                            <i class="bi bi-calendar-range text-xl text-slate-500 peer-checked:text-emerald-600 block mb-1"></i>
+                                            <p class="text-xs font-semibold text-slate-700 peer-checked:text-emerald-700">X días</p>
                                         </div>
                                     </label>
                                 </div>
                                 <div id="duracion-dias-container" class="mt-3 {% if not medicamento.duracion_dias %}hidden{% endif %}">
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">¿Cuántos días?</label>
                                     <div class="relative">
-                                        <i class="bi bi-calendar-day absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                        <i class="bi bi-calendar-day absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                         <input name="duracion_dias" type="number" id="duracion-dias-input" min="1" max="3650" value="{{ medicamento.duracion_dias|default:'' }}"
-                                            placeholder="Ej: 7, 30, 90" class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
+                                            placeholder="Ej: 7, 30, 90"
+                                            class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                                     </div>
+                                    <p class="text-xs text-slate-500 mt-1">Número de días que dura el tratamiento.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="p-6 lg:p-8 bg-slate-50/50">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600">
-                                <i class="bi bi-clock text-lg"></i>
+                    <!-- Sección 2: Frecuencia -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="px-6 py-5 border-b border-slate-200 flex items-center gap-3">
+                            <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-slate-200 text-slate-700 flex-shrink-0">
+                                <i class="bi bi-clock"></i>
                             </div>
-                            <h2 class="text-xl font-black text-slate-900">Frecuencia de toma</h2>
-                        </div>
-
-                        <div class="space-y-5">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-3">Tipo de frecuencia <span class="text-red-500">*</span></label>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <label class="relative cursor-pointer">
-                                        <input type="radio" name="frecuencia_tipo" value="horario" id="frecuencia_horario" class="peer sr-only" {% if medicamento.frecuencia_tipo == 'horario' %}checked{% endif %}>
-                                        <div class="rounded-xl border-2 border-slate-300 bg-white p-4 text-center peer-checked:border-indigo-600 peer-checked:bg-indigo-50 transition-all hover:border-indigo-400">
-                                            <i class="bi bi-clock text-2xl text-slate-600 peer-checked:text-indigo-600 mb-2"></i>
-                                            <p class="text-sm font-semibold text-slate-700 peer-checked:text-indigo-700">Horario específico</p>
-                                        </div>
-                                    </label>
-                                    <label class="relative cursor-pointer">
-                                        <input type="radio" name="frecuencia_tipo" value="cada_x_horas" id="frecuencia_cada_x" class="peer sr-only" {% if medicamento.frecuencia_tipo == 'cada_x_horas' %}checked{% endif %}>
-                                        <div class="rounded-xl border-2 border-slate-300 bg-white p-4 text-center peer-checked:border-indigo-600 peer-checked:bg-indigo-50 transition-all hover:border-indigo-400">
-                                            <i class="bi bi-arrow-repeat text-2xl text-slate-600 peer-checked:text-indigo-600 mb-2"></i>
-                                            <p class="text-sm font-semibold text-slate-700 peer-checked:text-indigo-700">Cada X horas</p>
-                                        </div>
-                                    </label>
-                                </div>
+                                <h2 class="text-base font-black text-slate-900">Frecuencia de toma</h2>
+                                <p class="text-xs text-slate-500">Cuándo debe tomar el medicamento</p>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <!-- Selector tipo frecuencia -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="frecuencia_tipo" value="horario" id="frecuencia_horario" class="peer sr-only" {% if medicamento.frecuencia_tipo == 'horario' %}checked{% endif %}>
+                                    <div class="rounded-xl border-2 border-slate-200 bg-white px-3 py-3 text-center peer-checked:border-slate-700 transition-all hover:border-slate-400">
+                                        <i class="bi bi-clock text-xl text-slate-500 peer-checked:text-slate-800 block mb-1"></i>
+                                        <p class="text-xs font-semibold text-slate-700 peer-checked:text-slate-900">Horario fijo</p>
+                                    </div>
+                                </label>
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="frecuencia_tipo" value="cada_x_horas" id="frecuencia_cada_x" class="peer sr-only" {% if medicamento.frecuencia_tipo == 'cada_x_horas' %}checked{% endif %}>
+                                    <div class="rounded-xl border-2 border-slate-200 bg-white px-3 py-3 text-center peer-checked:border-slate-700 transition-all hover:border-slate-400">
+                                        <i class="bi bi-arrow-repeat text-xl text-slate-500 peer-checked:text-slate-800 block mb-1"></i>
+                                        <p class="text-xs font-semibold text-slate-700 peer-checked:text-slate-900">Cada X horas</p>
+                                    </div>
+                                </label>
                             </div>
 
-                            <div id="horario-container" class="{% if medicamento.frecuencia_tipo == 'cada_x_horas' %}hidden{% endif %}">
-                                <div class="flex items-center justify-between gap-4 mb-2">
-                                    <label class="block text-sm font-semibold text-slate-700">Horarios de toma <span class="text-red-500">*</span></label>
-                                    <button type="button" id="btn-agregar-horario" class="inline-flex items-center gap-2 rounded-xl border-2 border-dashed border-indigo-400 text-indigo-600 hover:border-indigo-600 hover:text-indigo-800 px-3 py-2 text-xs font-semibold transition-colors">
-                                        <i class="bi bi-plus-lg"></i>Agregar otro horario
+                            <!-- Horario fijo -->
+                            <div id="horario-container" class="{% if medicamento.frecuencia_tipo == 'cada_x_horas' %}hidden{% endif %} space-y-3">
+                                <div class="flex items-center justify-between gap-3">
+                                    <label class="text-sm font-semibold text-slate-700">
+                                        Horarios <span class="text-red-500">*</span>
+                                    </label>
+                                    <button type="button" id="btn-agregar-horario" class="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-slate-400 text-slate-600 hover:border-slate-700 hover:bg-slate-50 px-2.5 py-1.5 text-xs font-semibold transition-colors">
+                                        <i class="bi bi-plus-lg"></i> Agregar
                                     </button>
                                 </div>
-                                <div id="horarios-list" class="space-y-3">
+                                <div id="horarios-list" class="space-y-2">
                                     {% for h in medicamento.get_horarios_ordenados %}
                                     <div class="horario-row flex gap-2 items-center">
                                         <div class="relative flex-1">
-                                            <i class="bi bi-clock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                            <input name="horario" type="time" class="horario-input block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" value="{{ h.hora|time:'H:i' }}" {% if forloop.first %}required{% endif %}>
+                                            <i class="bi bi-clock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                            <input name="horario" type="time" value="{{ h.hora|time:'H:i' }}" {% if forloop.first %}required{% endif %}
+                                                class="horario-input block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-700 transition-all">
                                         </div>
-                                        <button type="button" class="horario-remove p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors {% if forloop.first and forloop.last %}hidden{% endif %}" title="Quitar horario">
-                                            <i class="bi bi-x-lg text-lg"></i>
+                                        <button type="button" class="horario-remove p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors {% if forloop.first and forloop.last %}hidden{% endif %}" title="Quitar">
+                                            <i class="bi bi-x-lg text-sm"></i>
                                         </button>
                                     </div>
                                     {% empty %}
                                     <div class="horario-row flex gap-2 items-center">
                                         <div class="relative flex-1">
-                                            <i class="bi bi-clock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                            <input name="horario" type="time" class="horario-input block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" value="{{ medicamento.horario|time:'H:i' }}" required>
+                                            <i class="bi bi-clock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                            <input name="horario" type="time" value="{{ medicamento.horario|time:'H:i' }}" required
+                                                class="horario-input block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-700 transition-all">
                                         </div>
-                                        <button type="button" class="horario-remove hidden p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Quitar horario">
-                                            <i class="bi bi-x-lg text-lg"></i>
+                                        <button type="button" class="horario-remove hidden p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Quitar">
+                                            <i class="bi bi-x-lg text-sm"></i>
                                         </button>
                                     </div>
                                     {% endfor %}
                                 </div>
-                                <p class="text-xs text-slate-500 mt-2">Ej: 8:00, 14:00, 20:00 para varias tomas al día</p>
-                            </div>
-
-                            <div id="cada-x-horas-container" class="space-y-4 {% if medicamento.frecuencia_tipo != 'cada_x_horas' %}hidden{% endif %}">
                                 <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Cada cuántas horas <span class="text-red-500">*</span></label>
-                                    <div class="relative">
-                                        <i class="bi bi-arrow-repeat absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                                        <input name="cada_x_horas" type="number" id="cada-x-horas-input" min="1" max="24" value="{{ medicamento.cada_x_horas|default:'' }}"
-                                            placeholder="Ej: 8" class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Hora de inicio <span class="text-red-500">*</span></label>
-                                    <div class="relative">
-                                        <i class="bi bi-play-circle absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                                        <input name="hora_inicio" type="time" id="hora-inicio-input" value="{{ medicamento.hora_inicio|time:'H:i' }}"
-                                            class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Fecha de inicio del tratamiento</label>
-                                    <div class="relative">
-                                        <i class="bi bi-calendar3 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                        <input name="fecha_inicio_tratamiento" type="date" id="fecha-inicio-input" {% if medicamento.fecha_inicio_tratamiento %}value="{{ medicamento.fecha_inicio_tratamiento|date:'Y-m-d' }}"{% endif %}
-                                            class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-                                    </div>
-                                    <p class="text-xs text-slate-500 mt-1">Opcional. Para calcular correctamente las tomas desde una fecha.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="p-6 lg:p-8 bg-indigo-50/30">
-                        <div class="flex items-center gap-3 mb-2">
-                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600">
-                                <i class="bi bi-robot text-lg"></i>
-                            </div>
-                            <h2 class="text-xl font-black text-slate-900">Configuración para la llamada</h2>
-                        </div>
-                        <p class="text-sm text-slate-500 mb-6">Instrucciones y preferencias para cuando la IA realice la llamada de recordatorio</p>
-                        <div class="space-y-5">
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Instrucciones para la IA</label>
-                                <textarea id="instrucciones-llamada" name="instrucciones_llamada" rows="3" maxlength="200"
-                                    placeholder="Ej: Recordar con el desayuno, Preguntar si tuvo efectos secundarios..."
-                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none">{{ medicamento.instrucciones_llamada }}</textarea>
-                                <div class="flex items-center justify-between mt-1">
-                                    <p class="text-xs text-slate-500">Opcional. Si lo dejas vacío, la llamada preguntará "¿Ya tomó su medicamento?".</p>
-                                    <span id="instrucciones-counter" class="text-xs text-slate-400 ml-2 flex-shrink-0">{{ medicamento.instrucciones_llamada|length }}/200</span>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Llamar X minutos antes</label>
-                                <div class="relative max-w-[180px]">
-                                    <i class="bi bi-clock-history absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <input name="minutos_antes_llamada" type="number" min="0" max="15" value="{{ medicamento.minutos_antes_llamada|default:0 }}"
-                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-                                </div>
-                                <p class="text-xs text-slate-500 mt-1">Minutos antes de la hora de toma para realizar la llamada (máx 15 min)</p>
-                            </div>
-                        </div>
-
-                        <!-- Reintentos automáticos -->
-                        <div class="pt-4 border-t border-slate-100">
-                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Reintentos automáticos</p>
-                            <div class="grid sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Reintentos si no responde</label>
-                                    <select name="max_reintentos" class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-                                        <option value="0" {% if medicamento.max_reintentos == 0 %}selected{% endif %}>Sin reintento</option>
-                                        <option value="1" {% if medicamento.max_reintentos == 1 %}selected{% endif %}>1 reintento</option>
-                                        <option value="2" {% if medicamento.max_reintentos == 2 %}selected{% endif %}>2 reintentos</option>
-                                        <option value="3" {% if medicamento.max_reintentos == 3 %}selected{% endif %}>3 reintentos</option>
+                                    <label class="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1.5">
+                                        <i class="bi bi-globe text-slate-400"></i> Zona horaria
+                                    </label>
+                                    <select name="timezone" class="block w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-slate-700 transition-all">
+                                        <option value="America/Bogota" {% if paciente.timezone == "America/Bogota" or not paciente.timezone %}selected{% endif %}>Colombia — UTC-5</option>
+                                        <option value="America/Mexico_City" {% if paciente.timezone == "America/Mexico_City" %}selected{% endif %}>México Centro — UTC-6</option>
+                                        <option value="America/Cancun" {% if paciente.timezone == "America/Cancun" %}selected{% endif %}>México Este — UTC-5</option>
+                                        <option value="America/Lima" {% if paciente.timezone == "America/Lima" %}selected{% endif %}>Perú — UTC-5</option>
+                                        <option value="America/Guayaquil" {% if paciente.timezone == "America/Guayaquil" %}selected{% endif %}>Ecuador — UTC-5</option>
+                                        <option value="America/Santiago" {% if paciente.timezone == "America/Santiago" %}selected{% endif %}>Chile — UTC-3/-4</option>
+                                        <option value="America/Buenos_Aires" {% if paciente.timezone == "America/Buenos_Aires" %}selected{% endif %}>Argentina — UTC-3</option>
+                                        <option value="America/Caracas" {% if paciente.timezone == "America/Caracas" %}selected{% endif %}>Venezuela — UTC-4</option>
+                                        <option value="America/La_Paz" {% if paciente.timezone == "America/La_Paz" %}selected{% endif %}>Bolivia — UTC-4</option>
+                                        <option value="America/Asuncion" {% if paciente.timezone == "America/Asuncion" %}selected{% endif %}>Paraguay — UTC-3/-4</option>
+                                        <option value="America/Montevideo" {% if paciente.timezone == "America/Montevideo" %}selected{% endif %}>Uruguay — UTC-3</option>
+                                        <option value="America/New_York" {% if paciente.timezone == "America/New_York" %}selected{% endif %}>EE.UU. Este — UTC-4/-5</option>
+                                        <option value="America/Chicago" {% if paciente.timezone == "America/Chicago" %}selected{% endif %}>EE.UU. Centro — UTC-5/-6</option>
+                                        <option value="America/Los_Angeles" {% if paciente.timezone == "America/Los_Angeles" %}selected{% endif %}>EE.UU. Oeste — UTC-7/-8</option>
+                                        <option value="Europe/Madrid" {% if paciente.timezone == "Europe/Madrid" %}selected{% endif %}>España — UTC+1/+2</option>
+                                        <option value="UTC" {% if paciente.timezone == "UTC" %}selected{% endif %}>UTC</option>
                                     </select>
-                                    <p class="text-xs text-slate-500 mt-1">Intentos adicionales si no atiende o reporta no haber tomado.</p>
+                                    <p class="text-xs text-slate-500 mt-1">Los horarios se programan en esta zona.</p>
+                                </div>
+                            </div>
+
+                            <!-- Cada X horas -->
+                            <div id="cada-x-horas-container" class="space-y-3 {% if medicamento.frecuencia_tipo != 'cada_x_horas' %}hidden{% endif %}">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                                        Cada cuántas horas <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <i class="bi bi-arrow-repeat absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                        <input name="cada_x_horas" type="number" id="cada-x-horas-input" min="1" max="24" value="{{ medicamento.cada_x_horas|default:'' }}"
+                                            placeholder="Ej: 8"
+                                            class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-700 transition-all">
+                                    </div>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Minutos entre reintentos</label>
-                                    <div class="relative max-w-[180px]">
-                                        <i class="bi bi-arrow-repeat absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                        <input name="minutos_entre_reintentos" type="number" min="5" max="10" value="{{ medicamento.minutos_entre_reintentos|default:10 }}"
-                                            class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                                        Hora de inicio <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <i class="bi bi-play-circle absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                        <input name="hora_inicio" type="time" id="hora-inicio-input" value="{{ medicamento.hora_inicio|time:'H:i' }}"
+                                            class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-700 transition-all">
                                     </div>
-                                    <p class="text-xs text-slate-500 mt-1">Tiempo de espera antes del siguiente intento.</p>
+                                    <p class="text-xs text-slate-500 mt-1">Zona: <span class="font-semibold">{{ paciente.timezone|default:"America/Bogota" }}</span></p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Fecha de inicio</label>
+                                    <div class="relative">
+                                        <i class="bi bi-calendar3 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                        <input name="fecha_inicio_tratamiento" type="date" id="fecha-inicio-input" {% if medicamento.fecha_inicio_tratamiento %}value="{{ medicamento.fecha_inicio_tratamiento|date:'Y-m-d' }}"{% endif %}
+                                            class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-700 transition-all">
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1">Opcional. Para calcular tomas desde una fecha específica.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    </div>
+                </div>
 
-                    <div class="p-6 lg:p-8 bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                        <a href="{% url 'detalle_paciente' paciente.id %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
-                            <i class="bi bi-arrow-left"></i>
-                            <span>Cancelar</span>
-                        </a>
-                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-3.5 text-sm font-semibold text-white shadow-lg hover:from-emerald-700 hover:to-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all">
-                            <i class="bi bi-check-circle text-lg"></i>
-                            <span>Guardar cambios</span>
-                        </button>
+                <!-- Sección 3: Llamada — ancho completo -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm mb-5">
+                    <div class="px-6 py-5 border-b border-slate-200 flex items-center gap-3">
+                        <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-slate-200 text-slate-700 flex-shrink-0">
+                            <i class="bi bi-telephone"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-black text-slate-900">Configuración de la llamada</h2>
+                            <p class="text-xs text-slate-500">Instrucciones para la IA y política de reintentos</p>
+                        </div>
                     </div>
-                </form>
-            </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Izquierda: instrucciones + minutos -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Instrucciones para la IA</label>
+                                    <textarea id="instrucciones-llamada" name="instrucciones_llamada" rows="4" maxlength="200"
+                                        placeholder="Ej: Recordar con el desayuno, preguntar si tuvo efectos secundarios..."
+                                        class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-700 transition-all resize-none">{{ medicamento.instrucciones_llamada }}</textarea>
+                                    <div class="flex items-start justify-between gap-3 mt-1.5">
+                                        <p class="text-xs text-slate-500">Opcional. Si lo dejas vacío, la llamada preguntará "¿Ya tomó su medicamento?".</p>
+                                        <span id="instrucciones-counter" class="text-xs text-slate-400 flex-shrink-0 font-medium tabular-nums">{{ medicamento.instrucciones_llamada|length }}/200</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Llamar X minutos antes de la toma</label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="relative w-36">
+                                            <i class="bi bi-clock-history absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                            <input name="minutos_antes_llamada" type="number" min="0" max="15" value="{{ medicamento.minutos_antes_llamada|default:0 }}"
+                                                class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-700 transition-all">
+                                        </div>
+                                        <span class="text-sm text-slate-500">minutos (máx. 15)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Derecha: reintentos -->
+                            <div>
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Reintentos automáticos</p>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Si no atiende la llamada</label>
+                                        <select name="max_reintentos" class="block w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-700 transition-all">
+                                            <option value="0" {% if medicamento.max_reintentos == 0 %}selected{% endif %}>Sin reintento</option>
+                                            <option value="1" {% if medicamento.max_reintentos == 1 %}selected{% endif %}>1 reintento</option>
+                                            <option value="2" {% if medicamento.max_reintentos == 2 %}selected{% endif %}>2 reintentos</option>
+                                            <option value="3" {% if medicamento.max_reintentos == 3 %}selected{% endif %}>3 reintentos</option>
+                                        </select>
+                                        <p class="text-xs text-slate-500 mt-1">Intentos adicionales si no atiende o dice que no ha tomado.</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Esperar entre reintentos</label>
+                                        <div class="flex items-center gap-3">
+                                            <div class="relative w-36">
+                                                <i class="bi bi-arrow-repeat absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                                <input name="minutos_entre_reintentos" type="number" min="5" max="10" value="{{ medicamento.minutos_entre_reintentos|default:10 }}"
+                                                    class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-700 transition-all">
+                                            </div>
+                                            <span class="text-sm text-slate-500">minutos</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm px-6 py-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <a href="{% url 'detalle_paciente' paciente.id %}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                        <i class="bi bi-arrow-left"></i>
+                        <span>Cancelar</span>
+                    </a>
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors">
+                        <i class="bi bi-check-circle"></i>
+                        <span>Guardar cambios</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </main>
 </div>
@@ -348,31 +412,28 @@
             if (duracionDiasInput) duracionDiasInput.setAttribute("required", "required");
         } else {
             if (duracionDiasContainer) duracionDiasContainer.classList.add("hidden");
-            if (duracionDiasInput) { duracionDiasInput.removeAttribute("required"); if (duracionDiasInput) duracionDiasInput.value = ""; }
+            if (duracionDiasInput) { duracionDiasInput.removeAttribute("required"); duracionDiasInput.value = ""; }
         }
     }
     if (duracionIndefinido) duracionIndefinido.addEventListener("change", toggleDuracion);
     if (duracionDiasRadio) duracionDiasRadio.addEventListener("change", toggleDuracion);
     toggleDuracion();
 
-    // Contador de caracteres para instrucciones
     const instrTA = document.getElementById("instrucciones-llamada");
     const instrCounter = document.getElementById("instrucciones-counter");
     if (instrTA && instrCounter) {
         instrTA.addEventListener("input", function() {
             const n = instrTA.value.length;
             instrCounter.textContent = n + "/200";
-            instrCounter.className = "text-xs ml-2 flex-shrink-0 " + (n >= 180 ? "text-red-500 font-semibold" : n >= 140 ? "text-amber-500" : "text-slate-400");
+            instrCounter.className = "text-xs flex-shrink-0 font-medium tabular-nums " + (n >= 180 ? "text-red-600" : n >= 140 ? "text-amber-600" : "text-slate-400");
         });
     }
 
-    // Loading state on form submit
     const form = document.querySelector("form");
     const submitBtn = form?.querySelector('[type="submit"]');
     if (form && submitBtn) {
-        form.addEventListener("submit", function(e) {
-            if (!submitBtn.disabled) {
-                submitBtn.dataset.loadingText = submitBtn.textContent;
+        form.addEventListener("submit", function() {
+            if (!submitBtn.disabled && typeof Loading !== "undefined") {
                 Loading.setLoading(submitBtn, true);
             }
         });

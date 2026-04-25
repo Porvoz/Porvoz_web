@@ -1,0 +1,46 @@
+# =============================================================================
+# docker-compose.dev.yml — development overlay
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#
+# Differences vs production stack:
+#   - bind-mount source code for hot reload
+#   - run Django dev server instead of gunicorn
+#   - expose web on host port 8000 (skip nginx)
+#   - DEBUG=True via development settings
+# =============================================================================
+
+services:
+
+  web:
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+    volumes:
+      - ./porvoz:/app
+      - media_files:/app/media
+      - static_files:/app/staticfiles
+    ports:
+      - "8000:8000"
+    # Override entrypoint to use Django's auto-reloading dev server.
+    command: []
+    entrypoint: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  celery-worker:
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+    volumes:
+      - ./porvoz:/app
+
+  celery-beat:
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+    volumes:
+      - ./porvoz:/app
+
+  # nginx no aporta valor en local — desactivado vía replicas: 0
+  nginx:
+    profiles:
+      - disabled

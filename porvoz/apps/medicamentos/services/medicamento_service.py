@@ -30,6 +30,11 @@ class MedicamentoService:
         minutos_entre_reintentos: int = 30,
     ) -> Medicamento:
         """Crea un medicamento con sus horarios."""
+        if instrucciones_llamada and not paciente.telefono:
+            raise ValueError(
+                "Este paciente no tiene teléfono configurado. "
+                "Edita el paciente y agrega un número antes de activar llamadas."
+            )
         horario_legacy, fecha_inicio_date = MedicamentoService._parsear_campos(
             horarios, frecuencia_tipo, fecha_inicio
         )
@@ -94,6 +99,11 @@ class MedicamentoService:
         """Activa/desactiva un medicamento. Retorna el nuevo estado."""
         medicamento.activo = not medicamento.activo
         medicamento.save()
+        if not medicamento.activo:
+            from apps.llamadas.models import Llamada
+            Llamada.objects.filter(
+                medicamento=medicamento, estado=Llamada.ESTADO_PROGRAMADA
+            ).delete()
         return medicamento.activo
 
     @staticmethod

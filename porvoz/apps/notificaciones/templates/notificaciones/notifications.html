@@ -24,10 +24,12 @@
                         </p>
                     </div>
                 </div>
-                <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 px-3 py-2 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm self-start sm:self-center">
-                    <i class="bi bi-house-fill"></i>
-                    Panel
-                </a>
+                <div class="flex gap-2 self-start sm:self-center">
+                    <a href="{% url 'dashboard' %}" class="btn-dashboard-primary self-start sm:self-center">
+                        <i class="bi bi-house"></i>
+                        Panel principal
+                    </a>
+                </div>
             </div>
         </header>
 
@@ -41,50 +43,73 @@
         </div>
         {% endif %}
 
-        <!-- Filtros Compactos -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-4">
-            <div class="space-y-2">
-                <!-- Botones de tipo (una fila compacta) -->
-                <div class="flex flex-wrap gap-1.5">
-                    <a href="{% url 'notifications' %}" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if not tipo_seleccionado and not solo_no_leidas %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
-                        Todas
-                    </a>
-                    <a href="{% url 'notifications' %}?tipo=alerta" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if tipo_seleccionado == 'alerta' %}bg-red-600 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
-                        Alertas
-                    </a>
-                    <a href="{% url 'notifications' %}?tipo=llamada" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if tipo_seleccionado == 'llamada' %}bg-indigo-600 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
-                        Llamadas
-                    </a>
-                    <a href="{% url 'notifications' %}?tipo=recordatorio" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if tipo_seleccionado == 'recordatorio' %}bg-amber-600 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
-                        Recordatorios
-                    </a>
-                    <a href="{% url 'notifications' %}?solo_no_leidas=1" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors {% if solo_no_leidas %}bg-slate-700 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
-                        Sin leer{% if no_leidas %} ({{ no_leidas }}){% endif %}
-                    </a>
-                </div>
-
-                <!-- Búsqueda y paciente en una fila -->
-                <div class="flex gap-2">
-                    <form method="get" class="flex-1 flex">
-                        <input type="hidden" name="tipo" value="{{ tipo_seleccionado|default:'' }}">
-                        <input type="hidden" name="solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
-                        {% if paciente_seleccionado and paciente_seleccionado != "None" %}<input type="hidden" name="paciente" value="{{ paciente_seleccionado }}">{% endif %}
-                        <div class="relative flex-1">
-                            <i class="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                            <input type="text" name="buscar" value="{{ buscar }}" placeholder="Buscar..." class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all">
-                        </div>
-                    </form>
-
-                    {% if pacientes %}
-                    <select onchange="if(this.value){ window.location.href=this.value; }" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent cursor-pointer hover:bg-slate-50 transition-all">
-                        <option value="{% url 'notifications' %}{% if tipo_seleccionado %}?tipo={{ tipo_seleccionado }}{% if solo_no_leidas %}&solo_no_leidas=1{% endif %}{% elif solo_no_leidas %}?solo_no_leidas=1{% endif %}{% if buscar %}{% if tipo_seleccionado or solo_no_leidas %}&{% else %}?{% endif %}buscar={{ buscar|urlencode }}{% endif %}">Pacientes</option>
-                        {% for p in pacientes %}
-                        <option value="{% url 'notifications' %}?paciente={{ p.id }}{% if tipo_seleccionado %}&tipo={{ tipo_seleccionado }}{% endif %}{% if solo_no_leidas %}&solo_no_leidas=1{% endif %}{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}" {% if paciente_seleccionado == p.id|stringformat:'s' %}selected{% endif %}>{{ p.get_display_nombre }}</option>
-                        {% endfor %}
-                    </select>
-                    {% endif %}
-                </div>
+        <!-- Filtros compactos -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6">
+            {% if medicamento_seleccionado and medicamento_nombre %}
+            <div class="flex items-center gap-2 mb-3">
+                <span class="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 text-xs font-semibold">
+                    <i class="bi bi-capsule-fill"></i>{{ medicamento_nombre }}
+                    <a href="{% url 'notifications' %}{% if paciente_seleccionado %}?paciente={{ paciente_seleccionado }}{% endif %}" class="ml-1 text-slate-500 hover:text-slate-800 transition-colors" title="Quitar filtro de medicamento"><i class="bi bi-x"></i></a>
+                </span>
+                {% if paciente_seleccionado %}
+                {% for p in pacientes %}{% if p.id|stringformat:'s' == paciente_seleccionado %}
+                <a href="{% url 'detalle_paciente' p.id %}" class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors">
+                    <i class="bi bi-arrow-left"></i>Volver a {{ p.get_display_nombre }}
+                </a>
+                {% endif %}{% endfor %}
+                {% endif %}
             </div>
+            {% endif %}
+            <form method="get" class="space-y-3">
+                {% if medicamento_seleccionado %}<input type="hidden" name="medicamento" value="{{ medicamento_seleccionado }}">{% endif %}
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                    <!-- Búsqueda -->
+                    <div class="sm:col-span-5 relative">
+                        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" name="buscar" value="{{ buscar }}" placeholder="Buscar notificación..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-400 transition-all">
+                    </div>
+
+                    <!-- Tipo -->
+                    <div class="sm:col-span-3">
+                        <select name="tipo" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer hover:border-slate-400 transition-all">
+                            <option value="">Todos los tipos</option>
+                            <option value="alerta" {% if tipo_seleccionado == 'alerta' %}selected{% endif %}>Alertas</option>
+                            <option value="recordatorio" {% if tipo_seleccionado == 'recordatorio' %}selected{% endif %}>Recordatorios</option>
+                            <option value="llamada" {% if tipo_seleccionado == 'llamada' %}selected{% endif %}>Llamadas</option>
+                            <option value="sistema" {% if tipo_seleccionado == 'sistema' %}selected{% endif %}>Sistema</option>
+                        </select>
+                    </div>
+
+                    <!-- Paciente -->
+                    {% if pacientes %}
+                    <div class="sm:col-span-2">
+                        <select name="paciente" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer hover:border-slate-400 transition-all">
+                            <option value="">Todos los pacientes</option>
+                            {% for p in pacientes %}
+                            <option value="{{ p.id }}" {% if paciente_seleccionado == p.id|stringformat:'s' %}selected{% endif %}>{{ p.get_display_nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <!-- Sin leer toggle -->
+                    <div class="sm:col-span-2">
+                        <label class="w-full h-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all border cursor-pointer {% if solo_no_leidas %}bg-slate-900 text-white border-slate-900 shadow-sm{% else %}bg-white text-slate-700 border-slate-300 hover:border-slate-400{% endif %}">
+                            <input type="checkbox" name="solo_no_leidas" value="1" onchange="this.form.submit()" {% if solo_no_leidas %}checked{% endif %} class="sr-only">
+                            <i class="bi bi-circle-fill text-xs"></i>
+                            Sin leer{% if no_leidas %} ({{ no_leidas }}){% endif %}
+                        </label>
+                    </div>
+                </div>
+
+                {% if tipo_seleccionado or paciente_seleccionado or solo_no_leidas or buscar or medicamento_seleccionado %}
+                <div class="pt-3 border-t border-slate-200">
+                    <a href="{% url 'notifications' %}" class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors">
+                        <i class="bi bi-x-circle"></i>Limpiar filtros
+                    </a>
+                </div>
+                {% endif %}
+            </form>
         </div>
 
         <!-- Panel de lista de notificaciones y acciones -->
@@ -110,13 +135,13 @@
             {% if notificaciones %}
             <div class="divide-y divide-slate-100">
                 {% for notificacion in notificaciones %}
-                <div class="px-6 py-4 flex gap-4 hover:bg-slate-50 transition-colors group {% if not notificacion.leida %}bg-blue-50/40{% endif %}">
+                <div class="px-6 py-4 flex gap-4 hover:bg-slate-50 transition-colors group {% if not notificacion.leida %}bg-slate-50{% endif %}">
                     <!-- Icono de tipo -->
                     <div class="flex-shrink-0 mt-0.5">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold
                             {% if notificacion.tipo == 'recordatorio' %}bg-amber-100 text-amber-600
                             {% elif notificacion.tipo == 'alerta' %}bg-red-100 text-red-600
-                            {% elif notificacion.tipo == 'llamada' %}bg-indigo-100 text-indigo-600
+                            {% elif notificacion.tipo == 'llamada' %}bg-slate-200 text-slate-700
                             {% else %}bg-slate-200 text-slate-700{% endif %}">
                             {% if notificacion.tipo == 'llamada' %}
                             <i class="bi bi-telephone"></i>
@@ -138,7 +163,7 @@
                                 {{ notificacion.titulo }}
                             </p>
                             {% if not notificacion.leida %}
-                            <span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></span>
+                            <span class="w-2 h-2 rounded-full bg-slate-500 flex-shrink-0"></span>
                             {% endif %}
                         </div>
 
@@ -152,7 +177,7 @@
                             <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold
                                 {% if notificacion.tipo == 'recordatorio' %}bg-amber-100 text-amber-700
                                 {% elif notificacion.tipo == 'alerta' %}bg-red-100 text-red-700
-                                {% elif notificacion.tipo == 'llamada' %}bg-indigo-100 text-indigo-700
+                                {% elif notificacion.tipo == 'llamada' %}bg-slate-100 text-slate-600
                                 {% else %}bg-slate-100 text-slate-600{% endif %}">
                                 {% if notificacion.tipo == 'llamada' %}<i class="bi bi-telephone text-xs"></i> Llamada
                                 {% elif notificacion.tipo == 'recordatorio' %}<i class="bi bi-clock text-xs"></i> Recordatorio
@@ -164,8 +189,8 @@
                             <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold
                                 {% if notificacion.prioridad == 'critica' %}bg-red-100 text-red-800 border border-red-300
                                 {% elif notificacion.prioridad == 'urgente' %}bg-orange-100 text-orange-800 border border-orange-300
-                                {% elif notificacion.prioridad == 'normal' %}bg-blue-100 text-blue-800 border border-blue-300
-                                {% else %}bg-green-100 text-green-800 border border-green-300{% endif %}">
+                                {% elif notificacion.prioridad == 'normal' %}bg-slate-100 text-slate-700 border border-slate-300
+                                {% else %}bg-emerald-100 text-emerald-700 border border-emerald-200{% endif %}">
                                 {% if notificacion.prioridad == 'critica' %}<i class="bi bi-exclamation-circle-fill"></i> CRÍTICA
                                 {% elif notificacion.prioridad == 'urgente' %}<i class="bi bi-exclamation-circle"></i> URGENTE
                                 {% elif notificacion.prioridad == 'normal' %}<i class="bi bi-info-circle"></i> Normal
@@ -176,7 +201,7 @@
                         </div>
 
                         <!-- Metadata -->
-                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                             {% if notificacion.paciente %}
                             <span class="inline-flex items-center gap-1">
                                 <i class="bi bi-person"></i>{{ notificacion.paciente.get_display_nombre }}
@@ -189,12 +214,14 @@
                             </span>
                             {% endif %}
                             {% if notificacion.paciente or notificacion.medicamento %}<span class="text-slate-300">&middot;</span>{% endif %}
+                            <span>{{ notificacion.creado_en|date:"d/m/Y H:i" }}</span>
+                            <span class="text-slate-300">&middot;</span>
                             <span>{{ notificacion.creado_en|timesince }} atrás</span>
                         </div>
                     </div>
 
-                    <!-- Acciones (Derecha, grupo para ver en hover) -->
-                    <div class="flex-shrink-0 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <!-- Acciones (Derecha) -->
+                    <div class="flex-shrink-0 flex gap-0.5">
                         {% if not notificacion.leida %}
                         <form method="post" class="inline">
                             {% csrf_token %}
@@ -204,7 +231,7 @@
                             <input type="hidden" name="redirect_paciente" value="{{ paciente_seleccionado|default:'' }}">
                             <input type="hidden" name="redirect_solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
                             <input type="hidden" name="redirect_buscar" value="{{ buscar }}">
-                            <button type="submit" class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Marcar como leída">
+                            <button type="submit" class="p-2 text-emerald-300 bg-emerald-50/40 border border-emerald-100/40 group-hover:text-emerald-700 group-hover:bg-emerald-200 group-hover:border-emerald-300 rounded-lg transition-colors" title="Marcar como leída">
                                 <i class="bi bi-check-circle text-sm"></i>
                             </button>
                         </form>
@@ -217,7 +244,7 @@
                             <input type="hidden" name="redirect_paciente" value="{{ paciente_seleccionado|default:'' }}">
                             <input type="hidden" name="redirect_solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
                             <input type="hidden" name="redirect_buscar" value="{{ buscar }}">
-                            <button type="button" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors btn-delete-notif" title="Eliminar">
+                            <button type="button" class="p-2 text-red-300 bg-red-50/40 border border-red-100/40 group-hover:text-red-700 group-hover:bg-red-200 group-hover:border-red-300 rounded-lg transition-colors btn-delete-notif" title="Eliminar">
                                 <i class="bi bi-trash2 text-sm"></i>
                             </button>
                         </form>
@@ -226,10 +253,12 @@
                 {% endfor %}
             </div>
             {% else %}
-            <div class="px-6 py-16 text-center">
-                <i class="bi bi-bell text-4xl text-slate-300 mb-3"></i>
-                <h3 class="text-lg font-semibold text-slate-900 mb-1">{% if buscar %}Sin resultados{% else %}No hay notificaciones{% endif %}</h3>
-                <p class="text-slate-500 text-sm mb-6 max-w-sm mx-auto">
+            <div class="px-6 py-14 text-center">
+                <div class="mx-auto mb-4 flex items-center justify-center w-20 h-20 rounded-full bg-slate-100">
+                    <i class="bi bi-bell text-4xl text-slate-400"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 mb-1">{% if buscar %}Sin resultados{% else %}No hay notificaciones{% endif %}</h3>
+                <p class="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
                     {% if buscar %}
                     No se encontraron notificaciones para "{{ buscar }}". Intenta con otros términos.
                     {% else %}
@@ -237,7 +266,7 @@
                     {% endif %}
                 </p>
                 {% if buscar %}
-                <a href="{% url 'notifications' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white px-5 py-2.5 text-sm font-semibold transition-colors">
+                <a href="{% url 'notifications' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-6 py-3 text-sm font-semibold shadow-sm transition-colors">
                     <i class="bi bi-x-lg"></i>Limpiar búsqueda
                 </a>
                 {% endif %}

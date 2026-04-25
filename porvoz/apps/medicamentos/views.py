@@ -2,6 +2,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .models import Medicamento
 from .services import MedicamentoService
@@ -10,6 +13,28 @@ from apps.pacientes.models import Paciente
 from apps.core.models import Perfil
 from apps.notificaciones.services import NotificacionService
 from apps.usuarios.services.planes_service import PlanService
+
+_TIMEZONES_VALIDAS = {
+    "America/Bogota", "America/Mexico_City", "America/Cancun", "America/Lima",
+    "America/Guayaquil", "America/Santiago", "America/Buenos_Aires",
+    "America/Caracas", "America/La_Paz", "America/Asuncion", "America/Montevideo",
+    "America/New_York", "America/Chicago", "America/Los_Angeles",
+    "Europe/Madrid", "UTC",
+}
+
+def _guardar_timezone_paciente(request: HttpRequest, paciente: Paciente) -> None:
+    """Actualiza la zona horaria del paciente si viene en el POST y es válida."""
+    tz_str = request.POST.get("timezone", "").strip()
+    if not tz_str or tz_str not in _TIMEZONES_VALIDAS:
+        return
+    if paciente.timezone == tz_str:
+        return
+    try:
+        ZoneInfo(tz_str)
+        paciente.timezone = tz_str
+        paciente.save(update_fields=["timezone"])
+    except (ZoneInfoNotFoundError, Exception):
+        pass
 
 
 def _extraer_campos_medicamento(request: HttpRequest) -> dict:
@@ -101,9 +126,14 @@ def agregar_medicamento_view(request: HttpRequest, paciente_id: int) -> HttpResp
         if error:
             messages.error(request, error)
         else:
-            medicamento = MedicamentoService.crear_medicamento(
-                paciente=paciente, **_campos_a_kwargs(campos)
-            )
+            try:
+                _guardar_timezone_paciente(request, paciente)
+                medicamento = MedicamentoService.crear_medicamento(
+                    paciente=paciente, **_campos_a_kwargs(campos)
+                )
+            except ValueError as e:
+                messages.error(request, str(e))
+                return render(request, "medicamentos/agregar_medicamento.html", {"perfil": perfil, "paciente": paciente})
             LlamadaService.programar_llamadas_medicamento(medicamento, request.user)
             nombre_pac = paciente.get_display_nombre()
             titulo = f'Medicamento "{campos["nombre"]}" agregado para {nombre_pac}'
@@ -137,6 +167,7 @@ def editar_medicamento_view(
         if error:
             messages.error(request, error)
         else:
+            _guardar_timezone_paciente(request, paciente)
             MedicamentoService.actualizar_medicamento(
                 medicamento=medicamento, **_campos_a_kwargs(campos)
             )
@@ -202,3 +233,4 @@ def eliminar_medicamento_view(
 
     context = {"paciente": paciente, "medicamento": medicamento}
     return render(request, "medicamentos/eliminar_medicamento.html", context)
+

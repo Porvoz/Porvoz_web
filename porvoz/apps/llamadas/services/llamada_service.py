@@ -13,14 +13,16 @@ import re
 import urllib.parse
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
+from django.db import models
 from django.utils import timezone
 
 from apps.llamadas.models import Llamada, RespuestaLlamada, AuditoriaLog
 from apps.medicamentos.models import Medicamento
 from apps.notificaciones.services.notificacion_service import NotificacionService
-from apps.notificaciones.services.email_service import EmailService
 from apps.pacientes.models import Paciente
 
 logger = logging.getLogger(__name__)
@@ -66,7 +68,15 @@ class LlamadaService:
         ).delete()
 
         ahora = timezone.now()
-        hoy = timezone.localtime(ahora).date()  # fecha en hora local (Bogotá), no UTC
+        paciente = medicamento.paciente
+
+        # Usar timezone del paciente (default America/Bogota)
+        try:
+            tz_paciente = ZoneInfo(paciente.timezone or "America/Bogota")
+        except ZoneInfoNotFoundError:
+            tz_paciente = ZoneInfo("America/Bogota")
+
+        hoy = ahora.astimezone(tz_paciente).date()
         offset = timedelta(minutes=medicamento.minutos_antes_llamada or 0)
         creadas = []
 
@@ -79,7 +89,8 @@ class LlamadaService:
                 hora = LlamadaService._as_time(h.hora)
                 if hora is None:
                     continue
-                dt_toma_hoy = timezone.make_aware(datetime.combine(hoy, hora))
+                # Construir datetime en timezone del paciente y convertir a UTC
+                dt_toma_hoy = datetime.combine(hoy, hora).replace(tzinfo=tz_paciente)
                 dt_hoy = dt_toma_hoy - offset
                 dt_manana = dt_toma_hoy + timedelta(days=1) - offset
 
@@ -93,7 +104,7 @@ class LlamadaService:
                 llamada = LlamadaService.crear_llamada_programada(
                     medicamento=medicamento,
                     usuario=usuario,
-                    paciente=medicamento.paciente,
+                    paciente=paciente,
                     fecha_programada=fecha,
                 )
                 creadas.append(llamada)
@@ -101,9 +112,7 @@ class LlamadaService:
         elif medicamento.frecuencia_tipo == medicamento.FRECUENCIA_CADA_X_HORAS:
             hora_inicio = LlamadaService._as_time(medicamento.hora_inicio)
             if hora_inicio and medicamento.cada_x_horas:
-                dt_base = timezone.make_aware(
-                    datetime.combine(hoy, hora_inicio)
-                )
+                dt_base = datetime.combine(hoy, hora_inicio).replace(tzinfo=tz_paciente)
                 intervalo = timedelta(hours=medicamento.cada_x_horas)
                 # Siguiente dosis que aún no haya pasado
                 dt_siguiente = dt_base
@@ -113,7 +122,7 @@ class LlamadaService:
                 llamada = LlamadaService.crear_llamada_programada(
                     medicamento=medicamento,
                     usuario=usuario,
-                    paciente=medicamento.paciente,
+                    paciente=paciente,
                     fecha_programada=dt_siguiente - offset,
                 )
                 creadas.append(llamada)
@@ -121,22 +130,69 @@ class LlamadaService:
         return creadas
 
     @staticmethod
+    def limpiar_llamadas_vencidas():
+        """
+        Marca como fallida toda Llamada con estado en_curso y fecha_ejecutada
+        anterior a hace 10 minutos. Evita acumulación de llamadas fantasma cuando
+        el webhook de status no llega (ej: ngrok caído).
+        """
+        corte = timezone.now() - timedelta(minutes=10)
+        vencidas = Llamada.objects.filter(
+            estado=Llamada.ESTADO_EN_CURSO,
+            fecha_ejecutada__lt=corte,
+        )
+        count = vencidas.count()
+        if count:
+            vencidas.update(estado=Llamada.ESTADO_FALLIDA)
+            logger.info(f"[LlamadaService] {count} llamada(s) en_curso vencidas → fallida.")
+        return count
+
+    @staticmethod
     def ejecutar_llamadas_pendientes(max_workers=5):
         """
         Busca llamadas programadas con fecha vencida y las ejecuta EN PARALELO.
         Usa ThreadPoolExecutor para disparar múltiples llamadas simultáneamente.
+
+        Antes de despachar:
+          - Limpia llamadas zombi atascadas en EN_CURSO (housekeeping).
+          - Cancela llamadas cuyo paciente o medicamento ya no estén activos.
 
         Args:
             max_workers: Máximo de llamadas paralelas (default 5)
         """
         from apps.llamadas.services.proveedor_voz_service import ProveedorVozService
 
+        # Housekeeping: cierra llamadas que quedaron colgadas en EN_CURSO
+        # (típicamente porque el webhook de status nunca llegó).
+        LlamadaService.limpiar_llamadas_vencidas()
+
         ahora = timezone.now()
+        candidatas = Llamada.objects.filter(
+            estado=Llamada.ESTADO_PROGRAMADA,
+            fecha_programada__lte=ahora,
+        ).select_related("medicamento", "paciente", "usuario")
+
+        # Cancelar las que apunten a paciente o medicamento inactivos.
+        # Si el cuidador desactivó el medicamento o eliminó al paciente entre
+        # programación y ejecución, no debemos llamar — marcamos como fallida.
+        canceladas = candidatas.filter(
+            models.Q(paciente__activo=False)
+            | models.Q(medicamento__isnull=True)
+            | models.Q(medicamento__activo=False)
+        )
+        n_canceladas = canceladas.count()
+        if n_canceladas:
+            canceladas.update(estado=Llamada.ESTADO_FALLIDA)
+            logger.info(
+                f"[LlamadaService] {n_canceladas} llamada(s) canceladas: "
+                f"paciente o medicamento inactivo."
+            )
+
         pendientes = list(
-            Llamada.objects.filter(
-                estado=Llamada.ESTADO_PROGRAMADA,
-                fecha_programada__lte=ahora,
-            ).select_related("medicamento", "paciente", "usuario")
+            candidatas.filter(
+                paciente__activo=True,
+                medicamento__activo=True,
+            )
         )
 
         if not pendientes:
@@ -172,8 +228,23 @@ class LlamadaService:
         """
         Ejecuta UNA llamada (usado por ThreadPoolExecutor).
         Se ejecuta en un thread separado.
+
+        Claim atómico: solo una instancia del scheduler puede pasar del PROGRAMADA→EN_CURSO.
+        Si otro proceso (u otro thread) ya claimó la llamada, salimos silenciosamente.
         """
         from apps.llamadas.services.proveedor_voz_service import ProveedorVozService
+
+        ahora = timezone.now()
+        claimed = Llamada.objects.filter(
+            pk=llamada.pk,
+            estado=Llamada.ESTADO_PROGRAMADA,
+        ).update(estado=Llamada.ESTADO_EN_CURSO, fecha_ejecutada=ahora)
+
+        if claimed == 0:
+            logger.info(
+                f"[LlamadaService] Llamada #{llamada.pk} ya fue claimada por otro proceso; saltando."
+            )
+            return
 
         llamada = Llamada.objects.select_related(
             "medicamento", "paciente", "usuario"
@@ -212,6 +283,16 @@ class LlamadaService:
         nombre_paciente = paciente.nombre if paciente else ""
 
         try:
+            # Validar número antes de llamar a Twilio
+            from apps.shared.services.telefono_service import TelefonoService
+            if not TelefonoService.es_numero_valido(numero):
+                error_msg = f"Número de teléfono inválido: {numero}"
+                logger.warning(f"[LlamadaService] Llamada #{llamada.id}: {error_msg}")
+                llamada.estado = Llamada.ESTADO_FALLIDA
+                llamada.save(update_fields=["estado"])
+                LlamadaService._crear_alerta_fallo(llamada, error_msg)
+                return
+
             voice_url = (
                 f"{base_url}/llamadas/webhook/voice/"
                 f"?llamada_id={llamada.id}"
@@ -223,18 +304,16 @@ class LlamadaService:
 
             call_sid = ProveedorVozService.disparar_llamada(
                 numero_telefono=numero,
-                mensaje=mensaje,
                 voice_url=voice_url,
                 status_url=status_url,
             )
 
+            # El estado EN_CURSO + fecha_ejecutada ya fueron seteados en el claim atómico arriba.
             llamada.call_sid = call_sid
-            llamada.estado = Llamada.ESTADO_EN_CURSO
-            llamada.fecha_ejecutada = timezone.now()
-            llamada.save(update_fields=["call_sid", "estado", "fecha_ejecutada"])
+            llamada.save(update_fields=["call_sid"])
 
             # Registrar auditoría
-            AuditoriaLog.registrar(
+            LlamadaService._registrar_auditoria(
                 usuario=llamada.usuario,
                 obj=llamada,
                 accion=AuditoriaLog.ACCION_UPDATE,
@@ -242,12 +321,42 @@ class LlamadaService:
             )
 
         except Exception as e:
-            logger.error(
-                f"[LlamadaService] Error ejecutando llamada #{llamada.id}: {e}"
+            error_msg = str(e)
+            # Errores de red transientes de Twilio → reprogramar en 5 min en vez de fallar
+            es_error_red = any(kw in error_msg.lower() for kw in (
+                "connection", "timeout", "network", "ssl", "socket", "read timed out"
+            ))
+            if es_error_red and llamada.intentos == 0:
+                logger.warning(
+                    f"[LlamadaService] Error de red en llamada #{llamada.id}, "
+                    f"reprogramando en 5 min: {error_msg}"
+                )
+                llamada.fecha_programada = timezone.now() + timedelta(minutes=5)
+                llamada.intentos = 1
+                llamada.save(update_fields=["fecha_programada", "intentos"])
+            else:
+                logger.error(
+                    f"[LlamadaService] Error ejecutando llamada #{llamada.id}: {error_msg}"
+                )
+                llamada.estado = Llamada.ESTADO_FALLIDA
+                llamada.save(update_fields=["estado"])
+                LlamadaService._crear_alerta_fallo(llamada, error_msg)
+
+    @staticmethod
+    def _registrar_auditoria(usuario, obj, accion: str, cambios: dict = None):
+        """Registra auditoría. Si falla, solo registra el error en logs (no interfiere con llamadas)."""
+        try:
+            content_type = ContentType.objects.get_for_model(obj.__class__)
+            AuditoriaLog.objects.create(
+                usuario=usuario,
+                contenido_type=content_type,
+                objeto_id=obj.pk,
+                objeto_str=str(obj),
+                accion=accion,
+                cambios=cambios or {},
             )
-            llamada.estado = Llamada.ESTADO_FALLIDA
-            llamada.save(update_fields=["estado"])
-            LlamadaService._crear_alerta_fallo(llamada, str(e))
+        except Exception as exc:
+            logger.warning(f"[AuditoriaLog] Fallo al registrar (no crítico): {exc}")
 
     @staticmethod
     def registrar_respuesta(
@@ -303,8 +412,37 @@ class LlamadaService:
             elif resultado_final == RespuestaLlamada.RESULTADO_DESPUES:
                 LlamadaService._crear_alerta_despues(llamada, palabras_paciente)
                 LlamadaService._intentar_reintento(llamada)
+            elif resultado_final == RespuestaLlamada.RESULTADO_EMERGENCIA:
+                # Crítica: NO se reintenta — un reintento podría ser perjudicial.
+                LlamadaService.crear_alerta_emergencia(llamada, palabras_paciente)
+            elif resultado_final == RespuestaLlamada.RESULTADO_RECHAZO:
+                # Crítica: NO se reintenta — el paciente rechazó explícitamente.
+                LlamadaService.crear_alerta_rechazo_tratamiento(llamada, palabras_paciente)
 
         return respuesta
+
+    @staticmethod
+    def actualizar_transcripcion_parcial(call_sid: str, transcripcion: str) -> None:
+        """
+        Persiste la transcripción parcial de una llamada en curso, turno a turno.
+        Upsert sobre RespuestaLlamada con como_respondio='atendida' y resultado='sin_confirmar'.
+
+        Si un webhook final llega después, registrar_respuesta sobreescribirá estos valores.
+        Si el webhook final nunca llega (ngrok caído, timeout), al menos queda la transcripción.
+        """
+        if not call_sid or not transcripcion:
+            return
+        llamada = Llamada.objects.filter(call_sid=call_sid).first()
+        if not llamada:
+            return
+        RespuestaLlamada.objects.update_or_create(
+            llamada=llamada,
+            defaults={
+                "como_respondio": RespuestaLlamada.RESPUESTA_ATENDIDA,
+                "resultado": RespuestaLlamada.RESULTADO_SIN_CONFIRMAR,
+                "transcripcion": transcripcion,
+            },
+        )
 
     @staticmethod
     def registrar_estado_final(call_sid: str, estado_twilio: str, duracion: int = None):
@@ -327,7 +465,12 @@ class LlamadaService:
             "failed": Llamada.ESTADO_FALLIDA,
             "canceled": Llamada.ESTADO_FALLIDA,
         }
-        nuevo_estado = mapa_estado.get(estado_twilio, Llamada.ESTADO_COMPLETADA)
+        nuevo_estado = mapa_estado.get(estado_twilio)
+        if nuevo_estado is None:
+            logger.info(
+                f"[LlamadaService] Ignorando estado no terminal de Twilio para call_sid={call_sid}: {estado_twilio}"
+            )
+            return
 
         campos = {"estado": nuevo_estado}
         if duracion is not None:
@@ -388,11 +531,11 @@ class LlamadaService:
         if not medicamento:
             return
 
-        max_reintentos = medicamento.max_reintentos
+        max_reintentos = min(medicamento.max_reintentos, 3)
         if max_reintentos == 0:
             return
 
-        if llamada.intentos <= max_reintentos:
+        if llamada.intentos < max_reintentos:
             minutos = medicamento.minutos_entre_reintentos or 30
             nueva_fecha = timezone.now() + timedelta(minutes=minutos)
             Llamada.objects.create(
@@ -422,12 +565,16 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
-        # Enviar email de toma confirmada
-        EmailService.enviar_email_toma_confirmada(
-            usuario=llamada.usuario,
-            paciente_nombre=llamada.paciente.nombre,
-            medicamento_nombre=med_nombre,
-        )
+        try:
+            from apps.notificaciones.tasks import enviar_email_task
+            enviar_email_task.delay(
+                tipo="toma_confirmada",
+                usuario_id=llamada.usuario.id,
+                paciente_id=llamada.paciente.id if llamada.paciente else None,
+                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
+            )
+        except Exception as e:
+            logger.warning(f"[LlamadaService] Email task falló (no crítico): {e}")
 
     @staticmethod
     def _crear_alerta_escalada(llamada: Llamada):
@@ -444,6 +591,17 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
+        try:
+            from apps.notificaciones.tasks import enviar_email_task
+            enviar_email_task.delay(
+                tipo="reintentos_agotados",
+                usuario_id=llamada.usuario.id,
+                paciente_id=llamada.paciente.id if llamada.paciente else None,
+                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
+                extra={"intentos": llamada.intentos},
+            )
+        except Exception as e:
+            logger.warning(f"[LlamadaService] Email reintentos_agotados falló (no crítico): {e}")
 
     @staticmethod
     def _crear_alerta_no_tomo(llamada: Llamada, palabras_paciente: str = ""):
@@ -461,12 +619,16 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
-        # Enviar email de toma no confirmada
-        EmailService.enviar_email_toma_no_confirmada(
-            usuario=llamada.usuario,
-            paciente_nombre=llamada.paciente.nombre,
-            medicamento_nombre=med_nombre,
-        )
+        try:
+            from apps.notificaciones.tasks import enviar_email_task
+            enviar_email_task.delay(
+                tipo="toma_no_confirmada",
+                usuario_id=llamada.usuario.id,
+                paciente_id=llamada.paciente.id if llamada.paciente else None,
+                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
+            )
+        except Exception as e:
+            logger.warning(f"[LlamadaService] Email task falló (no crítico): {e}")
 
     @staticmethod
     def _crear_alerta_despues(llamada: Llamada, palabras_paciente: str = ""):
@@ -484,12 +646,16 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
-        # Enviar email de toma aplazada
-        EmailService.enviar_email_toma_aplazada(
-            usuario=llamada.usuario,
-            paciente_nombre=llamada.paciente.nombre,
-            medicamento_nombre=med_nombre,
-        )
+        try:
+            from apps.notificaciones.tasks import enviar_email_task
+            enviar_email_task.delay(
+                tipo="toma_aplazada",
+                usuario_id=llamada.usuario.id,
+                paciente_id=llamada.paciente.id if llamada.paciente else None,
+                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
+            )
+        except Exception as e:
+            logger.warning(f"[LlamadaService] Email task falló (no crítico): {e}")
 
     @staticmethod
     def _crear_alerta_no_atendida(llamada: Llamada):
@@ -506,12 +672,88 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
-        # Enviar email de llamada no atendida
-        EmailService.enviar_email_llamada_no_atendida(
-            usuario=llamada.usuario,
-            paciente_nombre=llamada.paciente.nombre,
-            medicamento_nombre=med_nombre,
+        try:
+            from apps.notificaciones.tasks import enviar_email_task
+            enviar_email_task.delay(
+                tipo="llamada_no_atendida",
+                usuario_id=llamada.usuario.id,
+                paciente_id=llamada.paciente.id if llamada.paciente else None,
+                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
+            )
+        except Exception as e:
+            logger.warning(f"[LlamadaService] Email task falló (no crítico): {e}")
+
+    @staticmethod
+    def crear_alerta_emergencia(llamada: Llamada, palabras_paciente: str = ""):
+        """
+        Alerta CRÍTICA: el paciente reportó síntomas graves durante la llamada.
+        El email se envía OBLIGATORIAMENTE, ignorando las preferencias del usuario,
+        porque es un evento de seguridad que no puede silenciarse.
+        """
+        from apps.notificaciones.models import Notificacion
+
+        med_nombre = llamada.medicamento.nombre if llamada.medicamento else "medicamento"
+        detalle = f' El paciente dijo: "{palabras_paciente}".' if palabras_paciente else ""
+        titulo = f"EMERGENCIA — {llamada.paciente.nombre}"
+        mensaje = (
+            f"{llamada.paciente.nombre} reportó síntomas que podrían ser graves "
+            f"durante la llamada de recordatorio de {med_nombre}.{detalle} "
+            f"Contáctelo de inmediato."
         )
+        NotificacionService.crear_notificacion_alerta(
+            usuario=llamada.usuario,
+            titulo=titulo,
+            mensaje=mensaje,
+            paciente=llamada.paciente,
+            medicamento=llamada.medicamento,
+            prioridad=Notificacion.PRIORIDAD_CRITICA,
+        )
+        try:
+            from apps.notificaciones.tasks import enviar_email_task
+            enviar_email_task.delay(
+                tipo="emergencia_medica",
+                usuario_id=llamada.usuario.id,
+                paciente_id=llamada.paciente.id if llamada.paciente else None,
+                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
+                extra={"titulo": titulo, "mensaje": mensaje},
+            )
+        except Exception as e:
+            logger.warning(f"[LlamadaService] Email emergencia falló (no crítico): {e}")
+
+    @staticmethod
+    def crear_alerta_rechazo_tratamiento(llamada: Llamada, palabras_paciente: str = ""):
+        """
+        Alerta CRÍTICA: el paciente rechaza explícitamente el tratamiento.
+        Email obligatorio porque puede implicar discontinuación médica grave.
+        """
+        from apps.notificaciones.models import Notificacion
+
+        med_nombre = llamada.medicamento.nombre if llamada.medicamento else "medicamento"
+        detalle = f' El paciente dijo: "{palabras_paciente}".' if palabras_paciente else ""
+        titulo = f"Rechazo de tratamiento — {med_nombre}"
+        mensaje = (
+            f"{llamada.paciente.nombre} indicó que NO desea continuar con "
+            f"{med_nombre}.{detalle} Considere contactar al paciente y a su médico."
+        )
+        NotificacionService.crear_notificacion_alerta(
+            usuario=llamada.usuario,
+            titulo=titulo,
+            mensaje=mensaje,
+            paciente=llamada.paciente,
+            medicamento=llamada.medicamento,
+            prioridad=Notificacion.PRIORIDAD_CRITICA,
+        )
+        try:
+            from apps.notificaciones.tasks import enviar_email_task
+            enviar_email_task.delay(
+                tipo="rechazo_tratamiento",
+                usuario_id=llamada.usuario.id,
+                paciente_id=llamada.paciente.id if llamada.paciente else None,
+                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
+                extra={"titulo": titulo, "mensaje": mensaje},
+            )
+        except Exception as e:
+            logger.warning(f"[LlamadaService] Email rechazo falló (no crítico): {e}")
 
     @staticmethod
     def _crear_alerta_fallo(llamada: Llamada, error: str):

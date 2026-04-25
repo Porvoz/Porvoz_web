@@ -3,6 +3,7 @@ Servicio para estadísticas y datos del dashboard.
 """
 
 from datetime import datetime, timedelta
+from types import SimpleNamespace
 
 from django.contrib.auth.models import User
 from django.db.models import Prefetch
@@ -227,7 +228,7 @@ class DashboardService:
     def obtener_proximas_llamadas(usuario: User, limite: int = 5) -> list:
         """Próximas llamadas programadas (aún no ejecutadas) del usuario."""
         ahora = timezone.now()
-        return list(
+        proximas = list(
             Llamada.objects.filter(
                 usuario=usuario,
                 estado=Llamada.ESTADO_PROGRAMADA,
@@ -236,6 +237,98 @@ class DashboardService:
             .select_related("medicamento", "paciente")
             .order_by("fecha_programada")[:limite]
         )
+
+        if proximas:
+            return proximas
+
+        return DashboardService._obtener_proximas_llamadas_desde_medicamentos(
+            usuario, limite=limite
+        )
+
+    @staticmethod
+    def _obtener_proximas_llamadas_desde_medicamentos(
+        usuario: User, limite: int = 5
+    ) -> list:
+        """Calcula próximas llamadas desde medicamentos activos si no hay filas futuras en Llamada."""
+        ahora = timezone.now()
+        medicamentos = (
+            Medicamento.objects.filter(
+                paciente__usuario=usuario,
+                activo=True,
+            )
+            .select_related("paciente")
+            .prefetch_related("horarios")
+        )
+
+        items = []
+        for med in medicamentos:
+            fecha_llamada = DashboardService._proxima_fecha_llamada_para_medicamento(
+                med, ahora
+            )
+            if not fecha_llamada:
+                continue
+            items.append(
+                SimpleNamespace(
+                    medicamento=med,
+                    paciente=med.paciente,
+                    fecha_programada=fecha_llamada,
+                    intentos=1,
+                    estado=Llamada.ESTADO_PROGRAMADA,
+                    call_sid="",
+                    duracion=None,
+                    fecha_ejecutada=None,
+                )
+            )
+
+        items.sort(key=lambda item: item.fecha_programada)
+        return items[:limite]
+
+    @staticmethod
+    def _proxima_fecha_llamada_para_medicamento(medicamento: Medicamento, ahora):
+        """Devuelve la próxima fecha de llamada para un medicamento activo."""
+        from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+        paciente = medicamento.paciente
+        try:
+            tz_paciente = ZoneInfo(paciente.timezone or "America/Bogota")
+        except ZoneInfoNotFoundError:
+            tz_paciente = ZoneInfo("America/Bogota")
+
+        ahora_local = ahora.astimezone(tz_paciente)
+        hoy = ahora_local.date()
+        offset = timedelta(minutes=medicamento.minutos_antes_llamada or 0)
+
+        if medicamento.frecuencia_tipo == Medicamento.FRECUENCIA_HORARIO:
+            horarios = list(medicamento.horarios.order_by("orden", "hora"))
+            if not horarios and medicamento.horario:
+                horarios = [type("H", (), {"hora": medicamento.horario})()]
+
+            proximas = []
+            for h in horarios:
+                hora = h.hora
+                if hora is None:
+                    continue
+                dt_toma_hoy = timezone.make_aware(datetime.combine(hoy, hora), tz_paciente)
+                fecha_llamada_hoy = dt_toma_hoy - offset
+                if fecha_llamada_hoy > ahora_local:
+                    proximas.append(fecha_llamada_hoy)
+                else:
+                    proximas.append(dt_toma_hoy + timedelta(days=1) - offset)
+            return min(proximas) if proximas else None
+
+        if medicamento.frecuencia_tipo == Medicamento.FRECUENCIA_CADA_X_HORAS:
+            if not medicamento.hora_inicio or not medicamento.cada_x_horas:
+                return None
+            dt_base = timezone.make_aware(
+                datetime.combine(hoy, medicamento.hora_inicio), tz_paciente
+            )
+            intervalo = timedelta(hours=medicamento.cada_x_horas)
+            dt_siguiente = dt_base
+            while dt_siguiente - offset <= ahora_local:
+                dt_siguiente += intervalo
+            return dt_siguiente - offset
+
+        return None
 
     @staticmethod
     def obtener_estadisticas_llamadas(usuario: User) -> dict:
@@ -261,9 +354,12 @@ class DashboardService:
     @staticmethod
     def obtener_datos_completos(usuario: User, ordenar: str = "recientes") -> dict:
         """Obtiene todos los datos necesarios para el dashboard."""
+        from apps.usuarios.services.planes_service import PlanService
+
         perfil, _ = Perfil.objects.get_or_create(user=usuario)
         pacientes = DashboardService.obtener_pacientes(usuario, ordenar)
         stats_llamadas = DashboardService.obtener_estadisticas_llamadas(usuario)
+        uso_plan = PlanService.get_uso_actual(usuario)
 
         return {
             "perfil": perfil,
@@ -277,6 +373,7 @@ class DashboardService:
             "actividad_reciente": DashboardService.obtener_actividad_reciente(usuario),
             "dias_restantes_plan": PerfilService.get_dias_restantes_plan(perfil),
             "nombre_plan": perfil.get_plan_display(),
+            "uso_plan": uso_plan,
             "pacientes_sin_medicamentos": [
                 p for p in pacientes if p.medicamentos.count() == 0
             ],

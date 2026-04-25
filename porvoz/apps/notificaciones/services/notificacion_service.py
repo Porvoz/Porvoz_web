@@ -2,10 +2,13 @@
 Servicio para gestión de notificaciones.
 """
 
+import csv
 from datetime import datetime
+from io import StringIO
 
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django.utils.timezone import localtime
 
 from apps.notificaciones.models import Notificacion
 from apps.shared.exceptions import NotificacionError
@@ -207,8 +210,13 @@ class NotificacionService:
         if prioridad == "None":
             prioridad = None
 
+        medicamento_id = datos.get("medicamento") or None
+        if medicamento_id == "None":
+            medicamento_id = None
+
         return {
             "paciente_id": paciente_id,
+            "medicamento_id": medicamento_id,
             "tipo": tipo,
             "prioridad": prioridad,
             "fecha_desde": datos.get("fecha_desde"),
@@ -222,6 +230,8 @@ class NotificacionService:
         """Aplica filtros a un queryset de notificaciones."""
         if filtros.get("paciente_id"):
             queryset = queryset.filter(paciente_id=filtros["paciente_id"])
+        if filtros.get("medicamento_id"):
+            queryset = queryset.filter(medicamento_id=filtros["medicamento_id"])
         if filtros.get("tipo"):
             queryset = queryset.filter(tipo=filtros["tipo"])
         if filtros.get("prioridad"):
@@ -262,3 +272,25 @@ class NotificacionService:
                 prioridad=Notificacion.PRIORIDAD_CRITICA
             ).count(),
         }
+
+    @staticmethod
+    def exportar_csv(queryset) -> str:
+        """Exporta notificaciones filtradas como CSV."""
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Tipo", "Título", "Mensaje", "Paciente", "Medicamento", "Prioridad", "Leída", "Fecha"])
+
+        for notif in queryset:
+            fecha_texto = localtime(notif.creado_en).strftime("%d/%m/%Y %H:%M")
+            writer.writerow([
+                notif.get_tipo_display(),
+                notif.titulo,
+                notif.mensaje,
+                notif.paciente.nombre if notif.paciente else "—",
+                notif.medicamento.nombre if notif.medicamento else "—",
+                notif.get_prioridad_display(),
+                "Sí" if notif.leida else "No",
+                f"'{fecha_texto}",
+            ])
+
+        return output.getvalue()

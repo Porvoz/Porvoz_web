@@ -66,31 +66,37 @@ class Perfil(models.Model):
         help_text="Fecha hasta la cual el plan está activo",
     )
 
-    # Preferencias de notificación por email (muy restrictivos por defecto)
+    # Preferencias de notificación por email
     email_toma_confirmada = models.BooleanField(
         "Notificar cuando medicamento es tomado",
-        default=False,
+        default=True,
         help_text="Recibir email cuando se confirma que un medicamento fue tomado",
     )
     email_toma_no_confirmada = models.BooleanField(
         "Notificar cuando medicamento NO es tomado",
-        default=False,
+        default=True,
         help_text="Recibir email cuando se registra que un medicamento no fue tomado",
     )
     email_llamada_no_atendida = models.BooleanField(
         "Notificar llamadas no atendidas",
-        default=False,
+        default=True,
         help_text="Recibir email cuando una llamada de recordatorio no es atendida",
     )
     email_toma_aplazada = models.BooleanField(
         "Notificar cuando paciente aplaza medicamento",
-        default=False,
+        default=True,
         help_text="Recibir email cuando un paciente indica que tomará el medicamento después",
     )
-    email_urgente_minimo = models.BooleanField(
-        "📌 Solo alertas críticas/urgentes (recomendado)",
+    email_reintentos_agotados = models.BooleanField(
+        "Notificar cuando se agotan todos los reintentos",
         default=True,
-        help_text="Ignorar otras preferencias - solo recibir emails de emergencias reales",
+        help_text="Recibir email cuando el paciente no responde tras todos los intentos automáticos",
+    )
+    # Mantenido por compatibilidad con registros existentes; ya no se usa en la UI
+    email_urgente_minimo = models.BooleanField(
+        "Solo alertas críticas/urgentes",
+        default=False,
+        help_text="Obsoleto: ya no se muestra en la UI",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -103,3 +109,12 @@ class Perfil(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user.username}"
+
+    @property
+    def plan_expira_en(self):
+        """Alias legacy para compatibilidad con código antiguo."""
+        return self.plan_expiration
+
+    @plan_expira_en.setter
+    def plan_expira_en(self, value):
+        self.plan_expiration = value

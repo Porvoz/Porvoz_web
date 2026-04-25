@@ -2,7 +2,7 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
@@ -119,11 +119,23 @@ def notifications_view(request: HttpRequest) -> HttpResponse:
 
     stats = NotificacionService.obtener_estadisticas(request.user)
 
+    # Resolver nombre del medicamento filtrado para mostrarlo en el pill
+    medicamento_seleccionado = filtros.get("medicamento_id")
+    medicamento_nombre = None
+    if medicamento_seleccionado:
+        from apps.medicamentos.models import Medicamento
+        med_obj = Medicamento.objects.filter(
+            id=medicamento_seleccionado, paciente__usuario=request.user
+        ).first()
+        medicamento_nombre = med_obj.nombre if med_obj else None
+
     context = {
         "perfil": perfil,
         "notificaciones": notificaciones,
         "pacientes": pacientes,
         "paciente_seleccionado": filtros["paciente_id"],
+        "medicamento_seleccionado": medicamento_seleccionado,
+        "medicamento_nombre": medicamento_nombre,
         "tipo_seleccionado": filtros["tipo"],
         "fecha_desde": filtros["fecha_desde"],
         "fecha_hasta": filtros["fecha_hasta"],
@@ -146,3 +158,5 @@ def marcar_leida_view(request: HttpRequest, notif_id: int) -> HttpResponse:
         NotificacionService.marcar_como_leida(notif_id, request.user)
     next_url = request.POST.get("next") or request.GET.get("next") or reverse("notifications")
     return redirect(next_url)
+
+

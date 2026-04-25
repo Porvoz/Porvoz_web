@@ -7,11 +7,6 @@ urlpatterns = [
     path("agregar/", views.agregar_paciente_view, name="agregar_paciente"),
     path("<int:paciente_id>/", views.detalle_paciente_view, name="detalle_paciente"),
     path(
-        "<int:paciente_id>/historial-llamadas/",
-        views.historial_llamadas_paciente_view,
-        name="historial_llamadas_paciente",
-    ),
-    path(
         "<int:paciente_id>/editar/", views.editar_paciente_view, name="editar_paciente"
     ),
     path(
@@ -28,5 +23,10 @@ urlpatterns = [
         "<int:paciente_id>/enfermedad/<int:enfermedad_id>/editar/",
         views.editar_enfermedad_view,
         name="editar_enfermedad",
+    ),
+    path(
+        "<int:paciente_id>/descargar-reporte/",
+        views.descargar_reporte_paciente,
+        name="descargar_reporte_paciente",
     ),
 ]

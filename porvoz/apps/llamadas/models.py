@@ -96,11 +96,15 @@ class RespuestaLlamada(models.Model):
     RESULTADO_NEGATIVA = "negativa"
     RESULTADO_DESPUES = "despues"
     RESULTADO_SIN_CONFIRMAR = "sin_confirmar"
+    RESULTADO_RECHAZO = "rechazo_tratamiento"
+    RESULTADO_EMERGENCIA = "emergencia"
     RESULTADO_CHOICES = [
         (RESULTADO_CONFIRMADA, "Confirmó toma"),
         (RESULTADO_NEGATIVA, "No tomó"),
         (RESULTADO_DESPUES, "Lo tomará después"),
         (RESULTADO_SIN_CONFIRMAR, "Sin confirmar"),
+        (RESULTADO_RECHAZO, "Rechaza tratamiento"),
+        (RESULTADO_EMERGENCIA, "Posible emergencia"),
     ]
 
     llamada = models.OneToOneField(
@@ -206,3 +210,33 @@ class AuditoriaLog(models.Model):
 
     def __str__(self) -> str:
         return f"{self.get_accion_display()} - {self.objeto_str} ({self.timestamp})"
+
+    @staticmethod
+    def _get_client_ip(request):
+        """Obtiene IP del cliente desde request."""
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            return x_forwarded_for.split(",")[0]
+        return request.META.get("REMOTE_ADDR")
+
+    @classmethod
+    def registrar(cls, usuario, obj, accion: str, cambios: dict = None, request=None):
+        """Registra un evento de auditoría para mantener compatibilidad con servicios actuales."""
+        content_type = ContentType.objects.get_for_model(obj.__class__)
+        ip_address = None
+        user_agent = ""
+
+        if request is not None:
+            ip_address = cls._get_client_ip(request)
+            user_agent = request.META.get("HTTP_USER_AGENT", "")[:500]
+
+        return cls.objects.create(
+            usuario=usuario,
+            contenido_type=content_type,
+            objeto_id=obj.pk,
+            objeto_str=str(obj),
+            accion=accion,
+            cambios=cambios or {},
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )

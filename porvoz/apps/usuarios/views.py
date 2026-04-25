@@ -52,7 +52,7 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
         email_toma_no_confirmada = "email_toma_no_confirmada" in request.POST
         email_llamada_no_atendida = "email_llamada_no_atendida" in request.POST
         email_toma_aplazada = "email_toma_aplazada" in request.POST
-        email_urgente_minimo = "email_urgente_minimo" in request.POST
+        email_reintentos_agotados = "email_reintentos_agotados" in request.POST
 
         success, error_msg = PerfilService.actualizar_perfil(
             perfil,
@@ -72,7 +72,7 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
             email_toma_no_confirmada=email_toma_no_confirmada,
             email_llamada_no_atendida=email_llamada_no_atendida,
             email_toma_aplazada=email_toma_aplazada,
-            email_urgente_minimo=email_urgente_minimo,
+            email_reintentos_agotados=email_reintentos_agotados,
         )
 
         if success:

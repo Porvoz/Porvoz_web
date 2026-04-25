@@ -24,26 +24,41 @@ class EmailService:
 
     @staticmethod
     def _debe_enviar_email(usuario: User, tipo_email: str, prioridad: str = None) -> bool:
-        """Verifica si el usuario desea recibir este tipo de email."""
+        """
+        Verifica si el usuario desea recibir este tipo de email.
+
+        Lógica:
+        - email_urgente_minimo=True (default): enviar SOLO prioridades CRITICA/URGENTE,
+          ignorando todas las demás preferencias. Si prioridad es None o baja → no enviar.
+        - email_urgente_minimo=False: respetar cada preferencia específica.
+        """
         try:
             perfil = usuario.perfil
         except Exception:
+            logger.warning(f"[Email] Usuario {usuario.username} no tiene perfil — no se envía email")
             return False
 
-        # Si el usuario tiene activada la restricción de solo emails urgentes/críticos
-        if perfil.email_urgente_minimo and prioridad:
-            if prioridad not in [Notificacion.PRIORIDAD_CRITICA, Notificacion.PRIORIDAD_URGENTE]:
-                return False
+        if perfil.email_urgente_minimo:
+            # Modo restrictivo: solo CRITICA/URGENTE pasan, sin excepción
+            result = prioridad in [Notificacion.PRIORIDAD_CRITICA, Notificacion.PRIORIDAD_URGENTE]
+            if not result:
+                logger.info(
+                    f"[Email] Bloqueado por email_urgente_minimo: tipo={tipo_email} prioridad={prioridad}"
+                )
+            return result
 
-        # Verificar preferencias específicas
+        # Modo normal: cada tipo tiene su preferencia
         preferencias = {
-            "toma_confirmada": perfil.email_toma_confirmada,
-            "toma_no_confirmada": perfil.email_toma_no_confirmada,
-            "llamada_no_atendida": perfil.email_llamada_no_atendida,
-            "toma_aplazada": perfil.email_toma_aplazada,
+            "toma_confirmada":      perfil.email_toma_confirmada,
+            "toma_no_confirmada":   perfil.email_toma_no_confirmada,
+            "llamada_no_atendida":  perfil.email_llamada_no_atendida,
+            "toma_aplazada":        perfil.email_toma_aplazada,
+            "reintentos_agotados":  perfil.email_reintentos_agotados,
         }
-
-        return preferencias.get(tipo_email, True)
+        result = preferencias.get(tipo_email, False)
+        if not result:
+            logger.info(f"[Email] Preferencia desactivada: tipo={tipo_email}")
+        return result
 
     @staticmethod
     def enviar_notificacion_html(
@@ -81,14 +96,15 @@ class EmailService:
         try:
             # Seleccionar plantilla según tipo
             plantilla_map = {
-                "toma_confirmada": "emails/notificacion_toma_confirmada.html",
-                "toma_no_confirmada": "emails/notificacion_toma_no_confirmada.html",
-                "toma_aplazada": "emails/notificacion_toma_aplazada.html",
-                "llamada_no_atendida": "emails/notificacion_llamada_no_atendida.html",
-                "alerta": "emails/notificacion_alerta.html",
+                "toma_confirmada":    "notificaciones/emails/notificacion_toma_confirmada.html",
+                "toma_no_confirmada": "notificaciones/emails/notificacion_toma_no_confirmada.html",
+                "toma_aplazada":      "notificaciones/emails/notificacion_toma_aplazada.html",
+                "llamada_no_atendida":"notificaciones/emails/notificacion_llamada_no_atendida.html",
+                "reintentos_agotados":"notificaciones/emails/notificacion_llamada_no_atendida.html",
+                "alerta":             "notificaciones/emails/notificacion_alerta.html",
             }
 
-            plantilla = plantilla_map.get(tipo_notificacion, "emails/notificacion_alerta.html")
+            plantilla = plantilla_map.get(tipo_notificacion, "notificaciones/emails/notificacion_alerta.html")
 
             # Contexto para la plantilla
             base_url = EmailService._get_base_url()
@@ -146,7 +162,7 @@ Próximos pasos:
                 "url_preferencias": f"{EmailService._get_base_url()}/usuarios/editar-perfil/",
             }
 
-            html_content = render_to_string("emails/base_email.html", contexto)
+            html_content = render_to_string("notificaciones/emails/base_email.html", contexto)
             email = EmailMultiAlternatives(
                 subject=titulo,
                 body="Abre tu cliente de email con soporte HTML para ver este mensaje.",
@@ -231,6 +247,27 @@ Próximos pasos:
         )
 
     @staticmethod
+    def enviar_email_reintentos_agotados(usuario: User, paciente=None, medicamento=None, intentos: int = 0, url_detalle: str = None) -> bool:
+        """Envía email cuando se agotan todos los reintentos sin respuesta del paciente."""
+        nombre_med = medicamento.nombre if medicamento else "un medicamento"
+        nombre_pac = paciente.nombre if paciente else "un paciente"
+        titulo = f"Sin respuesta tras {intentos} intento(s) — {nombre_med}"
+        mensaje = (
+            f"{nombre_pac} no respondió la llamada de recordatorio para {nombre_med} "
+            f"después de {intentos} intento(s) automático(s). Se requiere atención manual."
+        )
+        return EmailService.enviar_notificacion_html(
+            usuario=usuario,
+            titulo=titulo,
+            tipo_notificacion="reintentos_agotados",
+            mensaje=mensaje,
+            paciente=paciente,
+            medicamento=medicamento,
+            prioridad=Notificacion.PRIORIDAD_CRITICA,
+            url_detalle=url_detalle,
+        )
+
+    @staticmethod
     def enviar_email_alerta(usuario: User, titulo: str, mensaje: str, paciente=None, medicamento=None, prioridad: str = None, url_detalle: str = None) -> bool:
         """Envía email de alerta personalizado."""
         return EmailService.enviar_notificacion_html(
@@ -243,3 +280,50 @@ Próximos pasos:
             prioridad=prioridad or Notificacion.PRIORIDAD_URGENTE,
             url_detalle=url_detalle,
         )
+
+    @staticmethod
+    def enviar_email_critico_obligatorio(
+        usuario: User,
+        titulo: str,
+        mensaje: str,
+        paciente=None,
+        medicamento=None,
+        url_detalle: str = None,
+    ) -> bool:
+        """
+        Envía un email crítico saltándose las preferencias del usuario.
+        Reservado para escenarios de seguridad del paciente (síntomas graves
+        durante una llamada, rechazo explícito de tratamiento). Estos eventos
+        nunca pueden silenciarse por configuración.
+        """
+        if not usuario.email:
+            logger.warning(f"[Email] Crítico: usuario {usuario.username} sin email")
+            return False
+        try:
+            base_url = EmailService._get_base_url()
+            contexto = {
+                "titulo": titulo,
+                "mensaje": mensaje,
+                "paciente": paciente,
+                "medicamento": medicamento,
+                "prioridad": Notificacion.PRIORIDAD_CRITICA,
+                "url_detalle": url_detalle or "",
+                "url_app": f"{base_url}/dashboard/",
+                "url_preferencias": f"{base_url}/usuarios/editar-perfil/",
+            }
+            html_content = render_to_string(
+                "notificaciones/emails/notificacion_alerta.html", contexto
+            )
+            email = EmailMultiAlternatives(
+                subject=titulo,
+                body=mensaje,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[usuario.email],
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send(fail_silently=False)
+            logger.info(f"[Email] CRÍTICO obligatorio enviado a {usuario.email}: {titulo}")
+            return True
+        except Exception as e:
+            logger.error(f"[Email] Error en crítico obligatorio a {usuario.email}: {e}")
+            return False

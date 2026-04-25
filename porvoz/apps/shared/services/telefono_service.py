@@ -87,3 +87,31 @@ class TelefonoService:
         if not numero:
             return ""
         return numero.replace(" ", "").replace("-", "")
+
+    @classmethod
+    def es_numero_valido(cls, telefono: str) -> bool:
+        """Valida que el número sea un formato E.164 válido."""
+        if not telefono or not isinstance(telefono, str):
+            return False
+        parsed = cls.parsear_telefono(telefono.strip())
+        if not parsed.numero:
+            return False
+        # E.164: pais + 7-15 dígitos
+        numero_limpio = parsed.numero.replace(" ", "").replace("-", "")
+        return len(numero_limpio) >= 7 and numero_limpio.isdigit()
+
+    @classmethod
+    def normalizar_telefono(cls, telefono: str) -> str:
+        """Retorna número en formato E.164 sin espacios (ej: +573001234567)."""
+        if not telefono:
+            return ""
+        parsed = cls.parsear_telefono(telefono.strip())
+        numero_limpio = parsed.numero.replace(" ", "").replace("-", "")
+        return f"{parsed.pais}{numero_limpio}"
+
+    @classmethod
+    def obtener_codigo_pais(cls, telefono: str) -> str:
+        """Extrae el código de país de un número E.164 (ej: +57)."""
+        if not telefono:
+            return "+57"
+        return cls.parsear_telefono(telefono.strip()).pais

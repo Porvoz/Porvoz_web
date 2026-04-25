@@ -2,11 +2,13 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
+from django.views.decorators.cache import never_cache
 
 from apps.autenticacion.services import RegistroService
 from apps.usuarios.services import PerfilService
 
 
+@never_cache
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         return redirect("dashboard_router")
@@ -24,6 +26,7 @@ def login_view(request: HttpRequest) -> HttpResponse:
     return render(request, "autenticacion/login.html")
 
 
+@never_cache
 def register_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         return redirect("dashboard_router")

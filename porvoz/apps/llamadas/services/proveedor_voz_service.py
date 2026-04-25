@@ -28,10 +28,24 @@ MSG_NEGATIVO   = "Entendido. Recuerde tomar su medicamento a la brevedad. Hasta 
 MSG_DESPUES    = "Entendido, le llamaremos más tarde. Hasta luego."
 MSG_NO_ESCUCHO = "No pude escucharle. Recuerde tomar su medicamento. Hasta luego."
 MSG_TIMEOUT    = "Llamada finalizada. Recuerde tomar su medicamento. Hasta luego."
+MSG_EMERGENCIA = (
+    "Lo escucho. Por su seguridad, llame a un familiar o a su médico de inmediato. "
+    "Si es una emergencia, marque el número de emergencias. Hasta luego."
+)
+MSG_RECHAZO    = "Entendido. Le avisaremos a su cuidador. Hasta luego."
 
 
 class ProveedorVozService:
     """Integración con Twilio (llamadas) y Gemini (IA conversacional)."""
+
+    # Re-exportados para que las views accedan a los mensajes vía el servicio.
+    MSG_CONFIRMADO = MSG_CONFIRMADO
+    MSG_NEGATIVO = MSG_NEGATIVO
+    MSG_DESPUES = MSG_DESPUES
+    MSG_NO_ESCUCHO = MSG_NO_ESCUCHO
+    MSG_TIMEOUT = MSG_TIMEOUT
+    MSG_EMERGENCIA = MSG_EMERGENCIA
+    MSG_RECHAZO = MSG_RECHAZO
 
     # ------------------------------------------------------------------
     # Twilio — cliente y número
@@ -74,16 +88,27 @@ class ProveedorVozService:
         return _twilio_phone
 
     @staticmethod
-    def disparar_llamada(numero_telefono: str, mensaje: str, voice_url: str, status_url: str) -> str:
+    def disparar_llamada(numero_telefono: str, voice_url: str, status_url: str) -> str:
         """
         Inicia una llamada con Twilio.
 
-        - machine_detection="Enable": detecta buzón de voz automáticamente.
-        - time_limit=90: corta la llamada a los 90 s (máx ~2 turnos de conversación).
+        - machine_detection="Enable": detecta buzón de voz de forma síncrona. Twilio
+          espera hasta ~4s antes de invocar la URL de voz, y el resultado llega como
+          AnsweredBy en el primer webhook de voz (sin callbacks adicionales).
+        - NO usamos async_amd: envía un webhook extra al status_callback con
+          AnsweredBy, que provocaba doble registro de estado y deduplicación errónea.
+        - time_limit=90: corta la llamada a los 90 s máximo.
+        - TWILIO_DRY_RUN=true: simula la llamada sin contactar Twilio.
 
         Returns:
             call_sid (str)
         """
+        if os.environ.get("TWILIO_DRY_RUN", "").lower() == "true":
+            import uuid
+            fake_sid = f"DRY_{uuid.uuid4().hex[:16].upper()}"
+            logger.info(f"[Twilio][DRY_RUN] Llamada simulada: {fake_sid} → {numero_telefono}")
+            return fake_sid
+
         client = ProveedorVozService.get_twilio_client()
         phone_from = ProveedorVozService.get_twilio_phone()
 
@@ -93,7 +118,9 @@ class ProveedorVozService:
             from_=phone_from,
             status_callback=status_url,
             status_callback_method="POST",
-            time_limit=90,  # corta a los 90 s si la conversación no cierra
+            status_callback_event=["completed"],
+            time_limit=90,
+            machine_detection="Enable",
         )
         logger.info(f"[Twilio] Llamada iniciada: {call.sid} → {numero_telefono}")
         return call.sid
@@ -111,8 +138,7 @@ class ProveedorVozService:
                 raise RuntimeError("GEMINI_API_KEY es obligatoria")
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            # gemini-2.0-flash-lite: modelo más barato y rápido disponible
-            _gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+            _gemini_model = genai.GenerativeModel("gemini-2.0-flash-lite")
         return _gemini_model
 
     @staticmethod
@@ -131,6 +157,8 @@ class ProveedorVozService:
         usa como contexto silencioso para entender el medicamento.
         """
         try:
+            from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+
             model = ProveedorVozService._get_gemini_model()
 
             contexto_med = f"Medicamento: {nombre_med}."
@@ -142,24 +170,45 @@ class ProveedorVozService:
             system = (
                 f"Eres Porvoz, asistente de voz para recordatorio de medicamentos. "
                 f"Estás hablando con {nombre_display}. {contexto_med} "
-                "Tu objetivo es confirmar si tomó el medicamento. "
-                "Responde de forma natural y breve (máximo 2 oraciones). "
-                "Puedes usar el contexto del medicamento para responder preguntas simples. "
-                "NUNCA des consejos médicos, dosis exactas ni información de diagnóstico. "
-                "Si confirma que lo tomó → despídete con 'Hasta luego'. "
-                "Si dice que no lo tomó → anímalo a tomarlo y despídete. "
-                "Si es ambiguo → pregunta directamente: '¿Ya lo tomó, sí o no?'. "
-                "Si pregunta algo que no puedes responder → di que consulte a su médico y despídete."
+                "Tu único objetivo es confirmar si tomó el medicamento. "
+                "Responde SIEMPRE de forma natural y breve (máximo 2 oraciones, en español). "
+                "Reglas estrictas que NUNCA puedes romper: "
+                "1. NUNCA des consejos médicos, diagnósticos, dosis, efectos secundarios "
+                "ni explicaciones de qué hace el medicamento. "
+                "2. Si el paciente menciona dolor, mareo, falta de aire, sangrado, "
+                "desmayo, no poder moverse, o cualquier síntoma grave: responde EXACTAMENTE "
+                "'Por favor llame a un familiar o a su médico de inmediato. Hasta luego.' y nada más. "
+                "3. Si pregunta sobre su salud, dolor o síntomas: responde "
+                "'Le recomiendo consultarlo con su médico. Hasta luego.' "
+                "4. Si dice que rechaza el tratamiento o que no quiere tomarlo más: "
+                "responde 'Entendido, le avisaremos a su cuidador. Hasta luego.' y termina. "
+                "5. Si confirma que lo tomó → despídete con 'Hasta luego'. "
+                "6. Si dice que no lo tomó → anímalo brevemente a tomarlo y despídete. "
+                "7. Si su respuesta es ambigua → pregunta directamente: '¿Ya lo tomó, sí o no?'. "
+                "8. NUNCA repitas los datos personales del paciente más de una vez. "
+                "9. NUNCA cambies de tema fuera del medicamento."
             )
+
+            # Truncar historial para no inflar el prompt
+            lineas_historial = historial.split("\n") if historial else []
+            historial_recortado = "\n".join(lineas_historial[-8:])
 
             prompt = (
                 f"{system}\n\n"
-                f"Conversación hasta ahora:\n{historial}\n"
+                f"Conversación hasta ahora:\n{historial_recortado}\n"
                 f'El paciente acaba de decir: "{input_usuario}"\n'
                 "Responde en máximo 2 oraciones."
             )
 
-            response = model.generate_content(prompt)
+            # Timeout de 3.5s — si Gemini no responde, Twilio no queda colgado
+            with ThreadPoolExecutor(max_workers=1) as ex:
+                future = ex.submit(model.generate_content, prompt)
+                try:
+                    response = future.result(timeout=3.5)
+                except FuturesTimeoutError:
+                    logger.warning("[Gemini] Timeout (3.5s) — usando respuesta estática")
+                    return MSG_TIMEOUT
+
             text = getattr(response, "text", "")
             if not text:
                 return MSG_TIMEOUT

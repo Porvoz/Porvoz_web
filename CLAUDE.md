@@ -6,9 +6,45 @@ This file provides guidance to Claude Code when working with the Porvoz project.
 
 **Porvoz** is a Django web application for managing medication reminders using automated voice calls. Caregivers register medications with dosing schedules and health conditions. The system sends automated reminders via voice calls, registers confirmations, and alerts when medications are not taken.
 
-**Tech Stack:** Django 5.2, Django REST Framework, SQLite (dev), Tailwind CSS, Bootstrap Icons, Twilio (voice calls), Google Gemini (AI conversation)
+**Tech Stack:** Django 5.2, Django REST Framework, SQLite (dev) / PostgreSQL (prod), Tailwind CSS, Bootstrap Icons, Twilio (voice calls), Google Gemini (AI conversation), Celery + Redis (async tasks)
 
-**Current Phase:** Sprint 2 complete — voice calls, plan enforcement, password recovery, and dashboard stats implemented. Ready for Sprint 3 (Celery, call retry logic, payment integration).
+**Current Phase:** Sprint 3 completed. Celery/Redis integrated for async emails and call execution. PostgreSQL-ready via DATABASE_URL. `_conversaciones` migrated to Django cache. Email sending now async via tasks. **Architectural refactor completed:** proper file organization, Django admin registration, settings split (dev/prod), cross-cutting utilities moved to shared layer, email templates migrated to notificaciones app, full test coverage for all apps.
+
+---
+
+## Recent Architectural Improvements (Sprint 3.5)
+
+### File Organization & Structure
+- **`config/health.py`** — Moved health check from `llamadas/health.py` to `config/` (infrastructure concern, not domain-specific)
+- **`apps/shared/decorators.py`** — Moved Twilio webhook decorators from `llamadas/` (cross-cutting utilities)
+- **`apps/notificaciones/templates/notificaciones/emails/`** — Email templates moved from root `templates/emails/` (app-level asset ownership)
+- **`scripts/ngrok_run.py`** — Development helper moved to dedicated `scripts/` folder
+
+### Settings Split (base / development / production)
+- **`config/settings/base.py`** — Shared settings only (apps, middleware, templates, auth, email defaults)
+- **`config/settings/development.py`** — Dev overrides: DEBUG=True, SQLite, LocMemCache, console email, Celery disabled
+- **`config/settings/production.py`** — Prod overrides: DEBUG=False, PostgreSQL required, Redis required, SMTP required, Celery enabled
+- **Environment detection:** Use `DJANGO_SETTINGS_MODULE=config.settings.production` in production; defaults to development
+
+### Django Admin Registration
+All models now registered in Django admin for debugging and data inspection:
+- `apps/core/admin.py` — Perfil
+- `apps/pacientes/admin.py` — Paciente, Enfermedad
+- `apps/medicamentos/admin.py` — Medicamento, HorarioMedicamento (with inline editing)
+- `apps/notificaciones/admin.py` — Notificacion
+- `apps/llamadas/admin.py` — Llamada, RespuestaLlamada, AuditoriaLog
+
+### Test Coverage
+New test files for previously untested apps:
+- `apps/autenticacion/tests.py` — User registration, password reset validation
+- `apps/usuarios/tests.py` — Profile changes, password validation, plan limits
+- `apps/dashboard/tests.py` — Stats aggregation, call metrics, activity feed
+- `apps/shared/tests.py` — TelefonoService, rate limiting, webhook deduplication
+
+### Import Updates
+- `config/urls.py` — health check import updated to `config.health`
+- `apps/llamadas/views.py` — decorators import updated to `apps.shared.decorators`
+- `apps/notificaciones/services/email_service.py` — template paths updated to `notificaciones/emails/`
 
 ---
 
@@ -41,6 +77,11 @@ EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
 EMAIL_HOST_USER=porvozcolombia@gmail.com
 EMAIL_HOST_PASSWORD=<gmail-app-password>
 DEFAULT_FROM_EMAIL=Porvoz <porvozcolombia@gmail.com>
+
+# Opcional — omitir en dev usa SQLite + LocMemCache sin Celery
+DATABASE_URL=postgresql://user:pass@localhost:5432/porvoz
+REDIS_URL=redis://localhost:6379/0
+CELERY_BROKER_URL=redis://localhost:6379/0
 ```
 
 `manage.py` loads this `.env` automatically via `python-dotenv` from `Path(__file__).resolve().parent.parent / ".env"`.
@@ -54,6 +95,8 @@ All commands from `porvoz/` directory:
 | Task | Command |
 |------|---------|
 | **Run dev server** | `python manage.py runserver` |
+| **Expose via ngrok** | `python ../scripts/ngrok_run.py` |
+| **Execute calls in loop** | `python manage.py ejecutar_llamadas --loop --intervalo 60` |
 | **Apply migrations** | `python manage.py migrate` |
 | **Create superuser** | `python manage.py createsuperuser` |
 | **Make migrations** | `python manage.py makemigrations` |
@@ -61,7 +104,36 @@ All commands from `porvoz/` directory:
 | **Run app tests** | `python manage.py test apps.llamadas` |
 | **Check issues** | `python manage.py check` |
 | **Execute pending calls (once)** | `python manage.py ejecutar_llamadas` |
-| **Execute calls in loop** | `python manage.py ejecutar_llamadas --loop --intervalo 60` |
+
+**Development workflow sin Redis (3 terminales):**
+```bash
+# Terminal 1: Django dev server
+python manage.py runserver
+
+# Terminal 2: ngrok para Twilio webhooks
+python ../scripts/ngrok_run.py
+
+# Terminal 3: Ejecutar llamadas (sin Celery)
+python manage.py ejecutar_llamadas --loop --intervalo 60
+```
+
+**Development workflow con Redis/Celery (5 terminales):**
+```bash
+# Terminal 1: Django dev server
+python manage.py runserver
+
+# Terminal 2: ngrok para Twilio webhooks
+python ../scripts/ngrok_run.py
+
+# Terminal 3: Celery worker (procesa tareas: emails, llamadas)
+celery -A config worker --loglevel=info
+
+# Terminal 4: Celery beat (scheduler periódico de llamadas)
+celery -A config beat --loglevel=info
+
+# Terminal 5: Flower (monitoreo de tareas — opcional)
+celery -A config flower
+```
 
 ---
 
@@ -123,10 +195,11 @@ porvoz/
     │
     ├── usuarios/
     │   ├── services/
-    │   │   ├── perfil_service.py      (Edit Perfil, change password, get_dias_restantes_plan)
+    │   │   ├── perfil_service.py      (Edit Perfil, change password, get_dias_restantes_plan, email preferences)
     │   │   └── planes_service.py      (PlanService — limits enforcement + PLAN_LIMITS + PLANES_DATA)
     │   ├── forms.py / views.py / urls.py
     │   └── templates/usuarios/
+    │       ├── edit_profile.html      ← Email preferences section with 5 restrictive checkboxes
     │       └── change_password.html   ← 2-column layout, strength bar, requirements checklist
     │
     ├── dashboard/
@@ -146,7 +219,8 @@ porvoz/
     │   ├── services/paciente_service.py
     │   ├── forms.py / views.py / urls.py
     │   ├── templates/pacientes/
-    │   │   ├── detalle_paciente.html  ← Shows call badge, instructions preview, "Ver llamadas" button
+    │   │   ├── detalle_paciente.html  ← Call badge, report download modal (Adherencia/Incumplimientos/Auditoría)
+    │   │   ├── listar_pacientes.html  ← Patient cards, "Ver detalles" button (w-full, prominent, shadow-lg)
     │   │   └── historial_llamadas_paciente.html  ← Filter by medication dropdown
     │   └── tests/test_services.py
     │
@@ -158,17 +232,28 @@ porvoz/
     │   └── tests/test_services.py
     │
     ├── notificaciones/
-    │   ├── models.py                  (Notificacion)
-    │   ├── services/notificacion_service.py
+    │   ├── models.py                  (Notificacion — added PRIORIDAD field + url_detalle)
+    │   ├── services/
+    │   │   ├── notificacion_service.py (CRUD, filtering, priorities, email preferences)
+    │   │   └── email_service.py       (HTML email templates, preference checking, context links)
     │   ├── forms.py / views.py / urls.py
     │   ├── templates/notificaciones/
+    │   │   ├── notifications.html     ← Compacted filters, priority badges (critica/urgente/normal/baja)
+    │   │   └── emails/                ← HTML email templates with branding
+    │   │       ├── base_email.html
+    │   │       ├── notificacion_alerta.html
+    │   │       ├── notificacion_toma_confirmada.html
+    │   │       ├── notificacion_toma_no_confirmada.html
+    │   │       ├── notificacion_llamada_no_atendida.html
+    │   │       └── notificacion_toma_aplazada.html
     │   └── tests/test_services.py
     │
-    └── llamadas/                      ← Sprint 2 ✓ IMPLEMENTADO
+    └── llamadas/                      ← Sprint 2 ✓ + reports ✓
         ├── models.py                  (Llamada, RespuestaLlamada)
         ├── services/
         │   ├── llamada_service.py     (Crear, ejecutar, sanitizar, registrar, alertas)
-        │   └── proveedor_voz_service.py  (Twilio + Gemini, max 2 oraciones, 280 chars)
+        │   ├── proveedor_voz_service.py  (Twilio + Gemini, max 2 oraciones, 280 chars)
+        │   └── reporte_service.py     (CSV reports: Adherencia, Incumplimientos, Auditoría)
         ├── forms.py                   (FiltroHistorialLlamadasForm)
         ├── views.py                   (MAX_TURNOS=4, MAX_HISTORIAL_LINEAS=8)
         ├── urls.py
@@ -224,6 +309,19 @@ User (Django)
 - `TIPO_RECORDATORIO` — Internal reminders (display only)
 - `TIPO_ALERTA` — Alerts (call not answered, error, plan limit reached)
 
+### Notification Priorities (Sprint 2.5)
+- `PRIORIDAD_BAJA` — Confirmations, routine info (green badge)
+- `PRIORIDAD_NORMAL` — Standard alerts, medication changes (blue badge)
+- `PRIORIDAD_URGENTE` — Missed calls, non-adherence (orange badge)
+- `PRIORIDAD_CRITICA` — Plan limits, system errors (red badge)
+
+**Email Preferences** (Perfil model):
+- `email_toma_confirmada` — Default False (not critical)
+- `email_toma_no_confirmada` — Default False (non-critical)
+- `email_llamada_no_atendida` — Default False (non-critical)
+- `email_toma_aplazada` — Default False (non-critical)
+- `email_urgente_minimo` — Default True (ONLY if True, send CRITICAL/URGENTE regardless of above preferences)
+
 ### Call States
 ```
 Llamada.estado:
@@ -247,14 +345,16 @@ RespuestaLlamada.como_respondio:
 | Service | Location | Responsibility |
 |---------|----------|-----------------|
 | `RegistroService` | `apps.autenticacion.services` | Create User + Perfil |
-| `PerfilService` | `apps.usuarios.services` | Edit Perfil, change password, dias_restantes_plan |
+| `PerfilService` | `apps.usuarios.services` | Edit Perfil, change password, dias_restantes_plan, email prefs |
 | `PlanService` | `apps.usuarios.services.planes_service` | Enforce plan limits, usage stats |
 | `DashboardService` | `apps.dashboard.services` | Patients, call stats (7d), reminders, activity |
 | `PacienteService` | `apps.pacientes.services` | Patient CRUD, phone verification |
 | `MedicamentoService` | `apps.medicamentos.services` | Medication CRUD, toggle |
-| `NotificacionService` | `apps.notificaciones.services` | Notification CRUD, filtering, stats |
+| `NotificacionService` | `apps.notificaciones.services` | CRUD, filtering, priorities, email gateway |
+| `EmailService` | `apps.notificaciones.services.email_service` | HTML email templates, preference checking |
 | `LlamadaService` | `apps.llamadas.services` | Schedule, execute, sanitize, register responses |
 | `ProveedorVozService` | `apps.llamadas.services` | Twilio calls + Gemini AI |
+| `ReporteService` | `apps.llamadas.services.reporte_service` | CSV reports (Adherencia, Incumplimientos, Auditoría) |
 | `TelefonoService` | `apps.shared.services` | Parse, format, sanitize phones |
 
 ---
@@ -380,6 +480,16 @@ python manage.py test apps.core
 - **Icons:** Bootstrap Icons
 - **Design tokens:** `bg-slate-100`, `rounded-2xl`, `shadow-sm`, `font-black`, `border border-slate-200`
 
+### Style Rules (MANDATORY)
+
+- **No gradients** — never use `bg-gradient-*`, `from-*`, `to-*`, or CSS gradients
+- **No folksy/vivid colors** — no purple/pink/cyan/lime/orange as primary backgrounds; no rainbow palettes
+- **Allowed palette:** slate (primary UI), emerald (success/active), red (danger/error), amber (warning), white (cards)
+- **Serious and elegant** — the app handles medical reminders; tone should be clean, trustworthy, professional
+- **Buttons:** `bg-slate-700 text-white` (primary), `bg-white border border-slate-300 text-slate-700` (secondary), `bg-red-600 text-white` (danger)
+- **Cards:** always `bg-white rounded-2xl border border-slate-200 shadow-sm`
+- **Badges/pills:** use `bg-emerald-100 text-emerald-700` (success), `bg-red-100 text-red-700` (error), `bg-amber-100 text-amber-800` (warning), `bg-slate-100 text-slate-700` (neutral)
+
 ---
 
 ## Voice Calls — Sprint 2 Implementation
@@ -456,6 +566,80 @@ python manage.py ejecutar_llamadas --loop --intervalo 60
 - Use `.prefetch_related()` for reverse relations / OneToOne
 - Add indexes on `usuario`, `activo`, `fecha_programada`
 - Voice conversation state (`_conversaciones` dict) is in-memory — fine for MVP, use Redis/cache in production
+
+---
+
+## Claude Code Guidance
+
+**Git Commits:**
+- Do NOT commit changes unless explicitly requested ("haz el commit", "crea un commit", etc.)
+- Always verify `.env` is in `.gitignore` before any commit
+- Never commit `.claude/` settings or temporary files
+
+**Communication Style:**
+- Be concise — no summaries at end of responses unless requested
+- Avoid unnecessary recaps or "I've completed X" statements
+- Answer directly without preamble
+- In outputs/context, prioritize brevity (this saves token budget for future conversations)
+
+---
+
+## Docker / Production Stack
+
+The repository ships with a production-ready container stack and a development overlay.
+
+### Layout
+
+```
+proyecto-2/
+├── docker/
+│   ├── django/Dockerfile        # multi-stage build, non-root appuser
+│   ├── django/entrypoint.sh
+│   └── nginx/default.conf       # reverse proxy + static/media serving
+├── docker-compose.yml           # production: db + redis + web + workers + nginx
+├── docker-compose.dev.yml       # overlay: bind-mount source, runserver, no nginx
+├── scripts/ngrok_run.py
+└── docs/architecture.md, deployment.md
+```
+
+The Docker build context is the repository **root** (not `porvoz/`), so the
+Dockerfile copies both `porvoz/` and `docker/django/entrypoint.sh`.
+
+### Running the stack
+
+```bash
+# Production
+docker compose up -d --build
+
+# Production + Flower (task monitor)
+docker compose --profile monitoring up -d
+
+# Development (hot reload, dev settings, port 8000 on host)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+### Production env vars (fail-fast)
+
+`config/settings/production.py` aborts at import time if any of these is missing:
+`DJANGO_SECRET_KEY`, `ALLOWED_HOSTS`, `DATABASE_URL`, `REDIS_URL`,
+`CELERY_BROKER_URL`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`,
+`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`,
+`TWILIO_BASE_URL`, `GEMINI_API_KEY`. `ALLOWED_HOSTS=*` is also rejected.
+
+### Celery beat schedule
+
+Production registers one periodic task in `CELERY_BEAT_SCHEDULE`:
+`apps.llamadas.tasks.ejecutar_llamadas_pendientes_task` every 60 s. The
+`DatabaseScheduler` upserts this entry into `django_celery_beat` tables on boot.
+
+### pyproject.toml
+
+`porvoz/pyproject.toml` declares project metadata plus optional `dev` and `test`
+dependency groups, and configures **ruff** (replacing flake8) and pytest.
+`requirements.txt` is still the install source for Docker builds — pyproject is
+metadata-only for now.
+
+See `docs/architecture.md` and `docs/deployment.md` for the long form.
 
 ---
 

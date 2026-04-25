@@ -8,5 +8,15 @@ twilio>=9.0
 google-generativeai>=0.8
 APScheduler>=3.10
 gunicorn>=21.0
+reportlab>=4.0.0
 
 python-dotenv>=1.0.0
+
+# Async task queue
+celery[redis]>=5.3
+django-celery-beat>=2.6
+django-celery-results>=2.5
+
+# Cache & DB
+redis>=5.0
+psycopg2-binary>=2.9

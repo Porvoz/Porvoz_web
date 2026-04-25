@@ -273,41 +273,40 @@ def eliminar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpRespon
 @login_required
 def detalle_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse:
     """Vista de detalle del paciente: info arriba y bloques de medicamentos/recordatorios abajo."""
+    from datetime import timedelta
+    from django.utils import timezone as tz
+    from apps.llamadas.models import Llamada, RespuestaLlamada
+
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
+
+    # Calcular adherencia y última llamada por medicamento (últimos 30 días)
+    # Denominador: completadas + fallidas (las fallidas cuentan como dosis no tomadas)
+    hace_30 = tz.now() - timedelta(days=30)
+    meds_stats = []
+    for med in paciente.medicamentos.all():
+        llamadas_mes = Llamada.objects.filter(
+            medicamento=med,
+            estado__in=[Llamada.ESTADO_COMPLETADA, Llamada.ESTADO_FALLIDA],
+            fecha_programada__gte=hace_30,
+        )
+        total = llamadas_mes.count()
+        confirmadas = llamadas_mes.filter(respuesta__resultado=RespuestaLlamada.RESULTADO_CONFIRMADA).count()
+        adherencia = round(confirmadas / total * 100) if total > 0 else None
+        ultima = (
+            Llamada.objects.filter(medicamento=med, estado__in=[Llamada.ESTADO_COMPLETADA, Llamada.ESTADO_FALLIDA])
+            .select_related("respuesta").order_by("-fecha_programada").first()
+        )
+        meds_stats.append({"med": med, "adherencia": adherencia, "ultima": ultima})
+
     context = {
         "perfil": perfil,
         "paciente": paciente,
+        "meds_stats": meds_stats,
     }
     return render(request, "pacientes/detalle_paciente.html", context)
 
 
-@login_required
-def historial_llamadas_paciente_view(
-    request: HttpRequest, paciente_id: int
-) -> HttpResponse:
-    """Historial de llamadas automáticas del paciente."""
-    perfil, _ = Perfil.objects.get_or_create(user=request.user)
-    paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
-    medicamento_id = request.GET.get("medicamento", "")
-    llamadas = (
-        Llamada.objects.filter(paciente=paciente, usuario=request.user)
-        .select_related("medicamento")
-        .prefetch_related("respuesta")
-        .order_by("-fecha_programada")
-    )
-    if medicamento_id:
-        llamadas = llamadas.filter(medicamento_id=medicamento_id)
-
-    medicamentos = paciente.medicamentos.order_by("nombre")
-    context = {
-        "perfil": perfil,
-        "paciente": paciente,
-        "llamadas": llamadas,
-        "medicamentos": medicamentos,
-        "medicamento_filtro": medicamento_id,
-    }
-    return render(request, "pacientes/historial_llamadas_paciente.html", context)
 
 
 @login_required
@@ -431,3 +430,42 @@ def listar_pacientes_view(request: HttpRequest) -> HttpResponse:
         "opciones_ordenar": opciones_ordenar,
     }
     return render(request, "pacientes/listar_pacientes.html", context)
+
+
+@login_required
+def descargar_reporte_paciente(request: HttpRequest, paciente_id: int) -> HttpResponse:
+    """Descarga reporte del paciente en CSV/Excel o PDF."""
+    from apps.llamadas.services.reporte_service import ReporteService
+
+    paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
+
+    tipo_reporte = request.POST.get("tipo_reporte", "adherencia")
+    formato = request.POST.get("formato", "csv")
+    fecha_desde = request.POST.get("fecha_desde", "")
+    fecha_hasta = request.POST.get("fecha_hasta", "")
+    medicamentos = request.POST.getlist("medicamentos")
+    medicamentos = [int(m) for m in medicamentos if m.isdigit()] or None
+
+    # Obtener datos según tipo
+    if tipo_reporte == "adherencia":
+        datos = ReporteService.obtener_datos_adherencia(paciente, fecha_desde, fecha_hasta, medicamentos)
+    elif tipo_reporte == "incumplimientos":
+        datos = ReporteService.obtener_datos_incumplimientos(paciente, fecha_desde, fecha_hasta, medicamentos)
+    else:  # auditoria
+        datos = ReporteService.obtener_datos_auditoria(paciente, fecha_desde, fecha_hasta, medicamentos)
+
+    nombre_slug = paciente.get_display_nombre().lower().replace(" ", "_")
+    fecha_str = str(datos['fecha_desde']).replace("-", "")
+    fecha_hasta_str = str(datos['fecha_hasta']).replace("-", "")
+
+    if formato == "pdf":
+        contenido = ReporteService.generar_pdf(tipo_reporte, datos)
+        filename = f"porvoz_{nombre_slug}_{tipo_reporte}_{fecha_str}_{fecha_hasta_str}.pdf"
+        response = HttpResponse(contenido, content_type="application/pdf")
+    else:  # csv
+        contenido = ReporteService.generar_csv(tipo_reporte, datos)
+        filename = f"porvoz_{nombre_slug}_{tipo_reporte}_{fecha_str}_{fecha_hasta_str}.csv"
+        response = HttpResponse(contenido, content_type="text/csv; charset=utf-8")
+
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response

@@ -1,12 +1,68 @@
+# =============================================================================
+# .dockerignore — keeps the build context small, fast and free of secrets.
+# Build context is the repository root.
+# =============================================================================
+
+# --- Python / virtualenvs ----------------------------------------------------
 venv/
+.venv/
+env/
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.tox/
+
+# --- Secrets / local env -----------------------------------------------------
 .env
 .env.local
+.env.*.local
+*.pem
+*.key
+
+# --- Local databases / runtime artifacts -------------------------------------
 db.sqlite3
+db.sqlite3-journal
+*.log
+*.pid
+celerybeat-schedule
+celerybeat.pid
+
+# --- User-generated / build outputs (never copy from host) -------------------
 media/
+porvoz/media/
 staticfiles/
+porvoz/staticfiles/
+
+# --- VCS / IDE / editor noise ------------------------------------------------
 .git/
 .gitignore
+.gitattributes
+.github/
+.vscode/
+.idea/
+.editorconfig
+*.swp
+*.swo
+
+# --- Docs and project meta (not needed at runtime) ---------------------------
 *.md
+docs/
+LICENSE
+CHANGELOG*
+
+# --- Local-only tooling / scripts (not for runtime image) --------------------
+scripts/
+ngrok.exe
+ngrok
+.claude/
+
+# --- Docker meta (avoid recursive bundling) ----------------------------------
+docker-compose*.yml
+.dockerignore
+Dockerfile
+**/Dockerfile

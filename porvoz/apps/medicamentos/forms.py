@@ -30,9 +30,20 @@ class MedicamentoForm(forms.Form):
         required=False,
     )
     duracion_dias = forms.IntegerField(min_value=1, required=False)
-    instrucciones_llamada = forms.CharField(widget=forms.Textarea, required=False)
+    instrucciones_llamada = forms.CharField(
+        max_length=200, required=False,
+        widget=forms.TextInput(attrs={"maxlength": "200"}),
+    )
     minutos_antes_llamada = forms.IntegerField(
         min_value=0, max_value=120, initial=0, required=False
+    )
+    max_reintentos = forms.IntegerField(
+        min_value=0, max_value=3, initial=1, required=False,
+        error_messages={"min_value": "Mínimo 0 reintentos.", "max_value": "Máximo 3 reintentos."},
+    )
+    minutos_entre_reintentos = forms.IntegerField(
+        min_value=5, max_value=180, initial=30, required=False,
+        error_messages={"min_value": "Mínimo 5 minutos entre reintentos.", "max_value": "Máximo 180 minutos."},
     )
 
     def clean(self):
@@ -44,6 +55,12 @@ class MedicamentoForm(forms.Form):
                 self.add_error("cada_x_horas", "Debes indicar cada cuántas horas.")
             if not cleaned.get("hora_inicio"):
                 self.add_error("hora_inicio", "Debes indicar la hora de inicio.")
+
+        # Las vistas pasan los horarios como campo extra fuera del form;
+        # validamos su presencia en la vista. Aquí solo validamos campos del form.
+        max_r = cleaned.get("max_reintentos")
+        if max_r is not None and max_r > 3:
+            self.add_error("max_reintentos", "Máximo 3 reintentos permitidos.")
 
         return cleaned
 
