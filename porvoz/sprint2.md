@@ -326,7 +326,7 @@ Para correr solo los tests del servicio de llamadas:
 python manage.py test apps.llamadas.tests.test_services --verbosity 2
 ```
 
-[Insertar captura de la ejecución de los tests una vez se corra el comando]
+[Insertar captura de pantalla de la ejecución en terminal o del resultado verde en GitHub Actions]
 
 ---
 
@@ -530,15 +530,17 @@ Además de las funcionalidades principales:
 - Formularios rediseñados para mejor navegación
 
 **Historias implementadas (resumen breve):**
-- HU-32 — Integración de notificaciones con el correo
-- HU-27 — Recuperar contraseña
-- HU-30 — Sistema de notificaciones de emergencia
-- HU-11 — Dashboard básico de seguimiento
-- HU-29 — Historial de llamadas
-- HU-31 — Sistema de acciones post-llamada
 - HU-04 — Llamadas automáticas con IA
 - HU-05 — Registrar confirmación de toma
+- HU-07 — Validación y manejo básico de errores
 - HU-09 — Detectar respuestas negativas
+- HU-11 — Dashboard básico de seguimiento
+- HU-27 — Recuperar contraseña
+- HU-29 — Historial de llamadas
+- HU-30 — Sistema de notificaciones de emergencia
+- HU-31 — Sistema de acciones post-llamada
+- HU-32 — Integración de notificaciones con el correo
+- HU-34 — Sistema responsive en celular
 
 **Bugs corregidos:**
 
@@ -551,7 +553,7 @@ Además de las funcionalidades principales:
 
 **Métricas del sprint:**
 - 11 historias completadas, 89 puntos entregados
-- 84% de cobertura de tests, 94 pruebas automáticas pasando
+- 84% de cobertura de tests, 102 pruebas automáticas pasando
 - 0 vulnerabilidades de seguridad
 - 34 commits, 6 pull requests mergeadas
 
@@ -565,6 +567,74 @@ En Sprint 3 el foco principal es ejecutar las pruebas de usabilidad con los part
 
 # 7. Evidencias de Ceremonias – Sprint 2
 
+## 7.1 Sprint Planning
+
+**Participantes:** 4 devs, 1 QA, 1 PM, 1 Scrum Master
+
+**Resultado:**
+- 11 historias seleccionadas (89 pts)
+- Velocidad Sprint 1: 89 pts, capacidad Sprint 2: ~90 pts
+- HU-29 y HU-30 se pospusieron a Sprint 3 por complejidad
+
+---
+
+## 7.2 Daily Standup
+
+**Frecuencia:** todos los días hábiles, 9:00 AM – 9:15 AM
+
+**Ejemplo – Miércoles Día 3:**
+
+| Dev | Ayer | Hoy | Bloqueador |
+|-----|------|-----|-----------|
+| Dev1 | Configuración del webhook de voz | Clasificación de respuestas por palabras clave | Ninguno |
+| Dev2 | Tests de clasificación | Programación de reintentos automáticos | Necesitaba revisar el modelo de Llamada |
+| Dev3 | Pantalla del historial de llamadas | Filtros del historial | Los endpoints ya estaban listos |
+| QA1 | Diseño de casos de prueba | Ejecución de CP-04 y CP-05 | Servidor de prueba de llamadas |
+
+---
+
+## 7.3 Sprint Review
+
+**Asistentes:** equipo + Product Owner + 2 personas interesadas en el producto
+
+**Demo:**
+1. Llamada automática en vivo
+2. Detección de respuestas en tiempo real
+3. Reintento automático después de una respuesta negativa
+4. Alerta de emergencia y correo enviado
+5. Panel con estadísticas de adherencia
+6. Historial con filtros
+
+**Comentarios:**
+- PO: "La IA maneja respuestas ambiguas de forma natural."
+- Invitado: "¿Se puede cambiar el tiempo entre reintentos?" — Sí, es configurable por medicamento.
+
+**Resultado:** 11 de 11 historias aceptadas
+
+---
+
+## 7.4 Sprint Retrospective
+
+**Qué salió bien:**
+- La integración con Twilio no dio problemas mayores
+- Los tests automáticos atajaron 2 bugs antes de que llegaran a `main`
+- El daily mantuvo al equipo en la misma página
+
+**Qué no salió tan bien:**
+- Las code reviews se demoraban entre 4 y 6 horas en abrirse
+- No documentamos las conexiones entre servicios; eso costó un día cuando alguien nuevo entró a tocar el módulo de llamadas
+
+**Acciones para Sprint 3:**
+- Code reviews máximo 2 horas para abrirse, con turnos rotativos
+- Documentar las conexiones entre servicios antes de empezar a programar
+- Pair programming en las partes más críticas
+
+**Velocidad del sprint:** 12.7 puntos por día
+
+---
+
+## 7.5 Evidencias Fotográficas
+
 <table>
   <tr>
     <td><img src="pruebareunion14.png" width="300"/></td>
@@ -575,4 +645,18 @@ En Sprint 3 el foco principal es ejecutar las pruebas de usabilidad con los part
     <td><img src="pruebareunion17.png" width="300"/></td>
   </tr>
 </table>
+
+---
+
+# 8. Sustentación
+
+Guion corto para la presentación al profesor (5-7 min). Cada bloque corresponde a un entregable evaluado.
+
+**1. Demo del MVP (3 min):** mostrar en vivo el flujo completo. Crear paciente y medicamento, esperar la llamada, contestar "sí" / "no" / "me siento mal" en tres pruebas, ver cómo se reprograma el reintento y cómo llega el correo de emergencia. Cerrar con el historial de llamadas y el dashboard.
+
+**2. Caso de Negocio (1 min):** resumir los cambios respecto al Sprint 1. Lo nuevo: presupuesto pre-operación y de operación con costos reales en COP (Twilio $0.0377/min = 158 COP/min), tres planes (Básico gratuito, Familiar 59.900, Profesional 299.900), punto de equilibrio en 13 clientes Familiar o 4 Profesional, e inventario de 10 riesgos con matriz de probabilidad/impacto, RACI y mitigación.
+
+**3. Protocolo de Pruebas de Usabilidad (1 min):** explicar que está planeado, no ejecutado todavía. 8 participantes (cuidadores reales, no técnicos), 8 tareas en formato de escenario real, métricas medibles de éxito, tiempo, errores y satisfacción. Se ejecuta en Sprint 3.
+
+**4. Pruebas Automáticas (1-2 min):** abrir `apps/llamadas/tests/test_services.py`, mostrar el test del happy path (paciente dice "no" → reintento programado) y el del flujo alternativo (ya se agotaron los reintentos → no se programa otro). Correr `python manage.py test` en vivo y mostrar que los 102 tests pasan. Mencionar los casos de prueba manuales (CP-01 a CP-05) ejecutados durante el sprint y el CI en GitHub Actions.
 
