@@ -181,3 +181,105 @@ class SaludoConInstruccionesTestCase(TestCase):
         # que cuando responde 200, el TwiML contenga las instrucciones.
         if resp.status_code == 200:
             self.assertIn("Tomar con agua", resp.content.decode())
+
+
+class HistorialLlamadasTestCase(TestCase):
+    """HU-29 – Historial de llamadas: las llamadas se registran y son consultables."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="cuidador_h", password="x")
+        from apps.core.models import Perfil
+        Perfil.objects.get_or_create(user=self.user)
+        self.paciente = Paciente.objects.create(
+            usuario=self.user, nombre="Ana", telefono="+573009990001",
+            timezone="America/Bogota",
+        )
+        self.med = Medicamento.objects.create(
+            paciente=self.paciente, nombre="Aspirina", dosis="100mg",
+            frecuencia_tipo=Medicamento.FRECUENCIA_HORARIO, horario="09:00",
+        )
+
+    def test_llamada_completada_queda_en_historial(self):
+        """Happy path: al completarse una llamada queda registrada y consultable por usuario."""
+        llamada = Llamada.objects.create(
+            medicamento=self.med, usuario=self.user, paciente=self.paciente,
+            fecha_programada=timezone.now(), estado=Llamada.ESTADO_COMPLETADA,
+            call_sid="CA_HIST_01",
+        )
+        resultado = Llamada.objects.filter(usuario=self.user, estado=Llamada.ESTADO_COMPLETADA)
+        self.assertIn(llamada, resultado)
+
+    def test_llamadas_con_distintos_resultados_son_distinguibles(self):
+        """Alternativo: llamadas con resultado confirmada y negativa se pueden filtrar por separado."""
+        llamada_ok = Llamada.objects.create(
+            medicamento=self.med, usuario=self.user, paciente=self.paciente,
+            fecha_programada=timezone.now(), estado=Llamada.ESTADO_COMPLETADA,
+            call_sid="CA_HIST_OK",
+        )
+        RespuestaLlamada.objects.create(
+            llamada=llamada_ok, resultado=RespuestaLlamada.RESULTADO_CONFIRMADA,
+            como_respondio=RespuestaLlamada.RESPUESTA_ATENDIDA,
+        )
+        llamada_no = Llamada.objects.create(
+            medicamento=self.med, usuario=self.user, paciente=self.paciente,
+            fecha_programada=timezone.now(), estado=Llamada.ESTADO_COMPLETADA,
+            call_sid="CA_HIST_NO",
+        )
+        RespuestaLlamada.objects.create(
+            llamada=llamada_no, resultado=RespuestaLlamada.RESULTADO_NEGATIVA,
+            como_respondio=RespuestaLlamada.RESPUESTA_ATENDIDA,
+        )
+        confirmadas = RespuestaLlamada.objects.filter(
+            llamada__usuario=self.user, resultado=RespuestaLlamada.RESULTADO_CONFIRMADA
+        )
+        negativas = RespuestaLlamada.objects.filter(
+            llamada__usuario=self.user, resultado=RespuestaLlamada.RESULTADO_NEGATIVA
+        )
+        self.assertEqual(confirmadas.count(), 1)
+        self.assertEqual(negativas.count(), 1)
+
+
+class EmergenciaTestCase(TestCase):
+    """HU-30 – Notificaciones de emergencia: alerta crítica forzada ante reporte de síntomas graves."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="cuidador_e", password="x")
+        from apps.core.models import Perfil
+        Perfil.objects.get_or_create(user=self.user)
+        self.paciente = Paciente.objects.create(
+            usuario=self.user, nombre="Pedro", telefono="+573001110001",
+            timezone="America/Bogota",
+        )
+        self.med = Medicamento.objects.create(
+            paciente=self.paciente, nombre="Warfarina", dosis="5mg",
+            frecuencia_tipo=Medicamento.FRECUENCIA_HORARIO, horario="08:00",
+        )
+        self.llamada = Llamada.objects.create(
+            medicamento=self.med, usuario=self.user, paciente=self.paciente,
+            fecha_programada=timezone.now(), estado=Llamada.ESTADO_EN_CURSO,
+            call_sid="CA_EMER_01",
+        )
+
+    def test_emergencia_crea_notificacion_critica(self):
+        """Happy path: reportar emergencia crea una notificación con prioridad CRÍTICA."""
+        from apps.notificaciones.models import Notificacion
+        LlamadaService.crear_alerta_emergencia(self.llamada, palabras_paciente="me duele el pecho")
+        alerta = Notificacion.objects.filter(
+            usuario=self.user, prioridad=Notificacion.PRIORIDAD_CRITICA
+        ).first()
+        self.assertIsNotNone(alerta)
+        self.assertIn("EMERGENCIA", alerta.titulo)
+
+    def test_respuesta_emergencia_dispara_alerta(self):
+        """Alternativo: cuando registrar_respuesta recibe RESULTADO_EMERGENCIA se genera alerta crítica."""
+        from apps.notificaciones.models import Notificacion
+        LlamadaService.registrar_respuesta(
+            call_sid="CA_EMER_01",
+            transcripcion="Usuario: me siento muy mal, me duele el pecho",
+            como_respondio=RespuestaLlamada.RESPUESTA_ATENDIDA,
+            resultado=RespuestaLlamada.RESULTADO_EMERGENCIA,
+        )
+        alerta = Notificacion.objects.filter(
+            usuario=self.user, prioridad=Notificacion.PRIORIDAD_CRITICA
+        ).first()
+        self.assertIsNotNone(alerta)

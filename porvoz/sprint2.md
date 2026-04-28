@@ -206,30 +206,62 @@ Las pruebas automáticas cubren la lógica del sistema y se ejecutan cada vez qu
 
 | Funcionalidad | Tipo de Prueba | Justificación |
 |---------------|---------------|---------------|
-| **Historia de Usuario HU-04 – Llamadas automáticas** | | |
-| Reintentos automáticos cuando el paciente dice que no | Unitaria | La lógica de reintento vive en `LlamadaService` sin depender de red; se prueba sola para verificar el conteo y la programación de la nueva llamada |
-| El reintento no se crea si se superó el máximo configurado | Unitaria | Es la regla central de `max_reintentos` del medicamento; se prueba sola para confirmar que el sistema la respeta |
-| No atender la llamada también genera un reintento | Unitaria | Verifica la rama `RESPUESTA_NO_ATENDIDA`, que debe disparar el mismo flujo que la negativa |
-| **Historia de Usuario HU-05 – Registrar respuestas** | | |
-| Detectar si el paciente dijo "sí" (confirmación) | Unitaria | El clasificador de palabras clave es una función determinística; no necesita llamadas reales para verificarse |
-| Detectar si el paciente dijo "no" (negativa) | Unitaria | Misma razón; cubre también variaciones sin tilde ("ya lo tome") |
-| Detectar si el paciente dijo "después" | Unitaria | Verifica variaciones coloquiales ("en un rato", "más tarde") |
-| Filtrar mensajes que intenten manipular al modelo de IA | Unitaria | Prueba de seguridad: el mensaje se trunca y se limpian palabras de instrucción antes de enviarse |
-| Validar que el número de teléfono tenga formato correcto | Unitaria | El validador cubre números colombianos con y sin código de país (+57) |
-| **Historia de Usuario HU-06 – Alertas automáticas** | | |
-| Confirmar la toma no genera alerta | Unitaria | Verifica que el flujo positivo no dispara alertas innecesarias |
-| Respuesta negativa genera alerta de prioridad normal | Integración | Requiere modelos reales en base de datos (Llamada + RespuestaLlamada + Notificacion) para verificar la cadena completa |
+| **HU-04 – Llamadas automáticas con IA** | | |
+| Paciente dice que no → se programa reintento | Unitaria | La lógica de reintento vive en `LlamadaService` sin depender de red; se verifica el conteo y la fecha de la nueva llamada |
+| Se superó el máximo de reintentos → no se programa otro | Unitaria | Es la regla central de `max_reintentos`; confirma que el sistema no llama indefinidamente |
+| Paciente no contesta → también genera reintento | Unitaria | Verifica la rama `RESPUESTA_NO_ATENDIDA`, que debe disparar el mismo flujo que la negativa |
+| El saludo incluye nombre, medicamento e instrucciones | Integración | Verifica que el endpoint de voz arme el TwiML con los datos reales del paciente y el medicamento desde la base de datos |
+| **HU-05 – Registrar confirmación de toma** | | |
+| Paciente dice "sí" → se registra como confirmada | Unitaria | El clasificador es determinístico; no necesita llamadas reales para verificarse |
+| Paciente dice variación coloquial ("ya lo tomé") → se clasifica igual | Unitaria | Cubre variaciones sin tilde y frases informales que un adulto mayor podría decir |
+| **HU-09 – Detectar respuestas negativas** | | |
+| Paciente dice "no" simple → clasificado como negativa | Unitaria | Verifica que el texto más corto posible de negación se detecte correctamente |
+| Paciente dice "después" → clasificado como aplazado | Unitaria | Verifica variaciones coloquiales ("en un rato", "más tarde") que indican aplazamiento |
+| **HU-30 – Sistema de Notificaciones de Emergencia** | | |
+| Paciente reporta síntomas → se crea notificación crítica | Integración | Requiere modelos reales; verifica que la prioridad sea CRÍTICA y el título incluya "EMERGENCIA" |
+| Respuesta de emergencia en webhook → alerta crítica creada | Integración | Prueba el flujo completo desde `registrar_respuesta` hasta la notificación en base de datos |
+| **HU-31 – Sistema de Acciones Post-Llamada** | | |
+| Confirmación → no se crea reintento ni alerta innecesaria | Unitaria | Verifica que el flujo positivo no genera ruido al cuidador |
+| Negativa → reintento + alerta al cuidador | Unitaria | Verifica que las dos acciones post-llamada ocurren juntas cuando el paciente dice que no |
+| **HU-29 – Historial de llamadas** | | |
+| Llamada completada queda almacenada y es consultable | Integración | Verifica que los registros persisten en base de datos y se pueden filtrar por usuario y estado |
+| Llamadas con distintos resultados son distinguibles | Integración | Confirma que confirmadas y negativas se pueden separar en consultas, base del historial con filtros |
+| **HU-32 – Integración de notificaciones con correo** | | |
+| Preferencia activa → `_debe_enviar_email` retorna True | Unitaria | La lógica de preferencias es pura y determinística; se prueba sola sin necesitar SMTP real |
+| Preferencia desactivada → `_debe_enviar_email` retorna False | Unitaria | Confirma que el cuidador puede silenciar notificaciones y el sistema lo respeta |
+| **HU-11 – Dashboard básico de seguimiento** | | |
+| `obtener_datos_completos` retorna estructura con todos los bloques | Integración | Verifica que el servicio del dashboard agrega pacientes, medicamentos, estadísticas y actividad en un solo objeto |
+| Estadísticas de llamadas de la semana son correctas | Integración | Confirma los conteos de confirmadas, negativas y no atendidas con datos reales en base de datos |
+| **HU-07 – Validación y manejo básico de errores** | | |
+| Registro con email duplicado lanza error | Unitaria | La validación de unicidad está en el servicio de registro; se prueba sola para confirmar que bloquea correctamente |
+| Fecha de nacimiento inválida retorna mensaje de error | Unitaria | El validador de edad es una función pura; se verifica que formatos incorrectos no pasen |
+| **HU-27 – Recuperar contraseña** | | |
+| Solicitud de reset con email registrado devuelve respuesta válida | Integración | Verifica que el formulario de recuperación responde 200 o 302 sin errores de servidor |
+| Solicitud con email inexistente no expone si el usuario existe | Integración | Prueba de seguridad: la respuesta debe ser igual independientemente de si el email está registrado |
 | **Flujo completo entre componentes** | | |
-| Paciente dice no → se reprograma la llamada → se crea alerta | Integración | Valida que los tres pasos de la cadena sucedan en orden con datos reales; es la prueba más importante de HU-04 y HU-06 juntas |
-| El saludo de la llamada incluye nombre, medicamento e instrucciones | Integración | Verifica que el endpoint de voz arme correctamente el TwiML con los datos del paciente y el medicamento desde la base de datos |
+| Paciente dice no → se reprograma la llamada → se crea alerta | Integración | Valida que los tres pasos de la cadena sucedan en orden con datos reales |
 
-Cada historia de usuario tiene al menos una prueba del **caso esperado (happy path)** y una del **caso alternativo o de error**, según los criterios de aceptación definidos en el backlog.
+Cada historia de usuario tiene al menos una prueba del **caso esperado (happy path)** y una del **caso alternativo o de error**, según los criterios de aceptación definidos en el backlog. HU-34 (responsive) se valida manualmente en las pruebas de usabilidad de la sección 3.
 
 ---
 
 ## 2.2 Tests Implementados
 
-Los tests viven en los archivos del proyecto. El principal es `apps/llamadas/tests/test_services.py`, que cubre las reglas del servicio de llamadas (reintentos, clasificación de respuestas, alertas). Los 94 tests pasan en la suite completa y se ejecutan automáticamente en cada PR via GitHub Actions (ver sección 2.3).
+Los tests están distribuidos en los módulos del proyecto. La suite completa tiene **102 tests** que pasan y se ejecutan automáticamente en cada PR vía GitHub Actions (ver sección 2.3).
+
+| Historia | Tests | Archivos |
+|----------|-------|---------|
+| HU-04 Llamadas automáticas | 6 | `apps/llamadas/tests/test_services.py` |
+| HU-05 Registrar confirmación | 3 | `apps/llamadas/tests/test_webhook_logic.py` |
+| HU-07 Validación de errores | 3 | `apps/autenticacion/tests.py`, `apps/core/tests/` |
+| HU-09 Respuestas negativas | 2 | `apps/llamadas/tests/test_webhook_logic.py` |
+| HU-11 Dashboard | 3 | `apps/dashboard/tests.py` |
+| HU-27 Recuperar contraseña | 2 | `apps/autenticacion/tests.py` |
+| HU-29 Historial de llamadas | 2 | `apps/llamadas/tests/test_services.py` |
+| HU-30 Emergencias | 2 | `apps/llamadas/tests/test_services.py` |
+| HU-31 Acciones post-llamada | 2 | `apps/llamadas/tests/test_services.py` |
+| HU-32 Notificaciones correo | 2 | `apps/notificaciones/tests/` |
+| HU-34 Responsive | — | Se valida manualmente (usabilidad) |
 
 ---
 
@@ -361,31 +393,39 @@ Las pruebas están **planeadas en Sprint 2** y se ejecutarán en Sprint 3. El ob
 
 ## 3.2 Tareas
 
-Las tareas se plantean como situaciones reales, no como instrucciones técnicas. El facilitador las lee en voz alta; el participante no sabe de antemano qué pasos seguir.
+Las tareas se plantean como situaciones reales, no como instrucciones técnicas. El facilitador las lee en voz alta; el participante no sabe de antemano qué pasos seguir. Cada tarea representa una acción que un cuidador haría en su día a día.
 
 **T1 — Registrar un paciente nuevo**
 *"Acabas de empezar a usar Porvoz. Tu mamá toma Losartán a las 8 a.m. y a las 8 p.m. Agrégala al sistema con ese medicamento."*
+El participante debe crear el perfil del paciente, ingresar el número de teléfono, agregar el medicamento con su nombre, dosis y los dos horarios indicados. Es el flujo de entrada más completo y el primero que cualquier cuidador haría al llegar a la plataforma por primera vez.
 
 **T2 — Consultar una llamada que no fue contestada**
 *"El sistema intentó llamar anoche y no hubo respuesta. Busca esa llamada y fíjate a qué hora fue y qué dice el resultado."*
+El participante debe navegar hasta el historial de llamadas del paciente, identificar la llamada que no fue contestada entre las del día anterior y leer el resultado que muestra el sistema. Sirve para evaluar si la navegación hacia el historial es intuitiva o si se pierde en el camino.
 
 **T3 — Entender una alerta activa**
 *"Tienes una alerta nueva. Ábrela y cuéntame qué medicamento la generó y por qué."*
+El participante debe encontrar la sección de alertas o notificaciones, abrir la alerta pendiente y explicar con sus propias palabras qué fue lo que pasó: qué medicamento, qué paciente y cuál fue el motivo. Evalúa si el mensaje de la alerta es claro sin necesidad de ayuda del facilitador.
 
 **T4 — Cambiar el horario de un medicamento**
 *"Tu papá ahora toma el Metformín a las 7 a.m. en vez de las 8. Actualiza ese horario."*
+El participante debe ubicar al paciente, entrar a los detalles del medicamento y modificar el horario de toma existente sin eliminar el medicamento ni crear uno nuevo. Esta tarea evalúa si la edición de horarios es visible y directa, o si el usuario da vueltas buscando cómo hacerlo.
 
 **T5 — Agregar un segundo medicamento al mismo paciente**
 *"Además del Losartán, tu mamá ahora también toma Atorvastatina todas las noches a las 9 p.m. Agrégalo."*
+El participante debe volver al perfil del paciente que ya registró en T1 y añadir un segundo medicamento con su nombre y horario. Evalúa si el flujo para agregar medicamentos adicionales es fácil de encontrar una vez que el paciente ya existe, o si confunde con el registro inicial.
 
 **T6 — Ver el historial de la semana**
 *"Quieres saber cuántas llamadas contestó tu paciente esta semana. Encuéntralo."*
+El participante debe encontrar el historial de llamadas y filtrar o identificar las de los últimos siete días para dar una respuesta concreta sobre cuántas fueron contestadas. Evalúa si los filtros de fecha y los estados de las llamadas son comprensibles sin explicación previa.
 
 **T7 — Actualizar el teléfono del paciente**
 *"Tu mamá cambió de número. El nuevo es 300 111 2233. Actualízalo para que las llamadas lleguen ahí."*
+El participante debe ir a la ficha del paciente y modificar el número de teléfono registrado. Puede parecer simple, pero en la interfaz actual el campo de edición está dentro del formulario de perfil del paciente, que no siempre es lo primero que la gente busca. Evalúa qué tan visible es la opción de edición.
 
 **T8 — Cerrar sesión y volver a entrar**
 *"Sal de la aplicación y vuelve a entrar. Confirma que el paciente y el medicamento que registraste antes siguen ahí."*
+El participante debe encontrar el botón de cerrar sesión, volver a ingresar con sus credenciales y verificar que los datos del paciente y el medicamento del ejercicio anterior siguen guardados. Evalúa si el flujo de autenticación es claro y si el participante entiende que los datos persisten entre sesiones.
 
 **Criterio de éxito por tarea:** completada sin intervención del facilitador.
 

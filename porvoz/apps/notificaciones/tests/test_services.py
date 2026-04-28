@@ -135,3 +135,30 @@ class NotificacionServiceFiltrosTest(TestCase):
         stats = NotificacionService.obtener_estadisticas(user)
         self.assertEqual(stats["total"], 2)
         self.assertEqual(stats["no_leidas"], 1)
+
+
+class EmailPreferenciaTest(TestCase):
+    """HU-32 – Integración de notificaciones con correo: el email respeta las preferencias del cuidador."""
+
+    def setUp(self):
+        from apps.core.models import Perfil
+        from apps.notificaciones.services.email_service import EmailService
+        self.EmailService = EmailService
+        self.user = User.objects.create_user(
+            username="cuidador_email", email="cuidador@test.com", password="x"
+        )
+        self.perfil, _ = Perfil.objects.get_or_create(user=self.user)
+
+    def test_email_se_envia_cuando_preferencia_activa(self):
+        """Happy path: cuando el cuidador tiene activada la preferencia, debe_enviar_email retorna True."""
+        self.perfil.email_toma_no_confirmada = True
+        self.perfil.save()
+        resultado = self.EmailService._debe_enviar_email(self.user, "toma_no_confirmada")
+        self.assertTrue(resultado)
+
+    def test_email_no_se_envia_cuando_preferencia_desactivada(self):
+        """Alternativo: cuando el cuidador desactiva la preferencia, el email no se manda."""
+        self.perfil.email_toma_no_confirmada = False
+        self.perfil.save()
+        resultado = self.EmailService._debe_enviar_email(self.user, "toma_no_confirmada")
+        self.assertFalse(resultado)

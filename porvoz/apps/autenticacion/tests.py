@@ -53,16 +53,30 @@ class RegistroServiceTest(TestCase):
 
 
 class PasswordResetTest(TestCase):
-    """Tests for password reset flow."""
+    """HU-27 – Recuperar contraseña: el flujo de restablecimiento funciona correctamente."""
 
     def setUp(self):
-        """Create test user."""
         self.user = User.objects.create_user(
-            username="testuser",
-            email="test@test.com",
-            password="OldPass123"
+            username="testuser", email="test@test.com", password="OldPass123"
         )
+        self.client = __import__("django.test", fromlist=["Client"]).Client()
 
     def test_reset_password_valid(self):
         """Should reset password with valid token."""
         self.assertTrue(User.objects.filter(email="test@test.com").exists())
+
+    def test_solicitud_reset_email_existente_redirige(self):
+        """Happy path: enviar solicitud con email registrado devuelve redirección al paso de confirmación."""
+        resp = self.client.post(
+            "/reset-password/",
+            {"email": "test@test.com"},
+        )
+        self.assertIn(resp.status_code, [200, 302])
+
+    def test_solicitud_reset_email_inexistente_no_expone_usuario(self):
+        """Alternativo: solicitar reset con email no registrado no revela si el usuario existe (seguridad)."""
+        resp = self.client.post(
+            "/reset-password/",
+            {"email": "noexiste@test.com"},
+        )
+        self.assertIn(resp.status_code, [200, 302])

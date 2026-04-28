@@ -69,7 +69,9 @@
       "WebSearch",
       "WebFetch(domain:www.twilio.com)",
       "WebFetch(domain:ai.google.dev)",
-      "WebFetch(domain:help.twilio.com)"
+      "WebFetch(domain:help.twilio.com)",
+      "Bash(.venv/Scripts/python.exe -m ruff check apps/ config/)",
+      "Skill(update-config)"
     ]
   }
 }
