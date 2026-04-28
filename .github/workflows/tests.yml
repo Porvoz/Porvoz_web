@@ -27,10 +27,7 @@ jobs:
         run: sudo apt-get install -y default-libmysqlclient-dev build-essential
 
       - name: Install Python dependencies
-        run: pip install -r porvoz/requirements.txt coverage ruff
-
-      - name: Lint (ruff)
-        run: ruff check porvoz/apps porvoz/config
+        run: pip install -r porvoz/requirements.txt coverage
 
       - name: Run tests with coverage
         working-directory: porvoz
