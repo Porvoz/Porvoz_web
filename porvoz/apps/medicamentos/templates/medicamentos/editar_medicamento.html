@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
 {% block body %}
 <div class="min-h-screen flex bg-slate-100">
     {% include "sidebar.html" %}
@@ -98,7 +101,7 @@
 
                             <div>
                                 <label class="block text-base font-semibold text-slate-800 mb-2">Duración del tratamiento</label>
-                                <div class="grid grid-cols-2 gap-2">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <label class="relative cursor-pointer">
                                         <input type="radio" name="duracion_tipo" value="indefinido" class="peer sr-only" id="duracion_indefinido" {% if not medicamento.duracion_dias %}checked{% endif %}>
                                         <div class="rounded-xl border-2 border-slate-200 bg-white px-3 py-3 text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all hover:border-slate-400">
@@ -140,7 +143,7 @@
                         </div>
                         <div class="p-6 space-y-4">
                             <!-- Selector tipo frecuencia -->
-                            <div class="grid grid-cols-2 gap-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <label class="relative cursor-pointer">
                                     <input type="radio" name="frecuencia_tipo" value="horario" id="frecuencia_horario" class="peer sr-only" {% if medicamento.frecuencia_tipo == 'horario' %}checked{% endif %}>
                                     <div class="rounded-xl border-2 border-slate-200 bg-white px-3 py-3 text-center peer-checked:border-slate-700 transition-all hover:border-slate-400">

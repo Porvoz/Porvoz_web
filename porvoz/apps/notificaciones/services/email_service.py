@@ -28,24 +28,14 @@ class EmailService:
         Verifica si el usuario desea recibir este tipo de email.
 
         Lógica:
-        - email_urgente_minimo=True (default): enviar SOLO prioridades CRITICA/URGENTE,
-          ignorando todas las demás preferencias. Si prioridad es None o baja → no enviar.
-        - email_urgente_minimo=False: respetar cada preferencia específica.
+        - Se respetan exclusivamente las preferencias visibles en UI.
+        - El flag legacy `email_urgente_minimo` se ignora para evitar bloqueos ocultos.
         """
         try:
             perfil = usuario.perfil
         except Exception:
             logger.warning(f"[Email] Usuario {usuario.username} no tiene perfil — no se envía email")
             return False
-
-        if perfil.email_urgente_minimo:
-            # Modo restrictivo: solo CRITICA/URGENTE pasan, sin excepción
-            result = prioridad in [Notificacion.PRIORIDAD_CRITICA, Notificacion.PRIORIDAD_URGENTE]
-            if not result:
-                logger.info(
-                    f"[Email] Bloqueado por email_urgente_minimo: tipo={tipo_email} prioridad={prioridad}"
-                )
-            return result
 
         # Modo normal: cada tipo tiene su preferencia
         preferencias = {

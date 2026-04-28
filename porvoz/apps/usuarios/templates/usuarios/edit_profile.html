@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
 {% block body %}
 <div class="min-h-screen flex bg-slate-100 flex-col w-full max-w-full overflow-x-hidden">
     {% include "sidebar.html" %}
@@ -230,7 +233,7 @@
                     </div>
                     <!-- Datos en grid -->
                     <div class="p-6 border-b border-slate-100">
-                        <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                             <div class="rounded-xl bg-slate-50 px-4 py-3">
                                 <p class="text-slate-500 font-medium mb-0.5">Fecha nac.</p>
                                 <p class="text-slate-900 font-medium">{% if perfil.date_of_birth %}{{ perfil.date_of_birth|date:"d/m/Y" }}{% else %}—{% endif %}</p>
@@ -283,9 +286,9 @@
                 <div class="bg-slate-600 rounded-xl px-5 py-3 text-white flex items-center justify-between">
                     <span class="text-sm text-slate-200">Plan actual</span>
                     <span class="text-base font-bold">
-                        {% if perfil.plan == perfil.PLAN_FREEMIUM %}Prueba · Gratis
-                        {% elif perfil.plan == perfil.PLAN_GROWTH %}Growth · $79.900/mes
-                        {% elif perfil.plan == perfil.PLAN_MULTI_BUSINESS %}Multi-cuidador · $99.900/mes
+                        {% if perfil.plan == perfil.PLAN_FREEMIUM %}Básico · Gratis
+                        {% elif perfil.plan == perfil.PLAN_GROWTH %}Familiar · $59.900 COP/mes
+                        {% elif perfil.plan == perfil.PLAN_MULTI_BUSINESS %}Profesional · $299.900 COP/mes
                         {% endif %}
                     </span>
                 </div>

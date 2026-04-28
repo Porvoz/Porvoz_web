@@ -92,11 +92,12 @@ class ProveedorVozService:
         """
         Inicia una llamada con Twilio.
 
-        - machine_detection="Enable": detecta buzón de voz de forma síncrona. Twilio
-          espera hasta ~4s antes de invocar la URL de voz, y el resultado llega como
-          AnsweredBy en el primer webhook de voz (sin callbacks adicionales).
-        - NO usamos async_amd: envía un webhook extra al status_callback con
-          AnsweredBy, que provocaba doble registro de estado y deduplicación errónea.
+        - SIN machine_detection: el TwiML empieza a sonar al instante en cuanto el
+          paciente contesta. Con AMD habilitado, Twilio se queda 4-8s en silencio
+          analizando si es humano o buzón, y el paciente cuelga creyendo que es
+          spam — disparando reintentos innecesarios.
+          Si la llamada cae al buzón, el saludo simplemente se graba ahí: es un
+          recordatorio aceptable para el paciente cuando lo escuche.
         - time_limit=90: corta la llamada a los 90 s máximo.
         - TWILIO_DRY_RUN=true: simula la llamada sin contactar Twilio.
 
@@ -120,7 +121,6 @@ class ProveedorVozService:
             status_callback_method="POST",
             status_callback_event=["completed"],
             time_limit=90,
-            machine_detection="Enable",
         )
         logger.info(f"[Twilio] Llamada iniciada: {call.sid} → {numero_telefono}")
         return call.sid

@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
 {% block body %}
 <div class="min-h-screen flex flex-col bg-white w-full max-w-full overflow-x-hidden">
     <div class="grid lg:grid-cols-2 flex-1 min-w-0 w-full">

@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: porvoz/requirements.txt
+
+      - name: Install system dependencies (mysqlclient)
+        run: sudo apt-get install -y default-libmysqlclient-dev build-essential
+
+      - name: Install Python dependencies
+        run: pip install -r porvoz/requirements.txt coverage ruff
+
+      - name: Lint (ruff)
+        run: ruff check porvoz/apps porvoz/config
+
+      - name: Run tests with coverage
+        working-directory: porvoz
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.development
+          DJANGO_SECRET_KEY: ci-secret-key-only-for-tests
+        run: |
+          coverage run manage.py test --verbosity 2
+          coverage report --fail-under=80

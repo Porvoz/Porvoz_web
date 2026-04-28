@@ -340,9 +340,17 @@ def webhook_voice(request):
 
     logger.info(f"[webhook_voice] Inicio de llamada CallSID={call_sid} Medicamento={nombre_med}")
 
-    # Saludo natural — no lee las instrucciones en voz alta
+    # Saludo natural — incluye las instrucciones del medicamento si existen,
+    # para que el paciente escuche el contexto que el cuidador configuró.
     saludo_inicio = f"Hola{' ' + nombre_paciente if nombre_paciente else ''}, le llama Porvoz."
-    saludo = f"{saludo_inicio} Es hora de tomar su {nombre_med}. ¿Ya lo tomó?"
+    instrucciones_limpias = (instrucciones or "").strip()
+    if instrucciones_limpias:
+        # Asegura punto final para que el TTS pause antes de la pregunta.
+        if instrucciones_limpias[-1] not in ".!?":
+            instrucciones_limpias += "."
+        saludo = f"{saludo_inicio} Es hora de tomar su {nombre_med}. {instrucciones_limpias} ¿Ya lo tomó?"
+    else:
+        saludo = f"{saludo_inicio} Es hora de tomar su {nombre_med}. ¿Ya lo tomó?"
 
     # Detectar buzón de voz — evitar falsos positivos con machine_start.
     answered_by = request.POST.get("AnsweredBy", "")

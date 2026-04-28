@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
 {% block body %}
 <div class="min-h-screen flex bg-slate-100 w-full overflow-x-hidden">
     {% include "sidebar.html" %}

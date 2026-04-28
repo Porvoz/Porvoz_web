@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
 {% block body %}
 <div class="min-h-screen flex bg-slate-100 flex-col w-full max-w-full overflow-x-hidden">
     {% include "sidebar.html" %}
@@ -10,16 +13,25 @@
             <i class="bi bi-list text-xl"></i>
         </button>
 
-        <header class="mb-4 mt-12 lg:mt-0">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <header class="mb-5 mt-12 lg:mt-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
                 <div>
                     <h1 class="text-2xl font-black tracking-tight text-slate-900">Pacientes</h1>
-                    <p class="mt-0.5 text-sm text-slate-600">Gestiona los recordatorios y la información de quienes tienes a cargo</p>
+                    <p class="mt-0.5 text-sm text-slate-600">
+                        {% if pacientes %}{{ pacientes|length }} paciente{{ pacientes|length|pluralize }} a tu cargo · gestiona recordatorios e información{% else %}Aún no tienes pacientes registrados{% endif %}
+                    </p>
                 </div>
-                <a href="{% url 'dashboard' %}" class="btn-dashboard-primary self-start sm:self-center">
-                    <i class="bi bi-house"></i>
-                    Panel principal
-                </a>
+                <div class="flex items-center gap-2">
+                    <a href="{% url 'agregar_paciente' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 text-sm font-bold transition-colors shadow-sm">
+                        <i class="bi bi-plus-lg"></i>
+                        <span class="hidden sm:inline">Nuevo paciente</span>
+                        <span class="sm:hidden">Nuevo</span>
+                    </a>
+                    <a href="{% url 'dashboard' %}" class="btn-dashboard-primary self-start sm:self-center">
+                        <i class="bi bi-house"></i>
+                        <span class="hidden sm:inline">Panel</span>
+                    </a>
+                </div>
             </div>
             <!-- Barra única: búsqueda + ordenamiento -->
             <div class="flex rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -39,7 +51,7 @@
                     <details class="relative">
                         <summary class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                             <i class="bi bi-sort-down-alt text-slate-500"></i>
-                            {% for k, v in opciones_ordenar %}{% if k == ordenar_actual %}{{ v }}{% endif %}{% endfor %}
+                            <span class="hidden sm:inline">{% for k, v in opciones_ordenar %}{% if k == ordenar_actual %}{{ v }}{% endif %}{% endfor %}</span>
                             <i class="bi bi-chevron-down text-xs text-slate-500"></i>
                         </summary>
                         <div class="absolute right-0 mt-1 w-56 rounded-xl border border-slate-200 bg-white shadow-xl py-1 z-30 min-w-max">
@@ -65,69 +77,131 @@
         {% endif %}
 
         {% if pacientes %}
-        <div class="space-y-4 mb-8">
+        <div class="flex flex-col gap-4 mb-8">
             {% for paciente in pacientes %}
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition-shadow">
-                <div class="flex flex-col gap-4">
-                    <!-- Fila superior: info paciente -->
-                    <div class="flex items-center gap-4 flex-1 min-w-0">
-                        {% if paciente.get_display_foto %}
-                        <img src="{{ paciente.get_display_foto.url }}" alt="" class="h-14 w-14 rounded-full object-cover border-2 border-slate-200 flex-shrink-0">
-                        {% else %}
-                        <div class="h-14 w-14 rounded-full bg-slate-200 flex items-center justify-center text-lg font-bold text-slate-600 flex-shrink-0">
-                            {{ paciente.get_display_nombre|slice:":1"|upper }}
-                        </div>
-                        {% endif %}
-                        <div class="min-w-0 flex-1">
-                            <h3 class="text-lg font-bold text-slate-900">{{ paciente.get_display_nombre }}</h3>
-                            <p class="text-sm text-slate-500 mt-0.5">
-                                {% if paciente.get_sexo_display %}{{ paciente.get_sexo_display }}{% if paciente.get_edad_display %}, {% endif %}{% endif %}{% if paciente.get_edad_display %}{{ paciente.get_edad_display }} años{% elif not paciente.get_sexo_display %}—{% endif %}
-                            </p>
-                        </div>
-                        <div class="relative dropdown-paciente flex-shrink-0">
-                            <button type="button" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors" aria-haspopup="true" aria-expanded="false" data-dropdown-toggle>
-                                <i class="bi bi-three-dots-vertical text-lg"></i>
-                            </button>
-                            <div class="hidden absolute right-0 mt-1 w-52 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white shadow-lg py-1 z-20" data-dropdown-menu>
-                                <a href="{% url 'editar_paciente' paciente.id %}" class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                                    <i class="bi bi-pencil"></i> Editar paciente
-                                </a>
-                                <a href="{% url 'agregar_medicamento' paciente.id %}" class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                                    <i class="bi bi-capsule"></i> Agregar medicamento
-                                </a>
-                                <a href="{% url 'eliminar_paciente' paciente.id %}" class="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
-                                    <i class="bi bi-trash"></i> Eliminar paciente
-                                </a>
+            <article class="group relative bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-slate-300 transition-all duration-200 overflow-hidden">
+                <div class="flex flex-col sm:flex-row">
+                    <!-- Columna izquierda: foto + nombre + datos demográficos -->
+                    <div class="relative sm:w-64 sm:flex-shrink-0 px-6 pt-6 pb-5 sm:py-6 bg-slate-50/60 border-b sm:border-b-0 sm:border-r border-slate-100">
+                        <div class="flex sm:flex-col items-center sm:items-start gap-4 sm:gap-3">
+                            <div class="relative flex-shrink-0">
+                                {% if paciente.get_display_foto %}
+                                <img src="{{ paciente.get_display_foto.url }}" alt="" class="h-20 w-20 rounded-2xl object-cover ring-2 ring-white shadow-sm">
+                                {% else %}
+                                <div class="h-20 w-20 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-2xl font-bold text-white shadow-sm">
+                                    {{ paciente.get_display_nombre|slice:":1"|upper }}
+                                </div>
+                                {% endif %}
+                                {% if paciente.es_usuario_mismo %}
+                                <span class="absolute -bottom-1 -right-1 inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 ring-2 ring-white" title="Eres tú">
+                                    <i class="bi bi-person-fill text-white text-xs"></i>
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="min-w-0 flex-1 sm:w-full">
+                                <h3 class="text-lg font-bold text-slate-900 leading-tight break-words" title="{{ paciente.get_display_nombre }}">
+                                    {{ paciente.get_display_nombre }}
+                                </h3>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    {% if paciente.get_sexo_display %}{{ paciente.get_sexo_display }}{% endif %}{% if paciente.get_edad_display %}{% if paciente.get_sexo_display %} · {% endif %}{{ paciente.get_edad_display }} años{% endif %}{% if paciente.parentesco %}{% if paciente.get_sexo_display or paciente.get_edad_display %} · {% endif %}{{ paciente.parentesco }}{% endif %}{% if not paciente.get_sexo_display and not paciente.get_edad_display and not paciente.parentesco %}Sin demografía{% endif %}
+                                </p>
+                                <div class="mt-2 flex items-center gap-1.5 text-xs text-slate-600">
+                                    <i class="bi bi-telephone text-slate-400"></i>
+                                    <span class="font-medium tabular-nums truncate">{{ paciente.get_display_telefono }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Recordatorios y condiciones -->
-                    <div class="flex items-center gap-4 flex-wrap pt-2">
-                        <div class="flex items-center gap-1.5 text-sm text-slate-600">
-                            <i class="bi bi-clock-history text-slate-400"></i>
-                            <span>{{ paciente.medicamentos.count }} recordatorio{{ paciente.medicamentos.count|pluralize }}</span>
+                    <!-- Columna derecha: chips + adherencia + acciones -->
+                    <div class="flex-1 min-w-0 px-6 py-5 flex flex-col gap-4">
+                        <!-- Header con menú -->
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
+                                    <i class="bi bi-capsule text-slate-500"></i>
+                                    {{ paciente.medicamentos.count }} recordatorio{{ paciente.medicamentos.count|pluralize }}
+                                </span>
+                                {% with conds=paciente.get_condiciones_activas %}
+                                {% if conds %}
+                                    {% for c in conds|slice:":2" %}
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 text-xs font-medium border border-slate-200">{{ c }}</span>
+                                    {% endfor %}
+                                    {% if conds|length > 2 %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold">+{{ conds|length|add:"-2" }}</span>
+                                    {% endif %}
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div class="relative dropdown-paciente flex-shrink-0">
+                                <button type="button" class="p-1.5 -mr-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors" aria-haspopup="true" aria-expanded="false" data-dropdown-toggle>
+                                    <i class="bi bi-three-dots-vertical text-lg"></i>
+                                </button>
+                                <div class="hidden absolute right-0 mt-1 w-52 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white shadow-lg py-1 z-20" data-dropdown-menu>
+                                    <a href="{% url 'editar_paciente' paciente.id %}" class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+                                        <i class="bi bi-pencil"></i> Editar paciente
+                                    </a>
+                                    <a href="{% url 'agregar_medicamento' paciente.id %}" class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+                                        <i class="bi bi-capsule"></i> Agregar medicamento
+                                    </a>
+                                    <a href="{% url 'historial_llamadas' %}?paciente={{ paciente.id }}" class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+                                        <i class="bi bi-telephone-outbound"></i> Ver llamadas
+                                    </a>
+                                    <hr class="my-1 border-slate-100">
+                                    <a href="{% url 'eliminar_paciente' paciente.id %}" class="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
+                                        <i class="bi bi-trash"></i> Eliminar paciente
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                        {% with conds=paciente.get_condiciones_activas %}
-                        {% if conds %}
-                        <div class="flex flex-wrap gap-1">
-                            {% for c in conds %}
-                            <span class="inline-flex px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-xs font-semibold">{{ c }}</span>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <span class="inline-flex px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 text-xs font-medium">No especificada</span>
-                        {% endif %}
-                        {% endwith %}
-                    </div>
 
-                    <!-- Botón ver detalles (solo) -->
-                    <a href="{% url 'detalle_paciente' paciente.id %}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-6 py-3 text-sm font-bold transition-colors shadow-sm">
-                        <i class="bi bi-eye-fill"></i>
-                        Ver detalles
-                    </a>
+                        <!-- Adherencia 30d -->
+                        {% if paciente.adherencia_30d is not None %}
+                        <div>
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="font-semibold text-slate-600">Adherencia 30 días</span>
+                                <span class="font-bold tabular-nums
+                                    {% if paciente.adherencia_30d >= 80 %}text-emerald-600
+                                    {% elif paciente.adherencia_30d >= 50 %}text-amber-600
+                                    {% else %}text-rose-600{% endif %}">{{ paciente.adherencia_30d }}%</span>
+                            </div>
+                            <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                                <div class="h-full rounded-full
+                                    {% if paciente.adherencia_30d >= 80 %}bg-emerald-500
+                                    {% elif paciente.adherencia_30d >= 50 %}bg-amber-500
+                                    {% else %}bg-rose-500{% endif %}"
+                                    style="width: {{ paciente.adherencia_30d }}%"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Próxima llamada -->
+                        {% if paciente.proxima_llamada %}
+                        <div class="flex items-center gap-2 text-xs text-slate-600">
+                            <i class="bi bi-clock-history text-slate-400"></i>
+                            <span>Próxima llamada</span>
+                            <span class="ml-auto font-semibold tabular-nums text-slate-700">{{ paciente.proxima_llamada.fecha_programada|date:"d M, g:i A" }}</span>
+                        </div>
+                        {% elif paciente.medicamentos.count == 0 %}
+                        <div class="flex items-center gap-2 text-xs text-slate-500 italic">
+                            <i class="bi bi-info-circle text-slate-400"></i>
+                            Sin recordatorios programados
+                        </div>
+                        {% endif %}
+
+                        <!-- Footer: botones -->
+                        <div class="mt-auto flex gap-2 pt-1">
+                            <a href="{% url 'detalle_paciente' paciente.id %}" class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 text-sm font-bold transition-colors shadow-sm">
+                                <i class="bi bi-eye-fill"></i>
+                                Ver detalles
+                            </a>
+                            <a href="{% url 'agregar_medicamento' paciente.id %}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 px-3 py-2.5 text-sm font-bold hover:bg-slate-50 transition-colors" title="Agregar recordatorio">
+                                <i class="bi bi-plus-lg"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </article>
             {% endfor %}
         </div>
         {% else %}
@@ -136,8 +210,12 @@
                 <div class="mx-auto mb-4 flex items-center justify-center w-20 h-20 rounded-full bg-slate-100">
                     <i class="bi bi-people text-4xl text-slate-400"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900 mb-1">Aún no tienes pacientes</h3>
-                <p class="text-sm text-slate-500 mb-6 max-w-sm mx-auto">Agrega un paciente para comenzar a programar recordatorios por voz.</p>
+                <h3 class="text-lg font-bold text-slate-900 mb-1">
+                    {% if buscar %}No encontramos pacientes con ese nombre{% else %}Aún no tienes pacientes{% endif %}
+                </h3>
+                <p class="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+                    {% if buscar %}Prueba con otro término o agrega un paciente nuevo.{% else %}Agrega un paciente para comenzar a programar recordatorios por voz.{% endif %}
+                </p>
                 <a href="{% url 'agregar_paciente' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-6 py-3 text-sm font-semibold shadow-sm transition-colors">
                     <i class="bi bi-plus-lg"></i>
                     Agregar paciente
@@ -146,15 +224,19 @@
         </div>
         {% endif %}
 
-        <!-- Crear más recordatorios / Agregar paciente (siempre visible abajo) -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
-            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Crea más recordatorios</p>
-            <h2 class="text-xl font-bold text-slate-900 mb-3">Agregar un nuevo paciente</h2>
-            <a href="{% url 'agregar_paciente' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-6 py-3 text-sm font-bold transition-colors shadow-sm">
+        {% if pacientes %}
+        <!-- CTA inferior -->
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">¿Otro paciente a tu cargo?</p>
+                <h2 class="text-base font-bold text-slate-900">Agrégalo y empieza sus recordatorios en minutos</h2>
+            </div>
+            <a href="{% url 'agregar_paciente' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-5 py-2.5 text-sm font-bold transition-colors shadow-sm whitespace-nowrap">
                 <i class="bi bi-plus-lg"></i>
                 Agregar ahora
             </a>
         </div>
+        {% endif %}
 
     </main>
 </div>

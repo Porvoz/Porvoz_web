@@ -1,11 +1,16 @@
+import logging
+
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 
 from apps.autenticacion.services import RegistroService
 from apps.usuarios.services import PerfilService
+
+logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 @never_cache
@@ -16,12 +21,17 @@ def login_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "").strip()
-        if username and password:
+        if not username or not password:
+            messages.error(request, "Por favor ingresa tu usuario y contraseña.")
+        else:
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
                 return redirect("dashboard_router")
-        messages.error(request, "Credenciales inválidas.")
+            messages.error(
+                request,
+                "Usuario o contraseña incorrectos. Verifica los datos e intenta de nuevo.",
+            )
 
     return render(request, "autenticacion/login.html")
 
@@ -54,11 +64,15 @@ def register_view(request: HttpRequest) -> HttpResponse:
 
         # Validaciones básicas
         if not username or not email or not password or not first_name or not last_name:
-            messages.error(request, "Todos los campos son obligatorios.")
+            messages.error(request, "Por favor completa todos los campos obligatorios.")
         elif password != password2:
-            messages.error(request, "Las contraseñas no coinciden.")
+            messages.error(request, "Las contraseñas no coinciden. Verifica e intenta de nuevo.")
+        elif len(password) < 8:
+            messages.error(request, "La contraseña debe tener al menos 8 caracteres.")
         elif User.objects.filter(username=username).exists():
-            messages.error(request, "El nombre de usuario ya está en uso.")
+            messages.error(request, "Ese nombre de usuario ya está registrado. Prueba con otro.")
+        elif User.objects.filter(email=email).exists():
+            messages.error(request, "Ese correo ya tiene una cuenta. ¿Quieres iniciar sesión?")
         else:
             # Validar edad si se proporciona fecha de nacimiento
             birth_date_obj = None
@@ -90,8 +104,13 @@ def register_view(request: HttpRequest) -> HttpResponse:
                     request, "Cuenta creada. Inicia sesión para continuar."
                 )
                 return redirect("login")
-            except Exception as e:
-                messages.error(request, f"Error al crear la cuenta: {str(e)}")
+            except Exception:
+                logger.exception("Error al registrar usuario %s", username)
+                messages.error(
+                    request,
+                    "No pudimos crear tu cuenta en este momento. "
+                    "Verifica tus datos e intenta de nuevo en unos segundos.",
+                )
 
     return render(request, "autenticacion/register.html")
 

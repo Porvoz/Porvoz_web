@@ -1,128 +1,113 @@
 {% extends "base.html" %}
 {% load static %}
 
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
 {% block body %}
-<div class="min-h-screen flex bg-slate-100">
+<div class="min-h-screen flex bg-slate-100 flex-col w-full max-w-full overflow-x-hidden">
     {% include "sidebar.html" %}
 
-    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10">
-        <button type="button" class="btn-mobile-menu" data-mobile-menu-toggle>
-            <i class="bi bi-list"></i>
+    <main class="main-content-responsive min-w-0 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10 flex flex-col">
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
         </button>
 
         <header class="mb-6 mt-12 lg:mt-0">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-600 text-white shadow-lg">
-                    <i class="bi bi-person-plus text-xl"></i>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-emerald-600 text-white shadow-sm shadow-emerald-200">
+                        <i class="bi bi-person-plus-fill text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Nuevo paciente</h1>
+                        <p class="text-sm text-slate-600 mt-0.5">Registra a quien vas a cuidar para empezar a programar recordatorios</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Agregar Paciente</h1>
-                    <p class="text-sm text-slate-600 mt-0.5">Registra un nuevo paciente para gestionar sus medicamentos y recordatorios</p>
-                </div>
+                <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 px-4 py-2.5 text-sm font-semibold transition-colors self-start sm:self-auto">
+                    <i class="bi bi-arrow-left"></i>
+                    Volver a pacientes
+                </a>
             </div>
         </header>
 
         {% if messages %}
         <div class="mb-6 space-y-2">
             {% for message in messages %}
-            <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+            <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-rose-200 bg-rose-50 text-rose-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
                 {{ message }}
             </div>
             {% endfor %}
         </div>
         {% endif %}
 
-        <div class="max-w-4xl mx-auto">
-            {% if not ya_existe_paciente_mismo %}
-            <div class="mb-6 p-5 rounded-2xl bg-slate-50 border border-slate-200">
-                <div class="flex items-center justify-between gap-4 flex-wrap">
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-600 text-white">
-                            <i class="bi bi-person-check text-xl"></i>
+        <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {% csrf_token %}
+
+            <!-- Columna principal: formulario -->
+            <div class="lg:col-span-8 space-y-6">
+                <!-- Foto + identidad básica -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 lg:px-8 py-5 border-b border-slate-100 flex items-center gap-3">
+                        <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600">
+                            <i class="bi bi-person text-base"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-slate-900 mb-0.5">¿Eres tú el paciente?</h3>
-                            <p class="text-sm text-slate-600">Pre-llena el formulario con tus datos personales</p>
+                            <h2 class="text-base font-bold text-slate-900">Información básica</h2>
+                            <p class="text-xs text-slate-500">Datos para identificar al paciente</p>
                         </div>
                     </div>
-                    <a href="{% url 'agregar_paciente' %}?prefill=me" class="inline-flex items-center gap-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 font-semibold transition-all shadow-md">
-                        <i class="bi bi-person-check"></i>
-                        Agregarme a mí
-                    </a>
-                </div>
-            </div>
-            {% endif %}
 
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <form method="post" enctype="multipart/form-data" class="divide-y divide-slate-200">
-                    {% csrf_token %}
-
-                    <!-- Foto -->
-                    <div class="p-6 lg:p-8 bg-slate-50/50">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <div class="p-6 lg:p-8 space-y-6">
+                        <!-- Foto -->
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
                             <div class="relative">
-                                <div id="foto-preview-placeholder" class="h-28 w-28 rounded-2xl bg-slate-200 border-2 border-slate-300 flex items-center justify-center {% if prefill and prefill_foto_url %}hidden{% endif %}">
-                                    <i class="bi bi-camera text-3xl text-slate-400"></i>
+                                <div id="foto-preview-placeholder" class="h-24 w-24 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center {% if prefill and prefill_foto_url %}hidden{% endif %}">
+                                    <i class="bi bi-camera text-2xl text-slate-400"></i>
                                 </div>
-                                <img id="foto-preview" src="{% if prefill and prefill_foto_url %}{{ prefill_foto_url }}{% endif %}" alt="Vista previa" class="h-28 w-28 rounded-2xl object-cover border-2 border-slate-300 {% if not prefill or not prefill_foto_url %}hidden{% endif %}">
-                                <div class="absolute -bottom-2 -right-2 bg-slate-600 text-white rounded-full p-2.5 shadow-lg">
-                                    <i class="bi bi-camera text-sm"></i>
-                                </div>
+                                <img id="foto-preview" src="{% if prefill and prefill_foto_url %}{{ prefill_foto_url }}{% endif %}" alt="Vista previa" class="h-24 w-24 rounded-2xl object-cover border border-slate-200 {% if not prefill or not prefill_foto_url %}hidden{% endif %}">
                             </div>
-                            <div class="flex-1">
-                                <h3 class="text-lg font-bold text-slate-900 mb-1">Foto del paciente</h3>
-                                <p class="text-sm text-slate-600 mb-4">Sube una foto para identificar fácilmente al paciente (opcional)</p>
-                                <label class="inline-flex items-center gap-2 rounded-xl border-2 border-slate-600 bg-slate-50 text-slate-800 px-5 py-2.5 text-sm font-semibold hover:bg-slate-100 cursor-pointer transition-all">
+                            <div class="flex-1 min-w-0">
+                                <label class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 px-4 py-2 text-sm font-semibold cursor-pointer transition-colors">
                                     <i class="bi bi-cloud-upload"></i>
-                                    <span>Seleccionar foto</span>
+                                    <span>Subir foto</span>
                                     <input id="foto-input" name="foto" type="file" accept="image/*" class="hidden">
                                 </label>
+                                <p class="text-xs text-slate-500 mt-2">JPG o PNG, máx. 5 MB. Opcional.</p>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Información básica -->
-                    <div class="p-6 lg:p-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-700">
-                                <i class="bi bi-person text-lg"></i>
-                            </div>
-                            <h2 class="text-xl font-black text-slate-900">Información básica</h2>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="md:col-span-2">
-                                <label class="block text-base font-semibold text-slate-800 mb-2">
-                                    Nombre completo <span class="text-red-500">*</span>
+                                <label class="block text-sm font-semibold text-slate-800 mb-2">
+                                    Nombre completo <span class="text-rose-500">*</span>
                                 </label>
                                 <div class="relative">
-                                    <i class="bi bi-person absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <i class="bi bi-person absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
                                     <input
                                         name="nombre"
                                         type="text"
                                         required
                                         value="{{ prefill_nombre }}"
                                         placeholder="Ej: María García López"
-                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all"
+                                        class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all"
                                     >
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-base font-semibold text-slate-800 mb-2">
-                                    Teléfono <span class="text-red-500">*</span>
+                                <label class="block text-sm font-semibold text-slate-800 mb-2">
+                                    Teléfono <span class="text-rose-500">*</span>
                                 </label>
-                                <div class="grid grid-cols-[120px_1fr] gap-2">
-                                    <select name="phone_country" class="rounded-xl border border-slate-300 text-sm px-3 py-3 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white font-medium">
+                                <div class="grid grid-cols-[110px_1fr] gap-2">
+                                    <select name="phone_country" class="rounded-xl border border-slate-300 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 bg-white font-medium">
                                         <option value="+57" {% if prefill_phone_country == "+57" or not prefill %}selected{% endif %}>+57 CO</option>
                                         <option value="+1" {% if prefill_phone_country == "+1" %}selected{% endif %}>+1 US</option>
                                         <option value="+34" {% if prefill_phone_country == "+34" %}selected{% endif %}>+34 ES</option>
                                         <option value="+52" {% if prefill_phone_country == "+52" %}selected{% endif %}>+52 MX</option>
                                     </select>
                                     <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <span class="text-slate-500 font-medium">+</span>
-                                        </div>
+                                        <i class="bi bi-telephone absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
                                         <input
                                             name="phone_number"
                                             type="tel"
@@ -130,28 +115,28 @@
                                             value="{{ prefill_telefono }}"
                                             placeholder="300 123 4567"
                                             pattern="[0-9\s]+"
-                                            class="block w-full pl-6 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all"
+                                            class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all"
                                         >
                                     </div>
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-base font-semibold text-slate-800 mb-2">Fecha de nacimiento</label>
+                                <label class="block text-sm font-semibold text-slate-800 mb-2">Fecha de nacimiento</label>
                                 <div class="relative">
-                                    <i class="bi bi-calendar3 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <i class="bi bi-calendar3 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
                                     <input
                                         name="fecha_nacimiento"
                                         type="date"
                                         value="{{ prefill_fecha_nacimiento }}"
-                                        class="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all"
+                                        class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all"
                                     >
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-base font-semibold text-slate-800 mb-2">Sexo</label>
-                                <select name="sexo" class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all">
+                                <label class="block text-sm font-semibold text-slate-800 mb-2">Sexo</label>
+                                <select name="sexo" class="block w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all">
                                     <option value="">Seleccionar</option>
                                     {% for valor, etiqueta in sexo_choices %}
                                     <option value="{{ valor }}">{{ etiqueta }}</option>
@@ -160,10 +145,10 @@
                             </div>
 
                             {% if not prefill %}
-                            <div class="md:col-span-2">
-                                <label class="block text-base font-semibold text-slate-800 mb-2">Parentesco / Relación</label>
-                                <select name="parentesco" class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all">
-                                    <option value="">Seleccionar (opcional)</option>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-800 mb-2">Parentesco / Relación</label>
+                                <select name="parentesco" class="block w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all">
+                                    <option value="">Opcional</option>
                                     <option value="Padre">Padre</option>
                                     <option value="Madre">Madre</option>
                                     <option value="Hijo/a">Hijo/a</option>
@@ -177,97 +162,168 @@
                             {% endif %}
                         </div>
                     </div>
+                </div>
 
-                    <!-- Información adicional -->
-                    <div class="p-6 lg:p-8 bg-slate-50/50">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-700">
-                                <i class="bi bi-file-text text-lg"></i>
-                            </div>
-                            <h2 class="text-xl font-black text-slate-900">Información adicional</h2>
+                <!-- Información médica -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 lg:px-8 py-5 border-b border-slate-100 flex items-center gap-3">
+                        <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-rose-50 border border-rose-100 text-rose-600">
+                            <i class="bi bi-heart-pulse text-base"></i>
                         </div>
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Información médica</h2>
+                            <p class="text-xs text-slate-500">Condiciones, alergias y notas relevantes</p>
+                        </div>
+                    </div>
 
-                        <div class="space-y-5">
-                            <!-- Condiciones médicas -->
-                            <div>
-                                <div class="flex items-center justify-between gap-4 mb-3">
-                                    <label class="block text-sm font-semibold text-slate-700">Condiciones médicas</label>
-                                    <button type="button" id="btn-agregar-condicion" class="inline-flex items-center gap-2 rounded-xl border-2 border-dashed border-slate-400 text-slate-600 hover:border-slate-600 hover:text-slate-800 px-3 py-2 text-xs font-semibold transition-colors">
-                                        <i class="bi bi-plus-lg"></i>Agregar otra condición
+                    <div class="p-6 lg:p-8 space-y-5">
+                        <!-- Condiciones médicas -->
+                        <div>
+                            <div class="flex items-center justify-between gap-4 mb-3">
+                                <label class="block text-sm font-semibold text-slate-800">Condiciones médicas</label>
+                                <button type="button" id="btn-agregar-condicion" class="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-slate-300 text-slate-600 hover:border-emerald-400 hover:text-emerald-700 hover:bg-emerald-50/40 px-3 py-1.5 text-xs font-semibold transition-colors">
+                                    <i class="bi bi-plus-lg"></i>Agregar otra
+                                </button>
+                            </div>
+                            <div id="condiciones-container" class="space-y-2.5">
+                                <div class="condicion-row flex gap-2 items-center">
+                                    <div class="relative flex-1">
+                                        <i class="bi bi-heart-pulse absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                        <input
+                                            name="condicion"
+                                            type="text"
+                                            placeholder="Ej: Diabetes, Hipertensión, Asma..."
+                                            class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all"
+                                        >
+                                    </div>
+                                    <button type="button" class="condicion-remove hidden p-2 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors" title="Quitar condición">
+                                        <i class="bi bi-x-lg"></i>
                                     </button>
                                 </div>
-                                <div id="condiciones-container" class="space-y-3">
-                                    <div class="condicion-row flex gap-2 items-center">
-                                        <div class="relative flex-1">
-                                            <i class="bi bi-heart-pulse absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                            <input
-                                                name="condicion"
-                                                type="text"
-                                                placeholder="Ej: Diabetes, Hipertensión, Asma..."
-                                                class="block w-full pl-11 pr-10 py-3 rounded-xl border border-slate-300 bg-white text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all"
-                                            >
-                                        </div>
-                                        <button type="button" class="condicion-remove hidden p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Quitar condición">
-                                            <i class="bi bi-x-lg text-lg"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <p class="text-xs text-slate-500 mt-2">Condiciones o enfermedades del paciente (opcional)</p>
                             </div>
+                            <p class="text-xs text-slate-500 mt-2">Agrega una por una. Opcional.</p>
+                        </div>
 
-                            <div>
-                                <label class="block text-base font-semibold text-slate-800 mb-2">Zona horaria</label>
-                                <select name="timezone" class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all">
-                                    <option value="America/Bogota">Colombia (America/Bogota)</option>
-                                    <option value="America/Mexico_City">México (America/Mexico_City)</option>
-                                    <option value="America/New_York">EE.UU. Este (America/New_York)</option>
-                                    <option value="America/Los_Angeles">EE.UU. Oeste (America/Los_Angeles)</option>
-                                    <option value="Europe/Madrid">España (Europe/Madrid)</option>
-                                    <option value="America/Buenos_Aires">Argentina (America/Buenos_Aires)</option>
-                                    <option value="America/Santiago">Chile (America/Santiago)</option>
-                                </select>
-                                <p class="text-xs text-slate-500 mt-1">Para programar llamadas en la hora local del paciente</p>
-                            </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-800 mb-2">Notas médicas</label>
+                            <textarea
+                                name="notas"
+                                rows="3"
+                                placeholder="Alergias, observaciones importantes, historial médico relevante..."
+                                class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all resize-none"
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
 
-                            <div>
-                                <label class="block text-base font-semibold text-slate-800 mb-2">Descripción</label>
-                                <textarea
-                                    name="descripcion"
-                                    rows="3"
-                                    placeholder="Información general, relación familiar, contexto del paciente..."
-                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all resize-none"
-                                >{{ prefill_descripcion }}</textarea>
-                            </div>
-
-                            <div>
-                                <label class="block text-base font-semibold text-slate-800 mb-2">Notas médicas</label>
-                                <textarea
-                                    name="notas"
-                                    rows="3"
-                                    placeholder="Alergias, observaciones importantes, historial médico relevante..."
-                                    class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all resize-none"
-                                ></textarea>
-                            </div>
+                <!-- Preferencias -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 lg:px-8 py-5 border-b border-slate-100 flex items-center gap-3">
+                        <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-sky-50 border border-sky-100 text-sky-600">
+                            <i class="bi bi-globe2 text-base"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Preferencias y contexto</h2>
+                            <p class="text-xs text-slate-500">Zona horaria de las llamadas y descripción</p>
                         </div>
                     </div>
 
-                    <!-- Botones -->
-                    <div class="p-6 lg:p-8 bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                        <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
-                            <i class="bi bi-arrow-left"></i>
-                            <span>Volver a pacientes</span>
-                        </a>
-                        <button
-                            type="submit"
-                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 px-8 py-3.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-colors"
-                        >
-                            <i class="bi bi-check-circle text-lg"></i>
-                            <span>Agregar Paciente</span>
-                        </button>
+                    <div class="p-6 lg:p-8 space-y-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-800 mb-2">Zona horaria</label>
+                            <select name="timezone" class="block w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all">
+                                <option value="America/Bogota">Colombia (America/Bogota)</option>
+                                <option value="America/Mexico_City">México (America/Mexico_City)</option>
+                                <option value="America/New_York">EE.UU. Este (America/New_York)</option>
+                                <option value="America/Los_Angeles">EE.UU. Oeste (America/Los_Angeles)</option>
+                                <option value="Europe/Madrid">España (Europe/Madrid)</option>
+                                <option value="America/Buenos_Aires">Argentina (America/Buenos_Aires)</option>
+                                <option value="America/Santiago">Chile (America/Santiago)</option>
+                            </select>
+                            <p class="text-xs text-slate-500 mt-1.5">Las llamadas se programan en esta zona horaria.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-800 mb-2">Descripción</label>
+                            <textarea
+                                name="descripcion"
+                                rows="3"
+                                placeholder="Información general, relación familiar, contexto del paciente..."
+                                class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all resize-none"
+                            >{{ prefill_descripcion }}</textarea>
+                        </div>
                     </div>
-                </form>
+                </div>
             </div>
-        </div>
+
+            <!-- Columna derecha: panel lateral -->
+            <aside class="lg:col-span-4 space-y-5">
+                {% if not ya_existe_paciente_mismo and not prefill %}
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-600 text-white shadow-sm shadow-emerald-200 flex-shrink-0">
+                            <i class="bi bi-person-check-fill"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">¿Eres tú el paciente?</h3>
+                            <p class="text-xs text-slate-600 mt-0.5">Pre-rellenamos el formulario con tus datos</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'agregar_paciente' %}?prefill=me" class="block text-center rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 text-sm font-bold transition-colors shadow-sm shadow-emerald-200">
+                        Agregarme a mí
+                    </a>
+                </div>
+                {% endif %}
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-5">
+                    <div class="flex items-center gap-2.5 mb-3">
+                        <i class="bi bi-lightbulb text-amber-500"></i>
+                        <h3 class="font-bold text-slate-900 text-sm">Antes de continuar</h3>
+                    </div>
+                    <ul class="space-y-2.5 text-xs text-slate-600 leading-relaxed">
+                        <li class="flex items-start gap-2">
+                            <i class="bi bi-check2-circle text-emerald-600 mt-0.5"></i>
+                            <span>El <strong class="text-slate-800">teléfono</strong> es lo único imprescindible — es a donde se envían los recordatorios.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="bi bi-check2-circle text-emerald-600 mt-0.5"></i>
+                            <span>Verifica el <strong class="text-slate-800">indicativo</strong> del país (Colombia es +57).</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="bi bi-check2-circle text-emerald-600 mt-0.5"></i>
+                            <span>La <strong class="text-slate-800">zona horaria</strong> determina la hora de las llamadas.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="bi bi-check2-circle text-emerald-600 mt-0.5"></i>
+                            <span>Podrás <strong class="text-slate-800">editar</strong> todo después de crear al paciente.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                    <div class="flex items-center gap-2.5 mb-2">
+                        <i class="bi bi-shield-lock text-slate-600"></i>
+                        <h3 class="font-bold text-slate-900 text-sm">Privacidad</h3>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Los datos del paciente solo son visibles para ti. Solo se usan para enviar recordatorios y mostrarte estadísticas de adherencia.
+                    </p>
+                </div>
+
+                <div class="sticky bottom-4 bg-white rounded-2xl border border-slate-200 shadow-lg p-4 flex flex-col gap-2">
+                    <button
+                        type="submit"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm shadow-emerald-200 ring-1 ring-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
+                    >
+                        <i class="bi bi-check-circle-fill"></i>
+                        Crear paciente
+                    </button>
+                    <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 px-5 py-2.5 text-xs font-semibold transition-colors">
+                        Cancelar
+                    </a>
+                </div>
+            </aside>
+        </form>
     </main>
 </div>
 

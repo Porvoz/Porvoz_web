@@ -25,8 +25,18 @@ CACHES = {
     }
 }
 
-# Email: Console backend (prints to stdout instead of sending)
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Email backend:
+#   - Si hay credenciales SMTP en .env (EMAIL_HOST_USER + EMAIL_HOST_PASSWORD),
+#     se usa SMTP real para que los correos lleguen al cuidador en desarrollo.
+#   - Si no hay credenciales, fallback a consola (los correos se imprimen en stdout).
+#   - Override manual: EMAIL_BACKEND en .env tiene la última palabra.
+_smtp_listo = bool(EMAIL_HOST_USER and EMAIL_HOST_PASSWORD)
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend"
+    if _smtp_listo
+    else "django.core.mail.backends.console.EmailBackend",
+)
 
 # Celery: Run tasks synchronously in dev (no broker needed).
 # To use real Celery: set REDIS_URL in .env and run celery worker + beat separately.

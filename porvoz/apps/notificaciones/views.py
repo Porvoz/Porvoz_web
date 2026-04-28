@@ -160,3 +160,20 @@ def marcar_leida_view(request: HttpRequest, notif_id: int) -> HttpResponse:
     return redirect(next_url)
 
 
+@login_required
+def export_notifications_csv_view(request: HttpRequest) -> HttpResponse:
+    """Exporta las notificaciones del usuario (con filtros aplicados) a CSV."""
+    filtros = NotificacionService.obtener_filtros_desde_dict(request.GET.dict())
+    queryset = Notificacion.objects.filter(usuario=request.user)
+    queryset = NotificacionService.aplicar_filtros(queryset, filtros)
+    queryset = queryset.select_related("paciente", "medicamento").order_by("-creado_en")
+
+    csv_text = NotificacionService.exportar_csv(queryset)
+    response = HttpResponse(
+        "﻿" + csv_text,
+        content_type="text/csv; charset=utf-8",
+    )
+    response["Content-Disposition"] = 'attachment; filename="notificaciones.csv"'
+    return response
+
+

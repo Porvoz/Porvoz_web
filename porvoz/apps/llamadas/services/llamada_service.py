@@ -535,7 +535,7 @@ class LlamadaService:
         if max_reintentos == 0:
             return
 
-        if llamada.intentos < max_reintentos:
+        if llamada.intentos <= max_reintentos:
             minutos = medicamento.minutos_entre_reintentos or 30
             nueva_fecha = timezone.now() + timedelta(minutes=minutos)
             Llamada.objects.create(
@@ -554,6 +554,71 @@ class LlamadaService:
             LlamadaService._crear_alerta_escalada(llamada)
 
     @staticmethod
+    def _enviar_email_evento(
+        *,
+        tipo: str,
+        llamada: Llamada,
+        extra: dict | None = None,
+    ) -> None:
+        """
+        Intenta enviar por Celery; si falla el enqueue, envía en línea como fallback.
+        """
+        extra = extra or {}
+
+        try:
+            from apps.notificaciones.tasks import enviar_email_task
+
+            enviar_email_task.delay(
+                tipo=tipo,
+                usuario_id=llamada.usuario.id,
+                paciente_id=llamada.paciente.id if llamada.paciente else None,
+                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
+                extra=extra,
+            )
+            return
+        except Exception as e:
+            logger.warning(
+                f"[LlamadaService] Falló cola Celery para {tipo}, fallback síncrono: {e}"
+            )
+
+        try:
+            from apps.notificaciones.services.email_service import EmailService
+
+            handlers = {
+                "toma_confirmada": EmailService.enviar_email_toma_confirmada,
+                "toma_no_confirmada": EmailService.enviar_email_toma_no_confirmada,
+                "toma_aplazada": EmailService.enviar_email_toma_aplazada,
+                "llamada_no_atendida": EmailService.enviar_email_llamada_no_atendida,
+                "reintentos_agotados": EmailService.enviar_email_reintentos_agotados,
+            }
+
+            if tipo in ("emergencia_medica", "rechazo_tratamiento"):
+                EmailService.enviar_email_critico_obligatorio(
+                    usuario=llamada.usuario,
+                    titulo=extra.get("titulo") or "Alerta crítica de Porvoz",
+                    mensaje=extra.get("mensaje") or "",
+                    paciente=llamada.paciente,
+                    medicamento=llamada.medicamento,
+                )
+                return
+
+            handler = handlers.get(tipo)
+            if not handler:
+                logger.warning(f"[LlamadaService] Tipo de email no soportado: {tipo}")
+                return
+
+            handler(
+                usuario=llamada.usuario,
+                paciente=llamada.paciente,
+                medicamento=llamada.medicamento,
+                **extra,
+            )
+        except Exception as e:
+            logger.warning(
+                f"[LlamadaService] Fallback síncrono falló para {tipo} (no crítico): {e}"
+            )
+
+    @staticmethod
     def _crear_notif_confirmada(llamada: Llamada):
         med_nombre = (
             llamada.medicamento.nombre if llamada.medicamento else "medicamento"
@@ -565,16 +630,7 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
-        try:
-            from apps.notificaciones.tasks import enviar_email_task
-            enviar_email_task.delay(
-                tipo="toma_confirmada",
-                usuario_id=llamada.usuario.id,
-                paciente_id=llamada.paciente.id if llamada.paciente else None,
-                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
-            )
-        except Exception as e:
-            logger.warning(f"[LlamadaService] Email task falló (no crítico): {e}")
+        LlamadaService._enviar_email_evento(tipo="toma_confirmada", llamada=llamada)
 
     @staticmethod
     def _crear_alerta_escalada(llamada: Llamada):
@@ -591,17 +647,11 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
-        try:
-            from apps.notificaciones.tasks import enviar_email_task
-            enviar_email_task.delay(
-                tipo="reintentos_agotados",
-                usuario_id=llamada.usuario.id,
-                paciente_id=llamada.paciente.id if llamada.paciente else None,
-                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
-                extra={"intentos": llamada.intentos},
-            )
-        except Exception as e:
-            logger.warning(f"[LlamadaService] Email reintentos_agotados falló (no crítico): {e}")
+        LlamadaService._enviar_email_evento(
+            tipo="reintentos_agotados",
+            llamada=llamada,
+            extra={"intentos": llamada.intentos},
+        )
 
     @staticmethod
     def _crear_alerta_no_tomo(llamada: Llamada, palabras_paciente: str = ""):
@@ -619,16 +669,7 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
-        try:
-            from apps.notificaciones.tasks import enviar_email_task
-            enviar_email_task.delay(
-                tipo="toma_no_confirmada",
-                usuario_id=llamada.usuario.id,
-                paciente_id=llamada.paciente.id if llamada.paciente else None,
-                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
-            )
-        except Exception as e:
-            logger.warning(f"[LlamadaService] Email task falló (no crítico): {e}")
+        LlamadaService._enviar_email_evento(tipo="toma_no_confirmada", llamada=llamada)
 
     @staticmethod
     def _crear_alerta_despues(llamada: Llamada, palabras_paciente: str = ""):
@@ -646,16 +687,7 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
-        try:
-            from apps.notificaciones.tasks import enviar_email_task
-            enviar_email_task.delay(
-                tipo="toma_aplazada",
-                usuario_id=llamada.usuario.id,
-                paciente_id=llamada.paciente.id if llamada.paciente else None,
-                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
-            )
-        except Exception as e:
-            logger.warning(f"[LlamadaService] Email task falló (no crítico): {e}")
+        LlamadaService._enviar_email_evento(tipo="toma_aplazada", llamada=llamada)
 
     @staticmethod
     def _crear_alerta_no_atendida(llamada: Llamada):
@@ -672,16 +704,7 @@ class LlamadaService:
             paciente=llamada.paciente,
             medicamento=llamada.medicamento,
         )
-        try:
-            from apps.notificaciones.tasks import enviar_email_task
-            enviar_email_task.delay(
-                tipo="llamada_no_atendida",
-                usuario_id=llamada.usuario.id,
-                paciente_id=llamada.paciente.id if llamada.paciente else None,
-                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
-            )
-        except Exception as e:
-            logger.warning(f"[LlamadaService] Email task falló (no crítico): {e}")
+        LlamadaService._enviar_email_evento(tipo="llamada_no_atendida", llamada=llamada)
 
     @staticmethod
     def crear_alerta_emergencia(llamada: Llamada, palabras_paciente: str = ""):
@@ -708,17 +731,11 @@ class LlamadaService:
             medicamento=llamada.medicamento,
             prioridad=Notificacion.PRIORIDAD_CRITICA,
         )
-        try:
-            from apps.notificaciones.tasks import enviar_email_task
-            enviar_email_task.delay(
-                tipo="emergencia_medica",
-                usuario_id=llamada.usuario.id,
-                paciente_id=llamada.paciente.id if llamada.paciente else None,
-                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
-                extra={"titulo": titulo, "mensaje": mensaje},
-            )
-        except Exception as e:
-            logger.warning(f"[LlamadaService] Email emergencia falló (no crítico): {e}")
+        LlamadaService._enviar_email_evento(
+            tipo="emergencia_medica",
+            llamada=llamada,
+            extra={"titulo": titulo, "mensaje": mensaje},
+        )
 
     @staticmethod
     def crear_alerta_rechazo_tratamiento(llamada: Llamada, palabras_paciente: str = ""):
@@ -743,17 +760,11 @@ class LlamadaService:
             medicamento=llamada.medicamento,
             prioridad=Notificacion.PRIORIDAD_CRITICA,
         )
-        try:
-            from apps.notificaciones.tasks import enviar_email_task
-            enviar_email_task.delay(
-                tipo="rechazo_tratamiento",
-                usuario_id=llamada.usuario.id,
-                paciente_id=llamada.paciente.id if llamada.paciente else None,
-                medicamento_id=llamada.medicamento.id if llamada.medicamento else None,
-                extra={"titulo": titulo, "mensaje": mensaje},
-            )
-        except Exception as e:
-            logger.warning(f"[LlamadaService] Email rechazo falló (no crítico): {e}")
+        LlamadaService._enviar_email_evento(
+            tipo="rechazo_tratamiento",
+            llamada=llamada,
+            extra={"titulo": titulo, "mensaje": mensaje},
+        )
 
     @staticmethod
     def _crear_alerta_fallo(llamada: Llamada, error: str):

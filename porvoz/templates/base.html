@@ -178,6 +178,10 @@
 <body class="bg-gray-50 font-sans">
     {% block body %}{% endblock %}
 
+    {% block messages %}
+        {% include "partials/messages.html" %}
+    {% endblock %}
+
     <script>
         (function () {
             const STORAGE_KEY = "porvoz-sidebar-collapsed";

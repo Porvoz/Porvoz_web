@@ -54,7 +54,22 @@
       "Bash(python manage.py makemigrations llamadas)",
       "Bash(python manage.py test apps.llamadas apps.notificaciones --verbosity=1)",
       "Bash(python manage.py test apps.pacientes apps.medicamentos apps.usuarios apps.shared --verbosity=1)",
-      "Bash(DJANGO_SETTINGS_MODULE=config.settings.production python -c \"from django.conf import settings; print\\('LOADED', settings.DEBUG\\)\")"
+      "Bash(DJANGO_SETTINGS_MODULE=config.settings.production python -c \"from django.conf import settings; print\\('LOADED', settings.DEBUG\\)\")",
+      "Bash(python manage.py test apps.pacientes apps.llamadas)",
+      "Bash(python manage.py test apps.pacientes)",
+      "Bash(python -c \"from django.template.loader import get_template; import django, os; os.environ.setdefault\\('DJANGO_SETTINGS_MODULE', 'porvoz.settings'\\); django.setup\\(\\); t1 = get_template\\('pacientes/listar_pacientes.html'\\); t2 = get_template\\('pacientes/detalle_paciente.html'\\); print\\('OK: both templates parse'\\)\")",
+      "Bash(python manage.py test apps.pacientes apps.usuarios)",
+      "Bash(python manage.py test apps.llamadas)",
+      "Bash(python manage.py test apps.llamadas.tests.test_services)",
+      "Bash(python manage.py test)",
+      "Bash(python manage.py test apps.notificaciones.tests.test_views.ExportNotificationsCsvViewTest})",
+      "Bash(python -c \"from dotenv import load_dotenv; from pathlib import Path; load_dotenv\\(Path\\('..'\\) / '.env'\\); import os; os.environ.setdefault\\('DJANGO_SETTINGS_MODULE', 'config.settings.development'\\); import django; django.setup\\(\\); from django.conf import settings; print\\('EMAIL_BACKEND:', settings.EMAIL_BACKEND\\); print\\('HOST_USER:', settings.EMAIL_HOST_USER\\); print\\('FROM:', settings.DEFAULT_FROM_EMAIL\\)\")",
+      "Bash(python -c \"import ast; [ast.parse\\(open\\(f\\).read\\(\\)\\) for f in ['apps/autenticacion/views.py', 'config/urls.py', 'config/settings/development.py']]; print\\('OK'\\)\")",
+      "Bash(python -c ' *)",
+      "WebSearch",
+      "WebFetch(domain:www.twilio.com)",
+      "WebFetch(domain:ai.google.dev)",
+      "WebFetch(domain:help.twilio.com)"
     ]
   }
 }

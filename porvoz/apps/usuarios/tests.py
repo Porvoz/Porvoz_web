@@ -88,11 +88,11 @@ class PlanServiceTest(TestCase):
         self.assertFalse(puede)
 
     def test_paciente_limit_growth(self):
-        """Growth plan should allow up to 5 patients."""
+        """Growth plan should allow up to 3 patients."""
         self.perfil.plan = Perfil.PLAN_GROWTH
         self.perfil.save()
 
-        for i in range(5):
+        for i in range(3):
             Paciente.objects.create(
                 usuario=self.user,
                 nombre=f"Paciente {i + 1}",
@@ -107,7 +107,7 @@ class PlanServiceTest(TestCase):
         self.perfil.plan = Perfil.PLAN_GROWTH
         self.perfil.save()
 
-        for i in range(3):
+        for i in range(2):
             Paciente.objects.create(
                 usuario=self.user,
                 nombre=f"Paciente {i + 1}",

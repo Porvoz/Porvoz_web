@@ -1,13 +1,13 @@
 """
 Datos de planes, límites y verificación de cuotas.
 
-Costo estimado por llamada (Twilio Colombia ~$0.035/min, 2 min promedio):
-  ≈ $0.07 USD ≈ 260 COP por llamada
+Costo real por llamada (Twilio Colombia móvil $0.0377 USD/min ≈ 158 COP/min, 20 s promedio):
+    53 COP base + 35% colchón = ~75 COP por llamada
 
-Márgenes aproximados:
-  Básico    ($0):       5 llamadas →  costo ~1.300 COP  (subsidio de adquisición)
-  Familiar  ($29.900):  60 llamadas → costo ~15.600 COP → ganancia ~14.300 COP/usuario
-  Profesional ($89.900): 250 llamadas → costo ~65.000 COP → ganancia ~24.900 COP/usuario
+Márgenes (caso máximo: paciente con 4-6 medicamentos/día ≈ 5-7 llamadas/día):
+    Básico       ($0):         150 llamadas → costo ~11.250 COP  (adquisición)
+    Familiar     ($59.900):    500 llamadas → costo ~37.500 COP  → ganancia ~22.400 COP/usuario (margen 37%)
+    Profesional ($299.900):  3.000 llamadas → costo ~225.000 COP → ganancia ~74.900 COP/usuario (margen 25%)
 """
 
 from datetime import date
@@ -21,18 +21,18 @@ from apps.core.models import Perfil
 PLAN_LIMITS = {
     Perfil.PLAN_FREEMIUM: {
         "max_pacientes": 1,
-        "max_medicamentos_por_paciente": 3,
-        "max_llamadas_mes": 5,
+        "max_medicamentos_por_paciente": 5,
+        "max_llamadas_mes": 150,
     },
     Perfil.PLAN_GROWTH: {
-        "max_pacientes": 5,
-        "max_medicamentos_por_paciente": 10,
-        "max_llamadas_mes": 60,
+        "max_pacientes": 3,
+        "max_medicamentos_por_paciente": None,  # ilimitado
+        "max_llamadas_mes": 500,
     },
     Perfil.PLAN_MULTI_BUSINESS: {
-        "max_pacientes": 15,
+        "max_pacientes": 20,
         "max_medicamentos_por_paciente": None,  # ilimitado
-        "max_llamadas_mes": 250,
+        "max_llamadas_mes": 3000,
     },
 }
 
@@ -50,8 +50,8 @@ PLANES_DATA = {
         "destacado": False,
         "caracteristicas": [
             "1 paciente",
-            "Hasta 3 medicamentos",
-            "5 llamadas automatizadas/mes",
+            "Hasta 5 medicamentos",
+            "150 llamadas automatizadas/mes",
             "Dashboard básico",
             "Historial 30 días",
         ],
@@ -61,15 +61,15 @@ PLANES_DATA = {
     },
     Perfil.PLAN_GROWTH: {
         "nombre": "Familiar",
-        "tagline": "Para familias que cuidan a sus seres queridos.",
-        "precio": "$29.900",
-        "precio_cop": "29.900",
-        "precio_mensual": 29900,
+        "tagline": "Para el cuidado diario de hasta 3 pacientes.",
+        "precio": "$59.900",
+        "precio_cop": "59.900",
+        "precio_mensual": 59900,
         "destacado": True,
         "caracteristicas": [
-            "Hasta 5 pacientes",
-            "Hasta 10 medicamentos por paciente",
-            "60 llamadas automatizadas/mes",
+            "Hasta 3 pacientes",
+            "Medicamentos ilimitados",
+            "500 llamadas automatizadas/mes",
             "Dashboard completo",
             "Historial 6 meses",
             "Llamadas con IA en español",
@@ -82,15 +82,15 @@ PLANES_DATA = {
     },
     Perfil.PLAN_MULTI_BUSINESS: {
         "nombre": "Profesional",
-        "tagline": "Para clínicas, EPS y equipos de salud.",
-        "precio": "$89.900",
-        "precio_cop": "89.900",
-        "precio_mensual": 89900,
+        "tagline": "Para clínicas, centros geriátricos y equipos de salud.",
+        "precio": "$299.900",
+        "precio_cop": "299.900",
+        "precio_mensual": 299900,
         "destacado": False,
         "caracteristicas": [
-            "Hasta 15 pacientes",
+            "Hasta 20 pacientes",
             "Medicamentos ilimitados",
-            "250 llamadas automatizadas/mes",
+            "3.000 llamadas automatizadas/mes",
             "Dashboard completo",
             "Historial completo",
             "Llamadas con IA en español",

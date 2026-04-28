@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
 {% block body %}
 <div class="min-h-screen flex bg-slate-100">
     {% include "sidebar.html" %}
@@ -104,7 +107,7 @@
                                 <label class="block text-sm font-semibold text-slate-700 mb-3">
                                     Duración del tratamiento
                                 </label>
-                                <div class="grid grid-cols-2 gap-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <label class="relative cursor-pointer">
                                         <input type="radio" name="duracion_tipo" value="indefinido" class="peer sr-only" checked id="duracion_indefinido">
                                         <div class="rounded-xl border-2 border-slate-300 bg-white p-4 text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all hover:border-emerald-400">
@@ -146,7 +149,7 @@
                                 <label class="block text-sm font-semibold text-slate-700 mb-3">
                                     Tipo de frecuencia <span class="text-red-500">*</span>
                                 </label>
-                                <div class="grid grid-cols-2 gap-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <label class="relative cursor-pointer">
                                         <input 
                                             type="radio" 

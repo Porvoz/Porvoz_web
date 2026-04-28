@@ -212,6 +212,134 @@ const Shortcuts = {
 };
 
 // ============================================================================
+// NETWORK - fetch con manejo amigable de errores y reintento
+// ============================================================================
+
+const Network = {
+  /**
+   * fetch con timeout y mensajes claros para offline / servidor caído.
+   * Retorna { ok, data, status, error } — nunca lanza.
+   *
+   * Uso:
+   *   const res = await Network.request("/api/x", { method: "POST", body: ... });
+   *   if (!res.ok) Toast.show(res.error, "error");
+   */
+  async request(url, options = {}, { timeoutMs = 15000 } = {}) {
+    if (!navigator.onLine) {
+      return {
+        ok: false,
+        status: 0,
+        error: "Sin conexión a internet. Revisa tu red e intenta nuevamente.",
+      };
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        credentials: options.credentials || "same-origin",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          ...(options.headers || {}),
+        },
+      });
+      clearTimeout(timer);
+
+      let data = null;
+      const ctype = response.headers.get("content-type") || "";
+      if (ctype.includes("application/json")) {
+        try {
+          data = await response.json();
+        } catch (_) {
+          data = null;
+        }
+      }
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          status: response.status,
+          data,
+          error:
+            (data && (data.error || data.detail || data.message)) ||
+            (response.status >= 500
+              ? "Ocurrió un problema en el servidor. Intenta nuevamente en unos segundos."
+              : response.status === 403
+                ? "No tienes permiso para realizar esta acción."
+                : response.status === 404
+                  ? "No encontramos lo que buscas."
+                  : "No pudimos completar la solicitud."),
+        };
+      }
+
+      return { ok: true, status: response.status, data };
+    } catch (err) {
+      clearTimeout(timer);
+      if (err.name === "AbortError") {
+        return {
+          ok: false,
+          status: 0,
+          error: "La conexión está tardando demasiado. Intenta nuevamente.",
+        };
+      }
+      return {
+        ok: false,
+        status: 0,
+        error: "No pudimos conectar con el servidor. Verifica tu conexión.",
+      };
+    }
+  },
+
+  /**
+   * Como request, pero con reintento automático con backoff.
+   * Solo reintenta en errores de red / 5xx, no en 4xx.
+   */
+  async requestWithRetry(url, options = {}, { retries = 2, timeoutMs = 15000 } = {}) {
+    let last;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      last = await this.request(url, options, { timeoutMs });
+      if (last.ok) return last;
+      // No reintentar en 4xx (input del usuario)
+      if (last.status >= 400 && last.status < 500) return last;
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+      }
+    }
+    return last;
+  },
+};
+
+// Banner global de "sin conexión" — se muestra/oculta automáticamente
+const ConnectionStatus = {
+  banner: null,
+  init() {
+    window.addEventListener("offline", () => this.show());
+    window.addEventListener("online", () => this.hide());
+    if (!navigator.onLine) this.show();
+  },
+  show() {
+    if (this.banner) return;
+    const el = document.createElement("div");
+    el.id = "porvoz-offline-banner";
+    el.className =
+      "fixed top-0 left-0 right-0 z-[60] bg-amber-500 text-white text-sm font-medium px-4 py-2 flex items-center justify-center gap-2 shadow";
+    el.innerHTML =
+      '<i class="bi bi-wifi-off"></i><span>Sin conexión. Algunas acciones podrían no funcionar.</span>';
+    document.body.appendChild(el);
+    this.banner = el;
+  },
+  hide() {
+    if (!this.banner) return;
+    this.banner.remove();
+    this.banner = null;
+    Toast.show("Conexión restaurada", "success", 2500);
+  },
+};
+
+// ============================================================================
 // HELPERS
 // ============================================================================
 
@@ -233,15 +361,21 @@ function escapeHtml(text) {
 document.addEventListener("DOMContentLoaded", () => {
   Theme.init();
   Shortcuts.init();
+  ConnectionStatus.init();
   // Convert Django messages to toasts
   document.querySelectorAll(".messages > li").forEach((msg) => {
     const text = msg.textContent.trim();
-    const type = msg.className.includes("error")
+    const cls = msg.className;
+    const type = cls.includes("error")
       ? "error"
-      : msg.className.includes("success")
-        ? "success"
-        : "info";
-    Toast.show(text, type);
+      : cls.includes("warning")
+        ? "warning"
+        : cls.includes("success")
+          ? "success"
+          : "info";
+    // Errores y warnings duran más para que el usuario los pueda leer
+    const duration = type === "error" || type === "warning" ? 7000 : 4000;
+    Toast.show(text, type, duration);
     msg.style.display = "none";
   });
 });

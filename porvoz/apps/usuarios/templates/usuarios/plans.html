@@ -1,8 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
 
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
 {% block body %}
-<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
+<div class="min-h-screen flex flex-col bg-slate-50 w-full max-w-full overflow-x-hidden">
     {% if user.is_authenticated %}
         {% include "sidebar.html" %}
     {% else %}
@@ -16,27 +19,30 @@
         </button>
         {% endif %}
 
-        <div class="w-full max-w-6xl min-w-0 mx-auto px-4 sm:px-6 lg:px-10 py-10 sm:py-14 {% if user.is_authenticated %}mt-12 lg:mt-0{% endif %}">
-            <header class="text-center mb-12">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200/80 text-slate-600 text-xs font-semibold mb-4">
-                    <i class="bi bi-star"></i> Planes y precios
-                </div>
-                <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Elige el plan ideal</h1>
-                <p class="text-slate-600 mt-1 text-base max-w-xl mx-auto">Precios en COP (pesos colombianos). Sin compromisos. Cancela cuando quieras.</p>
-                <div class="flex flex-wrap justify-center gap-3 mt-6">
-                    {% if not user.is_authenticated %}
-                    <a href="{% url 'register' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white px-5 py-2.5 text-sm font-semibold transition-colors shadow-lg">
+        <div class="w-full max-w-6xl min-w-0 mx-auto px-4 sm:px-6 lg:px-10 py-12 sm:py-16 {% if user.is_authenticated %}mt-12 lg:mt-0{% endif %}">
+            <!-- Encabezado -->
+            <header class="text-center mb-14 max-w-2xl mx-auto">
+                <span class="inline-block text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Planes y precios</span>
+                <h1 class="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                    Cuida a quienes amas<br class="hidden sm:block"> sin complicaciones
+                </h1>
+                <p class="text-slate-600 mt-4 text-base sm:text-lg leading-relaxed">
+                    Elige el plan que mejor se adapta a ti. Sin permanencia, sin tarjeta para empezar y soporte humano cuando lo necesites.
+                </p>
+                {% if not user.is_authenticated %}
+                <div class="flex flex-wrap justify-center gap-3 mt-7">
+                    <a href="{% url 'register' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 text-sm font-semibold transition-colors shadow-sm">
                         <i class="bi bi-person-plus"></i>Crear cuenta gratis
                     </a>
-                    <a href="{% url 'login' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 px-5 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
-                        <i class="bi bi-box-arrow-in-right"></i>Iniciar sesión
+                    <a href="{% url 'login' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 px-6 py-3 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                        Iniciar sesión
                     </a>
-                    {% endif %}
                 </div>
+                {% endif %}
             </header>
 
             {% if messages %}
-            <div class="mb-6 max-w-xl mx-auto space-y-2">
+            <div class="mb-8 max-w-xl mx-auto space-y-2">
                 {% for message in messages %}
                 <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
                     {{ message }}
@@ -45,50 +51,148 @@
             </div>
             {% endif %}
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            <!-- Tarjetas de planes -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-7 items-stretch">
                 {% for plan in planes %}
-                <article class="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 {% if plan.destacado %}ring-2 ring-slate-600 ring-offset-4 shadow-md z-10 bg-white{% else %}bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300{% endif %}">
+                <article class="relative flex flex-col rounded-2xl bg-white transition-all duration-200
+                    {% if plan.destacado %}border-2 border-emerald-500 shadow-xl shadow-emerald-100/60 md:-mt-4 md:mb-4{% else %}border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300{% endif %}">
+
                     {% if plan.destacado %}
-                    <div class="absolute top-0 left-0 right-0 bg-slate-600 text-white text-center py-2 text-xs font-bold uppercase tracking-wider">Más popular</div>
-                    <div class="flex-1 flex flex-col bg-slate-600 text-white pt-8 pb-8">
-                    {% else %}
-                    <div class="flex-1 flex flex-col bg-white pt-8 pb-6">
-                    {% endif %}
-                        <div class="px-6 sm:px-8">
-                            <h2 class="text-xl font-bold {% if plan.destacado %}text-white{% else %}text-slate-900{% endif %}">{{ plan.nombre }}</h2>
-                            <p class="text-sm {% if plan.destacado %}text-slate-300{% else %}text-slate-600{% endif %} mt-2 leading-relaxed">{{ plan.tagline }}</p>
-                            <div class="mt-6 flex items-baseline gap-1">
-                                {% if plan.precio_cop %}
-                                <span class="text-3xl font-black {% if plan.destacado %}text-white{% else %}text-slate-900{% endif %}">${{ plan.precio_cop }}</span>
-                                <span class="text-sm {% if plan.destacado %}text-slate-400{% else %}text-slate-500{% endif %}">/mes</span>
-                                {% else %}
-                                <span class="text-3xl font-black {% if plan.destacado %}text-white{% else %}text-slate-900{% endif %}">$0</span>
-                                <span class="text-sm {% if plan.destacado %}text-slate-400{% else %}text-slate-500{% endif %}">/mes</span>
-                                {% endif %}
-                            </div>
-                            <p class="text-xs {% if plan.destacado %}text-slate-400{% else %}text-slate-500{% endif %} mt-1">Precios en COP</p>
-                        </div>
+                    <!-- Etiqueta "Recomendado" con acento esmeralda -->
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white text-[11px] font-bold uppercase tracking-wider shadow-md shadow-emerald-200">
+                            <i class="bi bi-star-fill text-amber-300 text-[10px]"></i>Recomendado
+                        </span>
                     </div>
-                    <ul class="px-6 sm:px-8 py-6 space-y-6 bg-white border-t border-slate-100">
-                        {% for c in plan.caracteristicas %}
-                        <li class="flex items-start gap-3 text-sm text-slate-700">
-                            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                                <i class="bi bi-check2 text-xs font-bold"></i>
+                    {% endif %}
+
+                    <!-- Encabezado con ícono temático -->
+                    <div class="px-7 pt-9 pb-6">
+                        <div class="flex items-center gap-3 mb-3">
+                            {% if forloop.counter0 == 0 %}
+                            <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-sky-50 border border-sky-100">
+                                <i class="bi bi-rocket-takeoff-fill text-sky-600 text-lg"></i>
+                            </div>
+                            {% elif forloop.counter0 == 1 %}
+                            <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100">
+                                <i class="bi bi-people-fill text-emerald-600 text-lg"></i>
+                            </div>
+                            {% else %}
+                            <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100">
+                                <i class="bi bi-buildings-fill text-indigo-600 text-lg"></i>
+                            </div>
+                            {% endif %}
+                            <h2 class="text-lg font-bold text-slate-900">{{ plan.nombre }}</h2>
+                            {% if plan.es_plan_actual %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold uppercase tracking-wider">Plan actual</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed min-h-[40px]">{{ plan.tagline }}</p>
+
+                        <!-- Precio -->
+                        <div class="mt-6 flex items-baseline gap-1.5">
+                            <span class="text-xs font-semibold text-slate-500 mb-1">COP</span>
+                            <span class="text-4xl font-black text-slate-900 tracking-tight tabular-nums">
+                                {% if plan.precio_cop %}${{ plan.precio_cop }}{% else %}$0{% endif %}
                             </span>
-                            <span>{{ c }}</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    <div class="p-6 sm:px-8 pt-0">
-                        <a href="{% url 'register' %}" class="block w-full text-center rounded-xl py-3.5 text-sm font-bold transition-all {{ plan.boton_estilo }} {% if plan.destacado %}ring-2 ring-white/30{% endif %}">
+                            <span class="text-sm text-slate-500 font-medium">/mes</span>
+                        </div>
+                        {% if not plan.precio_cop %}
+                        <p class="text-xs text-slate-500 mt-1.5">Sin tarjeta de crédito</p>
+                        {% else %}
+                        <p class="text-xs text-slate-500 mt-1.5">Cancela cuando quieras</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Botón CTA -->
+                    <div class="px-7 pb-6">
+                        {% if plan.es_plan_actual %}
+                        <button type="button" disabled class="block w-full text-center rounded-xl py-3 text-sm font-bold border border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed">
+                            Tu plan actual
+                        </button>
+                        {% elif plan.destacado %}
+                        <a href="{% url 'register' %}" class="block w-full text-center rounded-xl py-3 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-sm shadow-emerald-200">
                             {{ plan.boton_texto }}
                         </a>
+                        {% elif forloop.counter0 == 0 %}
+                        <a href="{% url 'register' %}" class="block w-full text-center rounded-xl py-3 text-sm font-bold border-2 border-sky-200 bg-sky-50 hover:bg-sky-100 text-sky-700 transition-colors">
+                            {{ plan.boton_texto }}
+                        </a>
+                        {% else %}
+                        <a href="{% url 'register' %}" class="block w-full text-center rounded-xl py-3 text-sm font-bold bg-slate-900 hover:bg-slate-800 text-white transition-colors">
+                            {{ plan.boton_texto }}
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Características con check de color según plan -->
+                    <div class="px-7 pt-5 pb-7 border-t border-slate-100 flex-1
+                        {% if plan.destacado %}bg-emerald-50/30{% endif %}">
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4">Incluye</p>
+                        <ul class="space-y-3">
+                            {% for c in plan.caracteristicas %}
+                            <li class="flex items-start gap-2.5 text-sm text-slate-700 leading-snug">
+                                {% if forloop.parentloop.counter0 == 0 %}
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center mt-0.5">
+                                    <i class="bi bi-check2 text-xs font-bold"></i>
+                                </span>
+                                {% elif forloop.parentloop.counter0 == 1 %}
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mt-0.5">
+                                    <i class="bi bi-check2 text-xs font-bold"></i>
+                                </span>
+                                {% else %}
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center mt-0.5">
+                                    <i class="bi bi-check2 text-xs font-bold"></i>
+                                </span>
+                                {% endif %}
+                                <span>{{ c }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
                     </div>
                 </article>
                 {% endfor %}
             </div>
 
-            <p class="text-center text-sm text-slate-500 mt-10">Todos los planes incluyen soporte por correo. <a href="{% url 'contact' %}" class="text-slate-700 font-medium hover:text-slate-900 underline">Escríbenos</a> para dudas.</p>
+            <!-- Comparativa rápida con color -->
+            <div class="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100">
+                            <i class="bi bi-shield-check text-emerald-600 text-lg"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-900 text-sm">Sin permanencia</h3>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">Cambia o cancela tu plan cuando quieras desde tu cuenta.</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-sky-50 border border-sky-100">
+                            <i class="bi bi-headset text-sky-600 text-lg"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-900 text-sm">Soporte humano</h3>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">Equipo en Colombia listo para resolver tus dudas por correo.</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100">
+                            <i class="bi bi-lock-fill text-indigo-600 text-lg"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-900 text-sm">Datos protegidos</h3>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">Información cifrada y servidores en infraestructura segura.</p>
+                </div>
+            </div>
+
+            <!-- FAQ ligero / contacto -->
+            <div class="mt-12 rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 text-center">
+                <h3 class="text-lg font-bold text-slate-900">¿Tienes dudas sobre los planes?</h3>
+                <p class="text-sm text-slate-600 mt-1">Cuéntanos tu caso y te ayudamos a elegir el plan adecuado.</p>
+                <a href="{% url 'contact' %}" class="inline-flex items-center gap-2 mt-4 rounded-xl border border-slate-300 bg-white text-slate-700 px-5 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                    <i class="bi bi-envelope"></i>Contactar al equipo
+                </a>
+            </div>
         </div>
     </main>
 </div>

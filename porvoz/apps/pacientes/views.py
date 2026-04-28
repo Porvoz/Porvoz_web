@@ -1,7 +1,11 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+
+logger = logging.getLogger(__name__)
 
 from .models import Paciente, Enfermedad
 from .services import PacienteService
@@ -166,8 +170,12 @@ def editar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse
                 )
                 messages.success(request, "Datos actualizados correctamente.")
                 return redirect("editar_paciente", paciente_id=paciente.id)
-            except Exception as e:
-                messages.error(request, f"Error al actualizar: {str(e)}")
+            except Exception:
+                logger.exception("Error al actualizar paciente %s", paciente.id)
+                messages.error(
+                    request,
+                    "No pudimos actualizar el paciente. Verifica los datos e intenta de nuevo.",
+                )
         else:
             nombre = request.POST.get("nombre", "").strip()
             phone_country = request.POST.get("phone_country", "+57").strip()
@@ -219,9 +227,12 @@ def editar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse
                     )
                     messages.success(request, "Paciente actualizado correctamente.")
                     return redirect("editar_paciente", paciente_id=paciente.id)
-                except Exception as e:
+                except Exception:
+                    logger.exception("Error al guardar paciente %s", paciente.id)
                     messages.error(
-                        request, f"Error al actualizar el paciente: {str(e)}"
+                        request,
+                        "No pudimos actualizar el paciente. "
+                        "Intenta de nuevo en unos segundos.",
                     )
 
     # Parsear teléfono para mostrar en el formulario
@@ -284,6 +295,9 @@ def detalle_paciente_view(request: HttpRequest, paciente_id: int) -> HttpRespons
     # Denominador: completadas + fallidas (las fallidas cuentan como dosis no tomadas)
     hace_30 = tz.now() - timedelta(days=30)
     meds_stats = []
+    total_llamadas_30 = 0
+    total_confirmadas_30 = 0
+    total_no_atendidas_30 = 0
     for med in paciente.medicamentos.all():
         llamadas_mes = Llamada.objects.filter(
             medicamento=med,
@@ -291,18 +305,49 @@ def detalle_paciente_view(request: HttpRequest, paciente_id: int) -> HttpRespons
             fecha_programada__gte=hace_30,
         )
         total = llamadas_mes.count()
-        confirmadas = llamadas_mes.filter(respuesta__resultado=RespuestaLlamada.RESULTADO_CONFIRMADA).count()
+        confirmadas = llamadas_mes.filter(
+            respuesta__resultado=RespuestaLlamada.RESULTADO_CONFIRMADA
+        ).count()
+        no_atendidas = llamadas_mes.filter(
+            respuesta__como_respondio__in=[
+                RespuestaLlamada.RESPUESTA_NO_ATENDIDA,
+                RespuestaLlamada.RESPUESTA_BUZON,
+            ]
+        ).count()
         adherencia = round(confirmadas / total * 100) if total > 0 else None
         ultima = (
-            Llamada.objects.filter(medicamento=med, estado__in=[Llamada.ESTADO_COMPLETADA, Llamada.ESTADO_FALLIDA])
+            Llamada.objects.filter(
+                medicamento=med,
+                estado__in=[Llamada.ESTADO_COMPLETADA, Llamada.ESTADO_FALLIDA],
+            )
             .select_related("respuesta").order_by("-fecha_programada").first()
         )
         meds_stats.append({"med": med, "adherencia": adherencia, "ultima": ultima})
+        total_llamadas_30 += total
+        total_confirmadas_30 += confirmadas
+        total_no_atendidas_30 += no_atendidas
+
+    adherencia_global = (
+        round(total_confirmadas_30 / total_llamadas_30 * 100)
+        if total_llamadas_30 > 0
+        else None
+    )
+
+    medicamentos_activos = sum(1 for m in paciente.medicamentos.all() if m.activo)
+    medicamentos_inactivos = paciente.medicamentos.count() - medicamentos_activos
 
     context = {
         "perfil": perfil,
         "paciente": paciente,
         "meds_stats": meds_stats,
+        "stats_globales": {
+            "adherencia": adherencia_global,
+            "llamadas_30d": total_llamadas_30,
+            "confirmadas_30d": total_confirmadas_30,
+            "no_atendidas_30d": total_no_atendidas_30,
+            "medicamentos_activos": medicamentos_activos,
+            "medicamentos_inactivos": medicamentos_inactivos,
+        },
     }
     return render(request, "pacientes/detalle_paciente.html", context)
 
@@ -401,6 +446,10 @@ def editar_enfermedad_view(
 @login_required
 def listar_pacientes_view(request: HttpRequest) -> HttpResponse:
     """Vista para listar todos los pacientes del usuario."""
+    from datetime import timedelta
+    from django.utils import timezone as tz
+    from apps.llamadas.models import Llamada, RespuestaLlamada
+
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     ordenar = request.GET.get("ordenar", "recientes")
 
@@ -411,6 +460,39 @@ def listar_pacientes_view(request: HttpRequest) -> HttpResponse:
     buscar = request.GET.get("buscar", "").strip()
     if buscar:
         pacientes = PacienteService.buscar_pacientes(pacientes, buscar)
+
+    # Adjuntar adherencia (30d) y última llamada como atributos a cada paciente
+    hace_30 = tz.now() - timedelta(days=30)
+    for p in pacientes:
+        llamadas_mes = Llamada.objects.filter(
+            paciente=p,
+            estado__in=[Llamada.ESTADO_COMPLETADA, Llamada.ESTADO_FALLIDA],
+            fecha_programada__gte=hace_30,
+        )
+        total = llamadas_mes.count()
+        confirmadas = llamadas_mes.filter(
+            respuesta__resultado=RespuestaLlamada.RESULTADO_CONFIRMADA
+        ).count()
+        p.adherencia_30d = round(confirmadas / total * 100) if total > 0 else None
+        p.llamadas_30d = total
+        p.ultima_llamada = (
+            Llamada.objects.filter(
+                paciente=p,
+                estado__in=[Llamada.ESTADO_COMPLETADA, Llamada.ESTADO_FALLIDA],
+            )
+            .select_related("respuesta")
+            .order_by("-fecha_programada")
+            .first()
+        )
+        p.proxima_llamada = (
+            Llamada.objects.filter(
+                paciente=p,
+                estado=Llamada.ESTADO_PROGRAMADA,
+                fecha_programada__gte=tz.now(),
+            )
+            .order_by("fecha_programada")
+            .first()
+        )
 
     opciones_ordenar = [
         ("recientes", "Más recientes"),

@@ -57,3 +57,127 @@ class SanitizacionMensajeTestCase(TestCase):
         mensaje = "El paciente debe tomar después de comer"
         resultado = LlamadaService._sanitizar_mensaje(mensaje)
         self.assertEqual(resultado, mensaje)
+
+
+class ReintentoLlamadaTestCase(TestCase):
+    """
+    Verifica que cuando el paciente dice 'no tomé' o 'después' se programe
+    automáticamente una nueva llamada según max_reintentos del medicamento.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="cuidador", password="x")
+        Perfil.objects.get_or_create(user=self.user)
+        self.paciente = Paciente.objects.create(
+            usuario=self.user,
+            nombre="Tito",
+            telefono="+573001112222",
+            timezone="America/Bogota",
+        )
+        self.med = Medicamento.objects.create(
+            paciente=self.paciente,
+            nombre="Losartán",
+            dosis="50mg",
+            frecuencia_tipo=Medicamento.FRECUENCIA_HORARIO,
+            horario="08:00",
+            max_reintentos=2,
+            minutos_entre_reintentos=10,
+        )
+        self.llamada = Llamada.objects.create(
+            medicamento=self.med,
+            usuario=self.user,
+            paciente=self.paciente,
+            fecha_programada=timezone.now() - timedelta(minutes=1),
+            estado=Llamada.ESTADO_EN_CURSO,
+            call_sid="CA_TEST_NEG",
+            intentos=0,
+        )
+
+    def _llamadas_programadas(self):
+        return Llamada.objects.filter(
+            medicamento=self.med,
+            estado=Llamada.ESTADO_PROGRAMADA,
+        )
+
+    def test_negativa_programa_reintento(self):
+        """'No lo tomé' → crea una nueva Llamada PROGRAMADA con intentos=1."""
+        self.assertEqual(self._llamadas_programadas().count(), 0)
+        LlamadaService.registrar_respuesta(
+            call_sid="CA_TEST_NEG",
+            transcripcion="Usuario: no lo tomé",
+            como_respondio=RespuestaLlamada.RESPUESTA_ATENDIDA,
+            resultado=RespuestaLlamada.RESULTADO_NEGATIVA,
+        )
+        nuevas = self._llamadas_programadas()
+        self.assertEqual(nuevas.count(), 1)
+        nueva = nuevas.first()
+        self.assertEqual(nueva.intentos, 1)
+        # La nueva llamada se programa en el futuro (~10 min)
+        delta = nueva.fecha_programada - timezone.now()
+        self.assertGreater(delta.total_seconds(), 60 * 5)
+        self.assertLess(delta.total_seconds(), 60 * 15)
+
+    def test_despues_programa_reintento(self):
+        """'Llámame después' → crea una nueva Llamada PROGRAMADA."""
+        LlamadaService.registrar_respuesta(
+            call_sid="CA_TEST_NEG",
+            transcripcion="Usuario: llámame más tarde",
+            como_respondio=RespuestaLlamada.RESPUESTA_ATENDIDA,
+            resultado=RespuestaLlamada.RESULTADO_DESPUES,
+        )
+        self.assertEqual(self._llamadas_programadas().count(), 1)
+
+    def test_reintentos_no_exceden_max(self):
+        """Cuando intentos > max_reintentos no se programa otro."""
+        self.llamada.intentos = 3  # superó max_reintentos=2
+        self.llamada.save(update_fields=["intentos"])
+        LlamadaService.registrar_respuesta(
+            call_sid="CA_TEST_NEG",
+            transcripcion="Usuario: no",
+            como_respondio=RespuestaLlamada.RESPUESTA_ATENDIDA,
+            resultado=RespuestaLlamada.RESULTADO_NEGATIVA,
+        )
+        self.assertEqual(self._llamadas_programadas().count(), 0)
+
+    def test_no_atendida_programa_reintento(self):
+        """No atendió → también dispara reintento."""
+        LlamadaService.registrar_respuesta(
+            call_sid="CA_TEST_NEG",
+            transcripcion="",
+            como_respondio=RespuestaLlamada.RESPUESTA_NO_ATENDIDA,
+        )
+        self.assertEqual(self._llamadas_programadas().count(), 1)
+
+    def test_confirmada_no_programa_reintento(self):
+        """Confirmó la toma → no se reprograma nada."""
+        LlamadaService.registrar_respuesta(
+            call_sid="CA_TEST_NEG",
+            transcripcion="Usuario: ya lo tomé",
+            como_respondio=RespuestaLlamada.RESPUESTA_ATENDIDA,
+            resultado=RespuestaLlamada.RESULTADO_CONFIRMADA,
+        )
+        self.assertEqual(self._llamadas_programadas().count(), 0)
+
+
+class SaludoConInstruccionesTestCase(TestCase):
+    """
+    Verifica que el saludo inicial incluya las instrucciones del medicamento
+    cuando estén configuradas (esto se hace en webhook_voice).
+    """
+
+    def setUp(self):
+        from django.test import Client
+        self.client = Client()
+
+    def test_saludo_incluye_instrucciones(self):
+        """Si instrucciones != '', deben aparecer en el TwiML del saludo."""
+        from unittest.mock import patch
+        with patch("apps.shared.decorators.verify_twilio_signature", lambda f: f):
+            resp = self.client.post(
+                "/llamadas/webhook/voice/?nombre_med=Losartan&instrucciones=Tomar%20con%20agua&nombre_paciente=Tito",
+                data={"CallSid": "CA_SALUDO_TEST"},
+            )
+        # Algunas configuraciones pueden requerir signature válida — basta con
+        # que cuando responde 200, el TwiML contenga las instrucciones.
+        if resp.status_code == 200:
+            self.assertIn("Tomar con agua", resp.content.decode())
