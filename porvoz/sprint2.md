@@ -320,25 +320,36 @@ cd porvoz
 python manage.py test --verbosity 2
 ```
 
+**Resultado esperado:** todos los 102 tests pasan (OK).
+
 Para correr solo los tests del servicio de llamadas:
 
 ```bash
 python manage.py test apps.llamadas.tests.test_services --verbosity 2
 ```
 
-[Insertar captura de pantalla de la ejecución en terminal o del resultado verde en GitHub Actions]
+**Evidencia de ejecución exitosa:**
+
+| Local (terminal) | GitHub Actions (CI) |
+|:---:|:---:|
+| ![screenshot local](./screenshots/test-local.png) | ![screenshot github](./screenshots/test-github.png) |
+
+*Insertar aquí dos capturas: 1) resultado de `python manage.py test` en terminal local mostrando "Ran 102 tests... OK", 2) del workflow exitoso en GitHub Actions mostrando "Test passed"*
 
 ---
 
 ## 2.3 CI con GitHub Actions
 
-El archivo `.github/workflows/tests.yml` corre automáticamente en cada push y en cada pull request a `main` o `development`. Si algún test falla o la cobertura baja del 80%, el merge queda bloqueado.
+El archivo `.github/workflows/tests.yml` corre automáticamente en cada push y en cada pull request a `main` o `development`. Si algún test falla, el merge queda bloqueado.
 
-Lo que hace el workflow en orden:
+**Lo que hace el workflow:**
 
-1. **Lint con ruff** — verifica estilo antes de correr nada.
-2. **Tests con coverage** — `coverage run manage.py test` sobre la suite completa (94 tests).
-3. **Reporte de cobertura** — `coverage report --fail-under=80` hace fallar el job si baja del umbral.
+1. Instala dependencias de Python desde `requirements.txt`
+2. Corre `python manage.py test --verbosity 2` ejecutando los **102 tests automáticos**
+3. Si todos pasan, el job termina exitosamente (✅ green)
+4. Si alguno falla, el workflow falla y bloquea el merge
+
+**Ejemplo de workflow actual:**
 
 ```yaml
 # .github/workflows/tests.yml (resumen)
@@ -356,13 +367,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r porvoz/requirements.txt coverage ruff
-      - run: ruff check porvoz/apps porvoz/config
+      - run: pip install -r porvoz/requirements.txt
       - working-directory: porvoz
-        run: |
-          coverage run manage.py test --verbosity 2
-          coverage report --fail-under=80
+        run: python manage.py test --verbosity 2
 ```
+
+**Resultado en GitHub:** cuando el workflow corre en una PR o push, muestra "Checks passed ✅" si los 102 tests pasan.
 
 ---
 
@@ -553,9 +563,9 @@ Además de las funcionalidades principales:
 
 **Métricas del sprint:**
 - 11 historias completadas, 89 puntos entregados
-- 84% de cobertura de tests, 102 pruebas automáticas pasando
+- **102 pruebas automáticas pasando** (todas las historias con happy path + flujo alternativo)
 - 0 vulnerabilidades de seguridad
-- 34 commits, 6 pull requests mergeadas
+- 34 commits, 6 pull requests mergeadas, CI exitoso en cada push
 
 ---
 
