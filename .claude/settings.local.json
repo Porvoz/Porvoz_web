@@ -86,7 +86,10 @@
       "Bash(python manage.py migrate --verbosity 0)",
       "Bash(python manage.py test --verbosity 2)",
       "Bash(git add *)",
-      "Bash(git commit -m 'Fix test exception type: IntegrityError not ValueError for duplicate user *)"
+      "Bash(git commit -m 'Fix test exception type: IntegrityError not ValueError for duplicate user *)",
+      "Bash(git push *)",
+      "Bash(gh run *)",
+      "Bash(git commit -m 'Fix response classification: multi-word phrases before single words *)"
     ]
   }
 }

@@ -147,7 +147,7 @@ _FRASES_RECHAZO_N    = [_normalizar(f) for f in _FRASES_RECHAZO]
 def _detectar_resultado(speech: str) -> str | None:
     """
     Analiza el texto del paciente y retorna la intención detectada o None si es ambigua.
-    Prioridad: emergencia > rechazo > negativa > positiva > después > None.
+    Prioridad: emergencia > rechazo > "ahora" → DESPUES > frases multi-palabra > simple.
     Las dos primeras se evalúan ANTES que cualquier otra: nunca se debe
     minimizar un síntoma grave o un rechazo explícito.
     """
@@ -162,24 +162,37 @@ def _detectar_resultado(speech: str) -> str | None:
     if _contiene_frase(texto, _FRASES_RECHAZO_N):
         return RespuestaLlamada.RESULTADO_RECHAZO
 
-    # Negativa tiene prioridad sobre positiva/después
-    if _contiene_frase(texto, _FRASES_NEGATIVAS_N):
-        return RespuestaLlamada.RESULTADO_NEGATIVA
-
-    # "ahora" sin indicar toma inmediata → "despues"
+    # "ahora" sin toma inmediata → DESPUES (evita que "sí ahora" sea CONFIRMADA)
     frases_toma_inmediata = (
         "ya lo tome", "lo acabo de tomar", "ya tome", "si lo tome",
+        "ya me lo tome", "acabo de tomarlo", "lo tome",
     )
     if "ahora" in texto and not any(f in texto for f in frases_toma_inmediata):
         return RespuestaLlamada.RESULTADO_DESPUES
 
-    # Positiva
-    if _contiene_frase(texto, _FRASES_POSITIVAS_N):
+    # Frases multi-palabra: positivas ANTES que negativas (para "sí ya tomé, no tengo síntomas")
+    frases_positivas_multi = [f for f in _FRASES_POSITIVAS_N if " " in f]
+    if _contiene_frase(texto, frases_positivas_multi):
         return RespuestaLlamada.RESULTADO_CONFIRMADA
 
-    # Después
+    # Frases multi-palabra negativas
+    frases_negativas_multi = [f for f in _FRASES_NEGATIVAS_N if " " in f]
+    if _contiene_frase(texto, frases_negativas_multi):
+        return RespuestaLlamada.RESULTADO_NEGATIVA
+
+    # Después (multi-palabra)
     if _contiene_frase(texto, _FRASES_DESPUES_N):
         return RespuestaLlamada.RESULTADO_DESPUES
+
+    # Palabras simples: positivas ANTES que negativas
+    frases_positivas_simples = [f for f in _FRASES_POSITIVAS_N if " " not in f]
+    if _contiene_frase(texto, frases_positivas_simples):
+        return RespuestaLlamada.RESULTADO_CONFIRMADA
+
+    # Palabras simples negativas
+    frases_negativas_simples = [f for f in _FRASES_NEGATIVAS_N if " " not in f]
+    if _contiene_frase(texto, frases_negativas_simples):
+        return RespuestaLlamada.RESULTADO_NEGATIVA
 
     return None
 
