@@ -29,10 +29,12 @@ class RegistroServiceTest(TestCase):
         self.assertEqual(perfil.plan, Perfil.PLAN_FREEMIUM)
 
     def test_crear_usuario_email_duplicado(self):
-        """Should raise ValueError if username already exists."""
+        """Should raise IntegrityError if username already exists."""
+        from django.db import IntegrityError
+
         User.objects.create_user(username="existing@test.com", email="existing@test.com")
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IntegrityError):
             RegistroService.crear_usuario_y_perfil(
                 username="existing@test.com",
                 email="existing@test.com",
