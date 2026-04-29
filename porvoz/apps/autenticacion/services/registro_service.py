@@ -3,13 +3,12 @@ Servicio para crear cuentas de usuario con perfil.
 """
 
 from datetime import date, timedelta
-from typing import Optional, Tuple
 
 from django.contrib.auth.models import User
 
 from apps.core.models import Perfil
-from apps.shared.services import TelefonoService
 from apps.notificaciones.services.email_service import EmailService
+from apps.shared.services import TelefonoService
 
 
 class RegistroService:
@@ -26,12 +25,12 @@ class RegistroService:
         phone_number: str = "",
         document_type: str = "",
         document_number: str = "",
-        date_of_birth: Optional[date] = None,
+        date_of_birth: date | None = None,
         city: str = "",
         emergency_contact_name: str = "",
         emergency_contact_phone_country: str = "+57",
         emergency_contact_phone_number: str = "",
-    ) -> Tuple[User, Perfil]:
+    ) -> tuple[User, Perfil]:
         """
         Crea un usuario y su perfil asociado.
 

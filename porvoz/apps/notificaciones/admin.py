@@ -3,6 +3,7 @@ Django admin configuration for notificaciones app.
 """
 
 from django.contrib import admin
+
 from apps.notificaciones.models import Notificacion
 
 

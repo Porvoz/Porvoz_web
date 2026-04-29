@@ -157,7 +157,8 @@ class ProveedorVozService:
         usa como contexto silencioso para entender el medicamento.
         """
         try:
-            from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+            from concurrent.futures import ThreadPoolExecutor
+            from concurrent.futures import TimeoutError as FuturesTimeoutError
 
             model = ProveedorVozService._get_gemini_model()
 

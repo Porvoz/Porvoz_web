@@ -1,8 +1,8 @@
-from django.test import TestCase
 from django.contrib.auth.models import User
+from django.test import TestCase
 from django.utils import timezone
 
-from apps.llamadas.models import RespuestaLlamada, Llamada
+from apps.llamadas.models import Llamada, RespuestaLlamada
 from apps.llamadas.services.llamada_service import LlamadaService
 from apps.llamadas.views import _append_asistente, _detectar_resultado
 from apps.medicamentos.models import Medicamento

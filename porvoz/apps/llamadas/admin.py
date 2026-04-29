@@ -3,7 +3,8 @@ Django admin configuration for llamadas app.
 """
 
 from django.contrib import admin
-from apps.llamadas.models import Llamada, RespuestaLlamada, AuditoriaLog
+
+from apps.llamadas.models import AuditoriaLog, Llamada, RespuestaLlamada
 
 
 @admin.register(Llamada)

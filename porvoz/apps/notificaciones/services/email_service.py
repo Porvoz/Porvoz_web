@@ -3,11 +3,12 @@ Servicio para envío de emails con plantillas HTML.
 """
 
 import logging
-from django.core.mail import EmailMultiAlternatives
+
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from django.urls import reverse
+
 from apps.notificaciones.models import Notificacion
 
 logger = logging.getLogger(__name__)
@@ -220,10 +221,14 @@ Próximos pasos:
         )
 
     @staticmethod
-    def enviar_email_llamada_no_atendida(usuario: User, paciente=None, medicamento=None, url_detalle: str = None) -> bool:
+    def enviar_email_llamada_no_atendida(
+        usuario: User, paciente=None, medicamento=None, url_detalle: str = None
+    ) -> bool:
         """Envía email cuando la llamada no fue atendida."""
         titulo = "📞 Llamada No Atendida"
-        mensaje = f"La llamada de recordatorio para {medicamento.nombre if medicamento else 'un medicamento'} de {paciente.nombre if paciente else 'un paciente'} no fue atendida"
+        med_nombre = medicamento.nombre if medicamento else "un medicamento"
+        pac_nombre = paciente.nombre if paciente else "un paciente"
+        mensaje = f"La llamada de recordatorio para {med_nombre} de {pac_nombre} no fue atendida"
 
         return EmailService.enviar_notificacion_html(
             usuario=usuario,
@@ -258,7 +263,15 @@ Próximos pasos:
         )
 
     @staticmethod
-    def enviar_email_alerta(usuario: User, titulo: str, mensaje: str, paciente=None, medicamento=None, prioridad: str = None, url_detalle: str = None) -> bool:
+    def enviar_email_alerta(
+        usuario: User,
+        titulo: str,
+        mensaje: str,
+        paciente=None,
+        medicamento=None,
+        prioridad: str = None,
+        url_detalle: str = None,
+    ) -> bool:
         """Envía email de alerta personalizado."""
         return EmailService.enviar_notificacion_html(
             usuario=usuario,

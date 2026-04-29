@@ -3,7 +3,8 @@ Django admin configuration for medicamentos app.
 """
 
 from django.contrib import admin
-from apps.medicamentos.models import Medicamento, HorarioMedicamento
+
+from apps.medicamentos.models import HorarioMedicamento, Medicamento
 
 
 class HorarioMedicamentoInline(admin.TabularInline):

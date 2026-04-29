@@ -11,8 +11,8 @@ Responsabilidades:
 import logging
 import re
 import urllib.parse
-from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.contrib.auth.models import User
@@ -20,7 +20,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 
-from apps.llamadas.models import Llamada, RespuestaLlamada, AuditoriaLog
+from apps.llamadas.models import AuditoriaLog, Llamada, RespuestaLlamada
 from apps.medicamentos.models import Medicamento
 from apps.notificaciones.services.notificacion_service import NotificacionService
 from apps.pacientes.models import Paciente

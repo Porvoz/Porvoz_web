@@ -12,9 +12,9 @@ from django.views.decorators.http import require_http_methods
 from apps.llamadas.models import Llamada, RespuestaLlamada
 from apps.llamadas.services.llamada_service import LlamadaService
 from apps.llamadas.services.proveedor_voz_service import ProveedorVozService
-from apps.shared.decorators import verify_twilio_signature, deduplicate_webhook, rate_limit_by_key
 from apps.medicamentos.models import Medicamento
 from apps.pacientes.models import Paciente
+from apps.shared.decorators import deduplicate_webhook, rate_limit_by_key, verify_twilio_signature
 
 logger = logging.getLogger(__name__)
 
@@ -231,8 +231,9 @@ def _safe_registrar_estado_final(call_sid, estado_twilio, duracion=None):
 @login_required
 def historial_llamadas(request):
     """Historial global de llamadas del usuario."""
-    from django.utils import timezone
     from datetime import timedelta
+
+    from django.utils import timezone
 
     qs = (
         Llamada.objects.filter(usuario=request.user)

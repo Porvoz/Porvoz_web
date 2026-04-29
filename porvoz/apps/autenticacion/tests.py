@@ -2,8 +2,9 @@
 Tests for autenticacion app (registration, password reset).
 """
 
-from django.test import TestCase
 from django.contrib.auth.models import User
+from django.test import TestCase
+
 from apps.autenticacion.services.registro_service import RegistroService
 from apps.core.models import Perfil
 
@@ -31,7 +32,7 @@ class RegistroServiceTest(TestCase):
         """Should raise ValueError if username already exists."""
         User.objects.create_user(username="existing@test.com", email="existing@test.com")
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             RegistroService.crear_usuario_y_perfil(
                 username="existing@test.com",
                 email="existing@test.com",

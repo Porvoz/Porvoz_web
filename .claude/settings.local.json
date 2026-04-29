@@ -71,7 +71,17 @@
       "WebFetch(domain:ai.google.dev)",
       "WebFetch(domain:help.twilio.com)",
       "Bash(.venv/Scripts/python.exe -m ruff check apps/ config/)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "Bash(python manage.py shell)",
+      "Bash(ruff check *)",
+      "Bash(python -m pytest --version)",
+      "Bash(python manage.py test --version)",
+      "Bash(python -m pip list)",
+      "Bash(python manage.py test --verbosity 1)",
+      "Bash(python -m coverage run --source='apps' manage.py test --verbosity 0)",
+      "Bash(python -m coverage report --skip-covered)",
+      "Bash(python3 -c \"import sys, json; data = json.load\\(sys.stdin\\); errors = {}; [errors.setdefault\\(e['code'], []\\).append\\(e['filename']\\) for e in data]; [\\(print\\(f'{k}: {len\\(v\\)} errores'\\)\\) for k, v in sorted\\(errors.items\\(\\)\\)]\")",
+      "Bash(python manage.py test --verbosity 0)"
     ]
   }
 }

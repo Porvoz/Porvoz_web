@@ -3,11 +3,11 @@ Tests para PacienteService.
 Ejecutar: python manage.py test apps.pacientes
 """
 
-from django.test import TestCase
 from django.contrib.auth.models import User
+from django.test import TestCase
 
-from apps.pacientes.services import PacienteService
 from apps.pacientes.models import Paciente
+from apps.pacientes.services import PacienteService
 
 
 class PacienteServiceCrearTest(TestCase):

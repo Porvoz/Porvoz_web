@@ -27,7 +27,7 @@ def ejecutar_llamada_task(self, llamada_id: int, base_url: str):
         logger.error(f"[LlamadaTask] Llamada #{llamada_id} no encontrada")
     except Exception as exc:
         logger.error(f"[LlamadaTask] Error en llamada #{llamada_id}: {exc}")
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc
 
 
 @shared_task
@@ -37,6 +37,7 @@ def ejecutar_llamadas_pendientes_task():
     Configurar en django-celery-beat para ejecutar cada 60s.
     """
     from django.utils import timezone
+
     from apps.llamadas.models import Llamada
     from apps.llamadas.services.proveedor_voz_service import ProveedorVozService
 

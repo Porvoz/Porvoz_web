@@ -4,8 +4,8 @@ Shared settings used by all environments (dev, production).
 Environment-specific overrides are in development.py and production.py.
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 

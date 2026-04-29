@@ -6,9 +6,9 @@ import logging
 import os
 from functools import wraps
 
-from django.http import HttpResponse
 from django.conf import settings
 from django.core.cache import cache
+from django.http import HttpResponse
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +49,7 @@ def verify_twilio_signature(view_func):
 
         # Construir URL pública exacta usada por Twilio
         public_base_url = (os.getenv("TWILIO_BASE_URL") or os.getenv("BASE_URL") or "").rstrip("/")
-        if public_base_url:
-            request_url = f"{public_base_url}{request.get_full_path()}"
-        else:
-            request_url = request.build_absolute_uri()
+        request_url = f"{public_base_url}{request.get_full_path()}" if public_base_url else request.build_absolute_uri()
 
         # Validar firma con SDK oficial
         from twilio.request_validator import RequestValidator

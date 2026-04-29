@@ -106,7 +106,7 @@ class DashboardService:
         Incluye frecuencia horario fijo y cada X horas.
         Adjunta el estado de la última llamada ejecutada hoy para cada medicamento.
         """
-        from apps.llamadas.models import Llamada, RespuestaLlamada
+        from apps.llamadas.models import Llamada
 
         ahora = timezone.now()
         hoy = timezone.localtime(ahora).date()

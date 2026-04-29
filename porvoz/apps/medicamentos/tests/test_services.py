@@ -3,12 +3,12 @@ Tests para MedicamentoService.
 Ejecutar: python manage.py test apps.medicamentos
 """
 
-from django.test import TestCase
 from django.contrib.auth.models import User
+from django.test import TestCase
 
-from apps.pacientes.models import Paciente
-from apps.medicamentos.models import Medicamento, HorarioMedicamento
+from apps.medicamentos.models import HorarioMedicamento, Medicamento
 from apps.medicamentos.services import MedicamentoService
+from apps.pacientes.models import Paciente
 
 
 class MedicamentoServiceCrearTest(TestCase):

@@ -1,18 +1,18 @@
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from apps.core.models import Perfil
+from apps.llamadas.services.llamada_service import LlamadaService
+from apps.notificaciones.services import NotificacionService
+from apps.pacientes.models import Paciente
+from apps.usuarios.services.planes_service import PlanService
 
 from .models import Medicamento
 from .services import MedicamentoService
-from apps.llamadas.services.llamada_service import LlamadaService
-from apps.pacientes.models import Paciente
-from apps.core.models import Perfil
-from apps.notificaciones.services import NotificacionService
-from apps.usuarios.services.planes_service import PlanService
 
 _TIMEZONES_VALIDAS = {
     "America/Bogota", "America/Mexico_City", "America/Cancun", "America/Lima",

@@ -5,16 +5,17 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-logger = logging.getLogger(__name__)
-
-from .models import Paciente, Enfermedad
-from .services import PacienteService
 from apps.core.models import Perfil
 from apps.dashboard.services import DashboardService
 from apps.llamadas.models import Llamada
 from apps.notificaciones.services import NotificacionService
 from apps.shared.services import TelefonoService
 from apps.usuarios.services.planes_service import PlanService
+
+from .models import Enfermedad, Paciente
+from .services import PacienteService
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -285,8 +286,10 @@ def eliminar_paciente_view(request: HttpRequest, paciente_id: int) -> HttpRespon
 def detalle_paciente_view(request: HttpRequest, paciente_id: int) -> HttpResponse:
     """Vista de detalle del paciente: info arriba y bloques de medicamentos/recordatorios abajo."""
     from datetime import timedelta
+
     from django.utils import timezone as tz
-    from apps.llamadas.models import Llamada, RespuestaLlamada
+
+    from apps.llamadas.models import RespuestaLlamada
 
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
@@ -447,8 +450,10 @@ def editar_enfermedad_view(
 def listar_pacientes_view(request: HttpRequest) -> HttpResponse:
     """Vista para listar todos los pacientes del usuario."""
     from datetime import timedelta
+
     from django.utils import timezone as tz
-    from apps.llamadas.models import Llamada, RespuestaLlamada
+
+    from apps.llamadas.models import RespuestaLlamada
 
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     ordenar = request.GET.get("ordenar", "recientes")

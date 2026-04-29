@@ -2,16 +2,18 @@
 Tests for dashboard app (stats, activity feed, call metrics).
 """
 
-from django.test import TestCase
-from django.contrib.auth.models import User
-from django.utils import timezone
 from datetime import timedelta
+
+from django.contrib.auth.models import User
+from django.test import TestCase
+from django.utils import timezone
+
 from apps.core.models import Perfil
 from apps.dashboard.services.dashboard_service import DashboardService
-from apps.pacientes.models import Paciente
+from apps.llamadas.models import Llamada, RespuestaLlamada
 from apps.medicamentos.models import Medicamento
 from apps.notificaciones.models import Notificacion
-from apps.llamadas.models import Llamada, RespuestaLlamada
+from apps.pacientes.models import Paciente
 
 
 class DashboardServiceTest(TestCase):

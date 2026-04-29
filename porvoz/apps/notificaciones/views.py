@@ -2,14 +2,14 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
+from apps.core.models import Perfil
 from apps.notificaciones.models import Notificacion
 from apps.notificaciones.services import NotificacionService
 from apps.pacientes.models import Paciente
-from apps.core.models import Perfil
 
 
 def _notifications_redirect_url(request: HttpRequest) -> str:

@@ -4,12 +4,13 @@ Tests for usuarios app (profile, password changes, plan limits).
 
 from datetime import date, timedelta
 
-from django.test import TestCase
 from django.contrib.auth.models import User
-from apps.usuarios.services.perfil_service import PerfilService
-from apps.usuarios.services.planes_service import PlanService
+from django.test import TestCase
+
 from apps.core.models import Perfil
 from apps.pacientes.models import Paciente
+from apps.usuarios.services.perfil_service import PerfilService
+from apps.usuarios.services.planes_service import PlanService
 
 
 class PerfilServiceTest(TestCase):

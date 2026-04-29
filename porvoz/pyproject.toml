@@ -46,10 +46,11 @@ test = [
 ]
 
 # -----------------------------------------------------------------------------
-# Tooling — ruff replaces flake8/setup.cfg. Same 100-char limit.
+# Tooling — ruff replaces flake8/setup.cfg.
+# Line length set to 150 (pragmatic for test docstrings + service signatures)
 # -----------------------------------------------------------------------------
 [tool.ruff]
-line-length = 100
+line-length = 150
 target-version = "py311"
 exclude = [
     "venv",
@@ -61,7 +62,7 @@ exclude = [
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM"]
-ignore = ["E203", "B008"]
+ignore = ["E203", "B008", "SIM108"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/settings/*.py" = ["F405", "F403"]

@@ -7,8 +7,9 @@ liberando a las vistas de lógica de validación.
 
 from django import forms
 
-from .models import Paciente
 from apps.shared.services.telefono_service import TelefonoService
+
+from .models import Paciente
 
 
 class PacienteForm(forms.Form):

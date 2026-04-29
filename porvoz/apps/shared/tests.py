@@ -3,10 +3,11 @@ Tests for shared utilities (TelefonoService, decorators, exceptions).
 """
 
 from django.core.cache import cache
-from django.test import TestCase, RequestFactory
-from apps.shared.services.telefono_service import TelefonoService
-from apps.shared.decorators import rate_limit_by_key, deduplicate_webhook
 from django.http import HttpResponse
+from django.test import RequestFactory, TestCase
+
+from apps.shared.decorators import deduplicate_webhook, rate_limit_by_key
+from apps.shared.services.telefono_service import TelefonoService
 
 
 class TelefonoServiceTest(TestCase):

@@ -178,13 +178,12 @@ class PlanService:
         hoy = date.today()
 
         # Verificar expiración del plan (solo para planes de pago)
-        if perfil.plan != Perfil.PLAN_FREEMIUM and perfil.plan_expiration:
-            if perfil.plan_expiration < hoy:
-                return (
-                    False,
-                    f"Tu plan {perfil.get_plan_display()} venció el {perfil.plan_expiration.strftime('%d/%m/%Y')}. "
-                    "Renuévalo para continuar realizando llamadas.",
-                )
+        if perfil.plan != Perfil.PLAN_FREEMIUM and perfil.plan_expiration and perfil.plan_expiration < hoy:
+            return (
+                False,
+                f"Tu plan {perfil.get_plan_display()} venció el {perfil.plan_expiration.strftime('%d/%m/%Y')}. "
+                "Renuévalo para continuar realizando llamadas.",
+            )
 
         limites = PlanService.get_limites(perfil.plan)
         max_l = limites["max_llamadas_mes"]
@@ -206,7 +205,6 @@ class PlanService:
     def get_uso_actual(usuario) -> dict:
         """Retorna uso actual del usuario para mostrar en UI."""
         from apps.llamadas.models import Llamada
-        from apps.medicamentos.models import Medicamento
         from apps.pacientes.models import Paciente
 
         perfil = usuario.perfil

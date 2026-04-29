@@ -3,7 +3,6 @@ Servicio para gestionar perfiles de usuario.
 """
 
 from datetime import date, datetime, timedelta
-from typing import Optional, Tuple
 
 from apps.core.models import Perfil
 from apps.shared.services import TelefonoService
@@ -15,7 +14,7 @@ class PerfilService:
     @staticmethod
     def validar_edad(
         date_of_birth_str: str,
-    ) -> Tuple[Optional[date], Optional[str]]:
+    ) -> tuple[date | None, str | None]:
         """
         Valida que la fecha de nacimiento sea válida y represente una edad >= 10 años.
 
@@ -67,7 +66,7 @@ class PerfilService:
         email_llamada_no_atendida: bool = None,
         email_toma_aplazada: bool = None,
         email_reintentos_agotados: bool = None,
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Actualiza los datos del perfil y del usuario asociado.
 
@@ -151,7 +150,7 @@ class PerfilService:
         return 365
 
     @staticmethod
-    def cambiar_plan(perfil: Perfil, nuevo_plan: str) -> Tuple[bool, Optional[str]]:
+    def cambiar_plan(perfil: Perfil, nuevo_plan: str) -> tuple[bool, str | None]:
         """
         Cambia el plan del perfil a uno válido.
 

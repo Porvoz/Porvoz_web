@@ -28,9 +28,9 @@ def enviar_email_task(self, tipo: str, usuario_id: int, paciente_id=None, medica
         medicamento_id: ID del Medicamento (opcional)
         extra: kwargs adicionales pasados al handler (ej: {'intentos': 3})
     """
+    from apps.medicamentos.models import Medicamento
     from apps.notificaciones.services.email_service import EmailService
     from apps.pacientes.models import Paciente
-    from apps.medicamentos.models import Medicamento
 
     extra = extra or {}
 
@@ -78,4 +78,4 @@ def enviar_email_task(self, tipo: str, usuario_id: int, paciente_id=None, medica
         logger.error(f"[EmailTask] Usuario {usuario_id} no encontrado")
     except Exception as exc:
         logger.error(f"[EmailTask] Error en {tipo}: {exc}", exc_info=True)
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc

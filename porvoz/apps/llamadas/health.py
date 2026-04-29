@@ -5,8 +5,8 @@ Health check para monitoreo de servicios
 import logging
 from datetime import datetime
 
-from django.http import JsonResponse
 from django.db import connection
+from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
 logger = logging.getLogger(__name__)

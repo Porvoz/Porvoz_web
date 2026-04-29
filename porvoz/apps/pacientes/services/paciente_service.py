@@ -4,11 +4,10 @@ Servicio para gestión de pacientes.
 
 import unicodedata
 from datetime import date, datetime
-from typing import Optional, Tuple
 
 from django.contrib.auth.models import User
 
-from apps.pacientes.models import Paciente, Enfermedad
+from apps.pacientes.models import Enfermedad, Paciente
 
 
 class PacienteService:
@@ -37,7 +36,7 @@ class PacienteService:
 
     @staticmethod
     def verificar_telefono_existente(
-        usuario: User, telefono: str, paciente_excluir_id: Optional[int] = None
+        usuario: User, telefono: str, paciente_excluir_id: int | None = None
     ) -> bool:
         """Verifica si ya existe un paciente con ese teléfono."""
         qs = Paciente.objects.filter(usuario=usuario, telefono=telefono, activo=True)
@@ -71,7 +70,7 @@ class PacienteService:
         )
 
     @staticmethod
-    def obtener_por_id(paciente_id: int, usuario: User) -> Optional[Paciente]:
+    def obtener_por_id(paciente_id: int, usuario: User) -> Paciente | None:
         """Obtiene un paciente por ID verificando pertenencia."""
         try:
             return Paciente.objects.get(id=paciente_id, usuario=usuario)
@@ -110,7 +109,7 @@ class PacienteService:
     @staticmethod
     def obtener_por_id_y_enfermedad(
         paciente_id: int, enfermedad_id: int, usuario: User
-    ) -> tuple[Optional[Paciente], Optional[Enfermedad]]:
+    ) -> tuple[Paciente | None, Enfermedad | None]:
         """Obtiene paciente y enfermedad verificando pertenencia."""
         paciente = PacienteService.obtener_por_id(paciente_id, usuario)
         if not paciente:
@@ -124,7 +123,7 @@ class PacienteService:
     @staticmethod
     def parsear_fecha_diagnostico(
         fecha_str: str,
-    ) -> Tuple[Optional[date], Optional[str]]:
+    ) -> tuple[date | None, str | None]:
         """Parsea y valida una fecha de diagnóstico.
 
         Returns:
@@ -154,8 +153,9 @@ class PacienteService:
         """Copia la foto del perfil del usuario al paciente si no tiene foto propia."""
         if perfil and perfil.profile_image and not paciente.foto:
             try:
-                from django.core.files.images import ImageFile
                 from io import BytesIO
+
+                from django.core.files.images import ImageFile
 
                 if perfil.profile_image.storage.exists(perfil.profile_image.name):
                     imagen = perfil.profile_image.open("rb")
@@ -165,6 +165,6 @@ class PacienteService:
                     nombre_archivo = f"paciente_{paciente.id}_{img_name}"
                     paciente.foto.save(nombre_archivo, ImageFile(contenido), save=True)
                     imagen.close()
-            except (IOError, OSError):
+            except OSError:
                 # Si falla la copia de imagen, continuamos sin ella
                 pass

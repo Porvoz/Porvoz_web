@@ -2,8 +2,8 @@
 Servicio para gestión de medicamentos.
 """
 
+import contextlib
 from datetime import datetime
-from typing import Optional
 
 from django.contrib.auth.models import User
 
@@ -109,7 +109,7 @@ class MedicamentoService:
     @staticmethod
     def obtener_por_id(
         paciente_id: int, medicamento_id: int, usuario: User
-    ) -> Optional[Medicamento]:
+    ) -> Medicamento | None:
         """Obtiene un medicamento verificando pertenencia. Retorna None si no existe."""
         try:
             return Medicamento.objects.get(
@@ -127,17 +127,13 @@ class MedicamentoService:
         """Parsea horario legacy y fecha de inicio desde strings."""
         horario_legacy = None
         if horarios and frecuencia_tipo == Medicamento.FRECUENCIA_HORARIO:
-            try:
+            with contextlib.suppress(ValueError):
                 horario_legacy = datetime.strptime(horarios[0], "%H:%M").time()
-            except ValueError:
-                pass
 
         fecha_inicio_date = None
         if fecha_inicio:
-            try:
+            with contextlib.suppress(ValueError):
                 fecha_inicio_date = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
-            except ValueError:
-                pass
 
         return horario_legacy, fecha_inicio_date
 

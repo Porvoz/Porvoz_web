@@ -1,13 +1,14 @@
-from django.test import TestCase
-from django.contrib.auth.models import User
-from django.utils import timezone
 from datetime import timedelta
 
+from django.contrib.auth.models import User
+from django.test import TestCase
+from django.utils import timezone
+
+from apps.core.models import Perfil
 from apps.llamadas.models import Llamada, RespuestaLlamada
 from apps.llamadas.services.llamada_service import LlamadaService
 from apps.medicamentos.models import Medicamento
 from apps.pacientes.models import Paciente
-from apps.core.models import Perfil
 from apps.shared.services.telefono_service import TelefonoService
 
 

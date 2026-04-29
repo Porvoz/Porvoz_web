@@ -2,20 +2,27 @@
 Servicio para generar reportes en CSV y PDF.
 """
 
-from datetime import datetime, timedelta
-from io import StringIO, BytesIO
 import csv
+from datetime import datetime, timedelta
+from io import BytesIO, StringIO
 
 from django.utils import timezone
+
 from apps.llamadas.models import Llamada, RespuestaLlamada
 from apps.pacientes.models import Paciente
 
 try:
-    from reportlab.lib.pagesizes import letter, A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
     from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import inch
+    from reportlab.platypus import (
+        Paragraph,
+        SimpleDocTemplate,
+        Spacer,
+        Table,
+        TableStyle,
+    )
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False

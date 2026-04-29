@@ -6,11 +6,10 @@ import hashlib
 import hmac
 import logging
 from functools import wraps
-from time import time
 
-from django.http import HttpResponse
 from django.conf import settings
 from django.core.cache import cache
+from django.http import HttpResponse
 
 logger = logging.getLogger(__name__)
 

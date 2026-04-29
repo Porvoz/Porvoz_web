@@ -5,8 +5,8 @@ Ejecutar: python manage.py test apps.core
 
 from datetime import date, timedelta
 
-from django.test import TestCase
 from django.contrib.auth.models import User
+from django.test import TestCase
 
 from apps.autenticacion.services import RegistroService
 from apps.core.models import Perfil
