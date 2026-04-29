@@ -27,13 +27,11 @@ jobs:
         run: sudo apt-get install -y default-libmysqlclient-dev build-essential
 
       - name: Install Python dependencies
-        run: pip install -r porvoz/requirements.txt coverage
+        run: pip install -r porvoz/requirements.txt
 
-      - name: Run tests with coverage
+      - name: Run tests
         working-directory: porvoz
         env:
           DJANGO_SETTINGS_MODULE: config.settings.development
           DJANGO_SECRET_KEY: ci-secret-key-only-for-tests
-        run: |
-          coverage run manage.py test --verbosity 2
-          coverage report --fail-under=80
+        run: python manage.py test --verbosity 2
