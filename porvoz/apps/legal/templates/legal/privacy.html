@@ -39,7 +39,7 @@
 
             <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-8">
                 <p class="text-sm text-slate-800 mb-2 font-semibold"><i class="bi bi-journal-text mr-1"></i>Marco normativo colombiano</p>
-                <p class="text-xs text-slate-700 leading-relaxed">Esta Política se rige por la <strong>Ley Estatutaria 1581 de 2012</strong> (protección de datos personales), el <strong>Decreto 1377 de 2013</strong> (reglamentación), los <strong>artículos 15 y 20 de la Constitución Política de Colombia</strong> (derecho a la intimidad y habeas data) y la <strong>Circular Única de la SIC</strong> en materia de tratamiento de datos. Porvoz actúa como <strong>Responsable del Tratamiento</strong>.</p>
+                <p class="text-xs text-slate-700 leading-relaxed">Esta Política se rige por la <strong>Ley Estatutaria 1581 de 2012</strong> (protección de datos personales), el <strong>Decreto 1377 de 2013</strong> (reglamentación), la <strong>Ley 1266 de 2008</strong> (habeas data), la <strong>Resolución 309 de 2025</strong> (consentimiento informado en menores), la <strong>Resolución 1888 de 2025</strong> (interoperabilidad en salud), los <strong>artículos 15 y 20 de la Constitución Política de Colombia</strong> (derecho a la intimidad y habeas data) y la <strong>Circular Única de la SIC</strong> en materia de tratamiento de datos. Porvoz actúa como <strong>Responsable del Tratamiento</strong>.</p>
             </div>
 
             <article class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -64,6 +64,7 @@
                             <li><strong>Pacientes y tratamiento:</strong> nombre del paciente, teléfono, medicamentos, dosis, horarios, condiciones que usted registre</li>
                             <li><strong>Uso:</strong> registros de llamadas, historial de recordatorios, estado de atención</li>
                         </ul>
+                        <p class="text-slate-700 mt-4"><strong>⚠️ Datos sensibles:</strong> Conforme al artículo 5 de la Ley 1581 de 2012, la información relacionada con medicamentos, condiciones de salud y tratamientos constituye <strong>datos sensibles</strong>. El tratamiento de estos datos requiere su <strong>consentimiento previo, explícito e informado</strong>.</p>
                     </section>
 
                     <section class="border-b border-slate-100 pb-8 last:border-0">
@@ -92,7 +93,8 @@
                             <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">5</span>
                             Cesión y transmisión
                         </h2>
-                        <p class="text-slate-700"><strong>No vendemos ni alquilamos sus datos.</strong> Solo compartimos información con encargados del tratamiento necesarios para el Servicio (bajo cláusulas de confidencialidad), cumplimiento legal o con su consentimiento previo, conforme al artículo 24 de la Ley 1581 de 2012.</p>
+                        <p class="text-slate-700 mb-3"><strong>No vendemos ni alquilamos sus datos.</strong> Solo compartimos información con encargados del tratamiento necesarios para el Servicio (bajo cláusulas de confidencialidad), cumplimiento legal o con su consentimiento previo, conforme al artículo 24 de la Ley 1581 de 2012.</p>
+                        <p class="text-slate-700 text-sm"><strong>Encargados del tratamiento:</strong> Twilio (transmisión de llamadas), Google Gemini (clasificación de respuestas), proveedores de correo (notificaciones), bases de datos en la nube. Todos bajo compromisos de confidencialidad y protección de datos.</p>
                     </section>
 
                     <section class="border-b border-slate-100 pb-8 last:border-0">
@@ -106,10 +108,17 @@
                     <section class="border-b border-slate-100 pb-8 last:border-0">
                         <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
                             <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">7</span>
-                            Derechos del titular
+                            Derechos del titular (ARCC)
                         </h2>
-                        <p class="text-slate-700 mb-3">Conforme al artículo 8 de la Ley 1581 de 2012, usted tiene derecho a conocer, actualizar, rectificar, solicitar supresión o revocar la autorización. Para ejercerlos, diríjase a <a href="{% url 'contact' %}" class="text-slate-800 hover:text-slate-900 font-semibold underline underline-offset-2">Contacto</a>.</p>
-                        <p class="text-slate-600 text-sm">Ante la Superintendencia de Industria y Comercio (SIC) puede presentar quejas por el tratamiento de sus datos personales.</p>
+                        <p class="text-slate-700 mb-3">Conforme al artículo 8 de la Ley 1581 de 2012 y artículo 3 de la Ley 1266 de 2008, usted tiene derecho a:</p>
+                        <ul class="text-slate-700 space-y-2 ml-4 list-disc pl-2">
+                            <li><strong>Acceso (A):</strong> Conocer qué datos tenemos sobre usted</li>
+                            <li><strong>Rectificación (R):</strong> Corregir datos inexactos</li>
+                            <li><strong>Cancelación (C):</strong> Solicitar la eliminación de sus datos</li>
+                            <li><strong>Supresión (C+):</strong> Revocar la autorización del tratamiento de datos sensibles</li>
+                        </ul>
+                        <p class="text-slate-700 mt-3"><strong>Plazo de respuesta:</strong> Nos comprometemos a responder en máximo <strong>10 días hábiles</strong> contados desde la recepción de su solicitud (artículo 14, Ley 1581 de 2012). Para ejercer estos derechos, diríjase a <a href="{% url 'contact' %}" class="text-slate-800 hover:text-slate-900 font-semibold underline underline-offset-2">Contacto</a>.</p>
+                        <p class="text-slate-600 text-sm mt-3">Ante la Superintendencia de Industria y Comercio (SIC) puede presentar quejas o denuncias por el tratamiento indebido de sus datos personales.</p>
                     </section>
 
                     <section class="border-b border-slate-100 pb-8 last:border-0">
@@ -120,9 +129,32 @@
                         <p class="text-slate-700">Utilizamos cookies para el funcionamiento del sitio y la sesión. Puede gestionarlas desde su navegador; ello puede afectar algunas funcionalidades.</p>
                     </section>
 
-                    <section class="pb-0">
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
                         <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
                             <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">9</span>
+                            Pacientes menores de edad
+                        </h2>
+                        <p class="text-slate-700 mb-3">Porvoz cumple con la Resolución 309 de 2025 del Ministerio de Salud respecto al consentimiento informado en menores de edad:</p>
+                        <ul class="text-slate-700 space-y-2 ml-4 list-disc pl-2">
+                            <li><strong>Pacientes menores de 14 años:</strong> Se requiere el <strong>asentimiento informado</strong> del menor (si tiene capacidad de comprender) más el <strong>consentimiento del representante legal</strong> (padre, madre o tutor).</li>
+                            <li><strong>Pacientes de 14 a 18 años:</strong> El menor puede dar <strong>consentimiento directo</strong> si comprende los riesgos y beneficios del tratamiento.</li>
+                            <li><strong>Procedimientos de alto riesgo:</strong> Requieren asentimiento del menor y apoyo del representante legal, incluso en mayores de 14 años.</li>
+                        </ul>
+                        <p class="text-slate-700 mt-3">Como cuidador responsable de un menor, usted garantiza tener autoridad legal y consentimiento (o asentimiento) informado antes de registrar un paciente menor en Porvoz.</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">10</span>
+                            Interoperabilidad en salud (Resolución 1888 de 2025)
+                        </h2>
+                        <p class="text-slate-700">La Resolución 1888 de 2025 del Ministerio de Salud y Protección Social establece el Resumen Digital de Atención en Salud (RDA) como estándar interoperable en Colombia. Actualmente, <strong>Porvoz no participa en el sistema nacional de interoperabilidad RDA</strong>. Los datos de medicamentos, llamadas y recordatorios se almacenan exclusivamente en la plataforma Porvoz bajo las medidas de seguridad descritas en esta Política.</p>
+                        <p class="text-slate-700 mt-2 text-sm">En futuras versiones, si Porvoz implementa interoperabilidad, se utilizarán estándares HL7 FHIR, se protegerá el habeas data conforme a la Ley 1581, y se notificará a los usuarios con cambios en esta Política.</p>
+                    </section>
+
+                    <section class="pb-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">11</span>
                             Modificaciones
                         </h2>
                         <p class="text-slate-700">Nos reservamos el derecho de actualizar esta política. Los cambios se publicarán en esta página. El uso continuado implica la aceptación en la medida permitida por la ley.</p>

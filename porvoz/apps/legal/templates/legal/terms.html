@@ -39,7 +39,7 @@
 
             <div class="rounded-xl bg-amber-50 border border-amber-200/80 p-4 mb-8">
                 <p class="text-sm text-amber-900 mb-1 font-semibold"><i class="bi bi-info-circle mr-1"></i>Marco jurídico</p>
-                <p class="text-xs text-amber-800/90 leading-relaxed">Estos términos se rigen por la <strong>Ley 527 de 1999</strong> (comercio electrónico y mensajes de datos), la <strong>Ley 1273 de 2009</strong> (protección de datos e información) y el ordenamiento jurídico colombiano.</p>
+                <p class="text-xs text-amber-800/90 leading-relaxed">Estos términos se rigen por la <strong>Ley 527 de 1999</strong> (comercio electrónico y mensajes de datos), la <strong>Ley 1581 de 2012</strong> (protección de datos personales), el <strong>Decreto 1377 de 2013</strong> (reglamento), la <strong>Ley 1273 de 2009</strong> (protección de datos e información), la <strong>Resolución 309 de 2025</strong> (consentimiento informado en menores), la <strong>Resolución 1888 de 2025</strong> (interoperabilidad en salud) y el ordenamiento jurídico colombiano.</p>
             </div>
 
             <article class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -59,6 +59,7 @@
                             Descripción del Servicio
                         </h2>
                         <p class="text-slate-700">Porvoz es una plataforma web que permite a los usuarios (cuidadores) gestionar recordatorios de medicación para uno o varios pacientes, mediante llamadas automatizadas con tecnología de voz. El Servicio está diseñado como apoyo a la adherencia al tratamiento médico y al seguimiento de medicamentos. <strong class="text-slate-800">No constituye un servicio de salud ni sustituye en ningún caso la prescripción, supervisión o consejo de un profesional de la salud.</strong></p>
+                        <p class="text-slate-700 mt-3"><strong>Consentimiento para datos de salud:</strong> Al usar Porvoz, usted consiente el tratamiento de datos sensibles relacionados con medicamentos, condiciones de salud y registros de llamadas, conforme a la Ley 1581 de 2012 y su Política de Privacidad. Este consentimiento es independiente de los Términos y Condiciones y puede ser revocado en cualquier momento desde la sección de <a href="{% url 'contact' %}" class="text-slate-800 hover:text-slate-900 font-semibold underline underline-offset-2">Contacto</a>.</p>
                     </section>
 
                     <section class="border-b border-slate-100 pb-8 last:border-0">
@@ -97,6 +98,32 @@
                     <section class="border-b border-slate-100 pb-8 last:border-0">
                         <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
                             <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">6</span>
+                            Pacientes menores de edad
+                        </h2>
+                        <p class="text-slate-700 mb-3">Conforme a la Resolución 309 de 2025 del Ministerio de Salud:</p>
+                        <ul class="text-slate-700 space-y-2 ml-4 list-disc pl-2">
+                            <li><strong>Menores de 14 años:</strong> Se requiere consentimiento del representante legal (padre, madre o tutor) y asentimiento informado del menor si tiene capacidad de comprender.</li>
+                            <li><strong>Menores de 14 a 18 años:</strong> Pueden dar consentimiento directo si comprenden los riesgos y beneficios del tratamiento.</li>
+                        </ul>
+                        <p class="text-slate-700 mt-3">Como usuario responsable, usted garantiza ser el representante legal o tener la autorización correspondiente para registrar y gestionar pacientes menores de edad.</p>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">7</span>
+                            Período de conservación de datos
+                        </h2>
+                        <p class="text-slate-700">Conforme al artículo 9 de la Ley 1581 de 2012:</p>
+                        <ul class="text-slate-700 space-y-2 ml-4 list-disc pl-2">
+                            <li><strong>Datos de cuenta:</strong> Se conservan mientras la cuenta esté activa. Tras solicitar eliminación de cuenta, se retienen por mínimo 2 años (obligaciones legales y fiscales).</li>
+                            <li><strong>Historial de llamadas y recordatorios:</strong> Se conservan máximo 5 años desde el último registro, luego se anonimiza o suprime.</li>
+                            <li><strong>Datos de pacientes:</strong> Se retienen mientras estén activos en la plataforma; tras eliminación, máximo 2 años.</li>
+                        </ul>
+                    </section>
+
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">8</span>
                             Modificación y vigencia
                         </h2>
                         <p class="text-slate-700">Porvoz se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento. Los cambios entrarán en vigor desde su publicación. El uso del Servicio con posterioridad a la publicación implica la aceptación de los nuevos términos.</p>
@@ -104,15 +131,23 @@
 
                     <section class="border-b border-slate-100 pb-8 last:border-0">
                         <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
-                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">7</span>
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">9</span>
                             Terminación del acceso
                         </h2>
                         <p class="text-slate-700">Porvoz podrá suspender o dar por terminado el acceso al Servicio por incumplimiento de estos términos, uso fraudulento, o por razones operativas o legales, con o sin previo aviso.</p>
                     </section>
 
+                    <section class="border-b border-slate-100 pb-8 last:border-0">
+                        <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">10</span>
+                            Interoperabilidad en salud (Resolución 1888 de 2025)
+                        </h2>
+                        <p class="text-slate-700">La Resolución 1888 de 2025 establece el Resumen Digital de Atención en Salud (RDA) como estándar de interoperabilidad clínica en Colombia (fecha límite: 15 de abril de 2026). <strong>Porvoz actualmente no participa en el sistema RDA nacional.</strong> Si en futuras versiones implementa interoperabilidad, se cumplirá con los estándares HL7 FHIR, se protegerá el habeas data conforme a la Ley 1581, y se modificarán estos Términos para informar al usuario.</p>
+                    </section>
+
                     <section class="pb-0">
                         <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-start gap-2">
-                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">8</span>
+                            <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-bold">11</span>
                             Ley aplicable y jurisdicción
                         </h2>
                         <p class="text-slate-700">Será aplicable la ley de la República de Colombia. Las controversias serán sometidas a los jueces y tribunales competentes en Colombia.</p>
