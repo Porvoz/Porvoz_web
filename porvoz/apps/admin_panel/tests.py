@@ -3,7 +3,7 @@ Tests for admin panel views, models, and functionality.
 """
 
 from django.contrib.auth.models import User
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from apps.admin_panel.models import CodigoAcceso, PagoHistorico, TicketSoporte
