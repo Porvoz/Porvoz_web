@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn psycopg2-binary
 
 COPY . .
 
-RUN python porvoz/manage.py collectstatic --noinput --settings=config.settings.production || true
+WORKDIR /app/porvoz
+RUN python manage.py collectstatic --noinput --settings=config.settings.production 2>/dev/null || true
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--chdir", "porvoz"]
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:10000"]
