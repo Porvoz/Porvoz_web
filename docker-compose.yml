@@ -62,12 +62,6 @@ services:
     depends_on: *django-depends
     expose:
       - "8000"
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8000/api/health/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
 
   celery-worker:
     build: *django-build
