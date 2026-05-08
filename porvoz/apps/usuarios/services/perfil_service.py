@@ -202,7 +202,7 @@ class PerfilService:
         planes_validos = [p for p, _ in Perfil.PLAN_CHOICES]
 
         if nuevo_plan not in planes_validos:
-            return False, f"Plan inválido."
+            return False, "Plan inválido."
 
         perfil.plan = nuevo_plan
         perfil.plan_expiration = date.today() + timedelta(days=365)

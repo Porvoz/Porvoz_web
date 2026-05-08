@@ -4,11 +4,10 @@ Admin panel models for código de acceso, payment history, y support tickets.
 
 import secrets
 import string
-from datetime import date, datetime, timedelta
+from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.db import models
-from django.utils import timezone
 
 from apps.core.models import Perfil
 
