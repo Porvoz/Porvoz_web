@@ -6,7 +6,7 @@ djangorestframework==3.16.1
 django-cors-headers==4.9.0
 python-decouple==3.8
 Pillow==12.1.1
-mysqlclient==2.2.8
+psycopg2-binary>=2.9
 twilio>=9.0
 google-generativeai>=0.8
 APScheduler>=3.10
