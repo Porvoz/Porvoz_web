@@ -27,12 +27,18 @@
                             <p class="text-sm text-slate-500 mt-0.5">Todo lo que necesitas saber para usar Porvoz</p>
                         </div>
                     </div>
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'dashboard' %}" class="btn-dashboard-primary self-start sm:self-center">
-                        <i class="bi bi-house"></i>
-                        Panel principal
-                    </a>
-                    {% endif %}
+                    <div class="flex gap-2 flex-wrap self-start sm:self-center">
+                        <a href="{% url 'contactar_soporte' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-sm">
+                            <i class="bi bi-exclamation-circle"></i>
+                            Reportar problema
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="btn-dashboard-primary">
+                            <i class="bi bi-house"></i>
+                            Panel principal
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </header>
 

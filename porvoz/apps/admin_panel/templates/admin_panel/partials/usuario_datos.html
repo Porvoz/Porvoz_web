@@ -1,0 +1,117 @@
+<div class="space-y-5">
+<form method="post" class="space-y-5">
+    {% csrf_token %}
+    <input type="hidden" name="accion" value="datos">
+
+    <!-- Acceso -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">Acceso a la cuenta</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Usuario (login)</label>
+                <div class="relative">
+                    <i class="bi bi-at absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" name="username" value="{{ usuario.username }}" required
+                        class="w-full pl-8 pr-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Correo electrónico</label>
+                <div class="relative">
+                    <i class="bi bi-envelope absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="email" name="email" value="{{ usuario.email }}"
+                        class="w-full pl-8 pr-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="is_active" id="is_active_toggle" {% if usuario.is_active %}checked{% endif %} class="sr-only peer">
+                <div class="w-10 h-5 bg-slate-200 peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:bg-emerald-500 transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+            </label>
+            <label for="is_active_toggle" class="text-sm font-medium text-slate-700 cursor-pointer">
+                Cuenta activa
+                <span class="ml-1 text-xs {% if usuario.is_active %}text-emerald-600{% else %}text-red-500{% endif %}" id="active-label">
+                    ({% if usuario.is_active %}activa{% else %}suspendida{% endif %})
+                </span>
+            </label>
+        </div>
+        <script>
+        document.getElementById('is_active_toggle').addEventListener('change', function() {
+            document.getElementById('active-label').textContent = this.checked ? '(activa)' : '(suspendida)';
+            document.getElementById('active-label').className = 'ml-1 text-xs ' + (this.checked ? 'text-emerald-600' : 'text-red-500');
+        });
+        </script>
+    </div>
+
+    <!-- Datos personales -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">Datos personales</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nombre</label>
+                <input type="text" name="first_name" value="{{ usuario.first_name }}"
+                    class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Apellido</label>
+                <input type="text" name="last_name" value="{{ usuario.last_name }}"
+                    class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Ciudad</label>
+                <input type="text" name="city" value="{{ perfil.city }}"
+                    class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Teléfono</label>
+                <input type="text" name="phone" value="{{ perfil.phone }}"
+                    class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Fecha de nacimiento</label>
+                <input type="date" name="date_of_birth" value="{{ perfil.date_of_birth|date:'Y-m-d' }}"
+                    class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Documento</label>
+                <div class="flex gap-2">
+                    <select name="document_type" class="w-28 px-2 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                        <option value="cc" {% if perfil.document_type == 'cc' %}selected{% endif %}>CC</option>
+                        <option value="ce" {% if perfil.document_type == 'ce' %}selected{% endif %}>CE</option>
+                        <option value="ti" {% if perfil.document_type == 'ti' %}selected{% endif %}>TI</option>
+                        <option value="pp" {% if perfil.document_type == 'pp' %}selected{% endif %}>Pasaporte</option>
+                    </select>
+                    <input type="text" name="document_number" value="{{ perfil.document_number }}" placeholder="Número"
+                        class="flex-1 px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contacto emergencia -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">Contacto de emergencia</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nombre del contacto</label>
+                <input type="text" name="emergency_contact_name" value="{{ perfil.emergency_contact_name }}"
+                    class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Teléfono del contacto</label>
+                <input type="text" name="emergency_contact_phone" value="{{ perfil.emergency_contact_phone }}"
+                    class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+            </div>
+        </div>
+    </div>
+
+    <div class="flex justify-end">
+        <button type="submit"
+            class="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-7 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2">
+            <i class="bi bi-check-circle"></i> Guardar todos los cambios
+        </button>
+    </div>
+</form>
+</div>

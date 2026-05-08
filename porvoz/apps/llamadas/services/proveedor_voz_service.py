@@ -90,7 +90,7 @@ class ProveedorVozService:
     @staticmethod
     def disparar_llamada(numero_telefono: str, voice_url: str, status_url: str) -> str:
         """
-        Inicia una llamada con Twilio.
+        Inicia una llamada con Twilio, protegida por circuit breaker.
 
         - SIN machine_detection: el TwiML empieza a sonar al instante en cuanto el
           paciente contesta. Con AMD habilitado, Twilio se queda 4-8s en silencio
@@ -110,20 +110,24 @@ class ProveedorVozService:
             logger.info(f"[Twilio][DRY_RUN] Llamada simulada: {fake_sid} → {numero_telefono}")
             return fake_sid
 
-        client = ProveedorVozService.get_twilio_client()
-        phone_from = ProveedorVozService.get_twilio_phone()
+        from apps.shared.circuit_breaker import twilio_breaker
 
-        call = client.calls.create(
-            url=voice_url,
-            to=numero_telefono,
-            from_=phone_from,
-            status_callback=status_url,
-            status_callback_method="POST",
-            status_callback_event=["completed"],
-            time_limit=90,
-        )
-        logger.info(f"[Twilio] Llamada iniciada: {call.sid} → {numero_telefono}")
-        return call.sid
+        def _do_call():
+            client = ProveedorVozService.get_twilio_client()
+            phone_from = ProveedorVozService.get_twilio_phone()
+            call = client.calls.create(
+                url=voice_url,
+                to=numero_telefono,
+                from_=phone_from,
+                status_callback=status_url,
+                status_callback_method="POST",
+                status_callback_event=["completed"],
+                time_limit=90,
+            )
+            logger.info(f"[Twilio] Llamada iniciada: {call.sid} → {numero_telefono}")
+            return call.sid
+
+        return twilio_breaker.call(_do_call)
 
     # ------------------------------------------------------------------
     # Gemini — solo para respuestas ambiguas
@@ -156,7 +160,9 @@ class ProveedorVozService:
         de forma natural. Gemini NO lee las instrucciones en voz alta — las
         usa como contexto silencioso para entender el medicamento.
         """
-        try:
+        from apps.shared.circuit_breaker import gemini_breaker
+
+        def _do_gemini():
             from concurrent.futures import ThreadPoolExecutor
             from concurrent.futures import TimeoutError as FuturesTimeoutError
 
@@ -190,7 +196,6 @@ class ProveedorVozService:
                 "9. NUNCA cambies de tema fuera del medicamento."
             )
 
-            # Truncar historial para no inflar el prompt
             lineas_historial = historial.split("\n") if historial else []
             historial_recortado = "\n".join(lineas_historial[-8:])
 
@@ -211,12 +216,10 @@ class ProveedorVozService:
                     return MSG_TIMEOUT
 
             text = getattr(response, "text", "")
-            if not text:
-                return MSG_TIMEOUT
+            return text.strip()[:200] if text else MSG_TIMEOUT
 
-            # Limitar a ~200 chars (~30 palabras habladas ≈ 8 segundos de audio)
-            return text.strip()[:200]
-
+        try:
+            return gemini_breaker.call(_do_gemini, fallback=MSG_TIMEOUT)
         except Exception as e:
             logger.error(f"[Gemini] Error: {e}")
             return MSG_TIMEOUT

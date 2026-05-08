@@ -44,13 +44,15 @@ class Perfil(models.Model):
     profile_completed = models.BooleanField(default=False)
 
     # Planes
-    PLAN_FREEMIUM = "freemium"
-    PLAN_GROWTH = "growth"
-    PLAN_MULTI_BUSINESS = "multi_business"
+    PLAN_FREEMIUM = "freemium"          # Gratuito — clave legacy, no rompe datos existentes
+    PLAN_GROWTH = "growth"              # Básico
+    PLAN_MULTI_BUSINESS = "multi_business"  # Familiar
+    PLAN_PROFESIONAL = "profesional"    # Profesional
     PLAN_CHOICES = [
-        (PLAN_FREEMIUM, "Básico"),
-        (PLAN_GROWTH, "Familiar"),
-        (PLAN_MULTI_BUSINESS, "Profesional"),
+        (PLAN_FREEMIUM, "Gratuito"),
+        (PLAN_GROWTH, "Básico"),
+        (PLAN_MULTI_BUSINESS, "Familiar"),
+        (PLAN_PROFESIONAL, "Profesional"),
     ]
     plan = models.CharField(
         "Plan",
@@ -64,6 +66,33 @@ class Perfil(models.Model):
         null=True,
         blank=True,
         help_text="Fecha hasta la cual el plan está activo",
+    )
+
+    ESTADO_ACTIVO = "activo"
+    ESTADO_PAUSADO = "pausado"
+    ESTADO_CANCELADO = "cancelado"
+    ESTADO_CHOICES = [
+        (ESTADO_ACTIVO, "Activo"),
+        (ESTADO_PAUSADO, "Pausado"),
+        (ESTADO_CANCELADO, "Cancelado"),
+    ]
+    plan_estado = models.CharField(
+        "Estado del plan",
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default=ESTADO_ACTIVO,
+    )
+    plan_pausa_hasta = models.DateField(
+        "Plan pausado hasta",
+        null=True,
+        blank=True,
+        help_text="Fecha hasta la cual el plan permanece pausado (se reactiva automáticamente)",
+    )
+    plan_cancelacion_fecha = models.DateField(
+        "Fecha de baja por cancelación",
+        null=True,
+        blank=True,
+        help_text="El plan sigue activo hasta esta fecha, luego baja a Básico",
     )
 
     # Preferencias de notificación por email

@@ -61,6 +61,18 @@ class Paciente(models.Model):
         blank=True,
         help_text="Ej: America/Bogota, America/Mexico_City. Para programar llamadas en hora local.",
     )
+    # Perfil médico
+    medico_tratante = models.CharField("Médico tratante", max_length=200, blank=True)
+    tipo_sangre = models.CharField(
+        "Tipo de sangre", max_length=5, blank=True,
+        help_text="Ej: O+, A-, B+, AB+"
+    )
+    alergias = models.TextField(
+        "Alergias conocidas", blank=True,
+        help_text="Medicamentos, alimentos u otras alergias"
+    )
+    eps = models.CharField("EPS / Aseguradora", max_length=100, blank=True)
+
     activo = models.BooleanField("Activo", default=True)
     creado_en = models.DateTimeField("Fecha de creación", auto_now_add=True)
     actualizado_en = models.DateTimeField("Fecha de actualización", auto_now=True)

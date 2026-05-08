@@ -32,6 +32,11 @@ class EmailService:
         - Se respetan exclusivamente las preferencias visibles en UI.
         - El flag legacy `email_urgente_minimo` se ignora para evitar bloqueos ocultos.
         """
+        # Usuarios staff son cuentas de control, nunca reciben emails operacionales
+        if usuario.is_staff:
+            logger.info(f"[Email] Usuario staff {usuario.username} — se omite email operacional")
+            return False
+
         try:
             perfil = usuario.perfil
         except Exception:
@@ -134,6 +139,8 @@ class EmailService:
     @staticmethod
     def enviar_email_bienvenida(usuario: User) -> bool:
         """Envía email de bienvenida al crear cuenta."""
+        if usuario.is_staff:
+            return False
         try:
             titulo = "¡Bienvenido a Porvoz!"
             contexto = {
@@ -299,6 +306,10 @@ Próximos pasos:
         durante una llamada, rechazo explícito de tratamiento). Estos eventos
         nunca pueden silenciarse por configuración.
         """
+        if usuario.is_staff:
+            logger.info(f"[Email] Crítico omitido — usuario staff {usuario.username}")
+            return False
+
         if not usuario.email:
             logger.warning(f"[Email] Crítico: usuario {usuario.username} sin email")
             return False

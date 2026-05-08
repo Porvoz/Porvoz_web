@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20">
+
+        <!-- Header -->
+        <div class="mb-6 mt-12 lg:mt-0">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div>
+                    <a href="{% url 'tickets_soporte' %}" class="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 mb-2">
+                        <i class="bi bi-arrow-left"></i> Volver a tickets
+                    </a>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">{{ ticket.titulo }}</h1>
+                    <p class="text-sm text-slate-500 mt-1">
+                        De: <span class="font-semibold text-slate-700">{{ ticket.remitente }}</span>
+                        {% if ticket.email_remitente %} · {{ ticket.email_remitente }}{% endif %}
+                        {% if ticket.telefono_contacto %} · {{ ticket.telefono_contacto }}{% endif %}
+                    </p>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex flex-wrap gap-2">
+                    <form method="post" class="flex gap-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="cambiar_estado">
+                        <select name="estado" onchange="this.form.submit()"
+                            class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none font-semibold">
+                            {% for val, label in estados %}
+                            <option value="{{ val }}" {% if ticket.estado == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    <form method="post" class="flex gap-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="cambiar_prioridad">
+                        <select name="prioridad" onchange="this.form.submit()"
+                            class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none font-semibold">
+                            {% for val, label in prioridades %}
+                            <option value="{{ val }}" {% if ticket.prioridad == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Chat -->
+            <div class="lg:col-span-2 flex flex-col gap-4">
+                <!-- Messages -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100">
+                        <h2 class="text-sm font-bold text-slate-900">Conversación</h2>
+                    </div>
+                    <div class="p-5 space-y-4 max-h-[500px] overflow-y-auto" id="chat-container">
+                        {% for msg in mensajes %}
+                        <div class="flex {% if msg.es_admin %}justify-end{% else %}justify-start{% endif %}">
+                            <div class="max-w-[80%] {% if msg.es_admin %}bg-slate-800 text-white{% else %}bg-slate-100 text-slate-900{% endif %} rounded-2xl px-4 py-3">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs font-semibold opacity-75">
+                                        {% if msg.es_admin %}{{ msg.autor.get_full_name|default:msg.autor.username }}{% else %}{{ ticket.remitente }}{% endif %}
+                                    </span>
+                                    <span class="text-[10px] opacity-50">{{ msg.creado_en|date:"d/m H:i" }}</span>
+                                </div>
+                                <p class="text-sm whitespace-pre-wrap">{{ msg.contenido }}</p>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-center text-sm text-slate-400 py-8">Sin mensajes aún — el primer mensaje es la descripción del ticket.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Reply box -->
+                {% if ticket.estado != 'cerrado' %}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <form method="post" class="flex flex-col gap-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="responder">
+                        <textarea name="contenido" rows="3" required
+                            placeholder="Escribe tu respuesta..."
+                            class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 focus:border-transparent outline-none resize-none"></textarea>
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                class="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-5 py-2 rounded-xl text-sm transition-colors flex items-center gap-2">
+                                <i class="bi bi-send"></i> Responder
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                {% else %}
+                <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 text-center text-sm text-slate-500">
+                    Este ticket está cerrado.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Info sidebar -->
+            <div class="space-y-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Detalles</h3>
+                    <dl class="space-y-2 text-sm">
+                        <div>
+                            <dt class="text-xs text-slate-500">Estado</dt>
+                            <dd class="font-semibold text-slate-900">{{ ticket.get_estado_display }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-slate-500">Prioridad</dt>
+                            <dd class="font-semibold
+                                {% if ticket.prioridad == 'alta' %}text-red-600{% elif ticket.prioridad == 'media' %}text-amber-600{% else %}text-slate-600{% endif %}">
+                                {{ ticket.get_prioridad_display }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-slate-500">Creado</dt>
+                            <dd class="text-slate-700">{{ ticket.creado_en|date:"d/m/Y H:i" }}</dd>
+                        </div>
+                        {% if ticket.resuelto_en %}
+                        <div>
+                            <dt class="text-xs text-slate-500">Resuelto</dt>
+                            <dd class="text-slate-700">{{ ticket.resuelto_en|date:"d/m/Y H:i" }}</dd>
+                        </div>
+                        {% endif %}
+                        {% if ticket.telefono_contacto %}
+                        <div>
+                            <dt class="text-xs text-slate-500">Teléfono</dt>
+                            <dd class="text-slate-700">{{ ticket.telefono_contacto }}</dd>
+                        </div>
+                        {% endif %}
+                    </dl>
+                </div>
+
+                {% if ticket.usuario %}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Usuario</h3>
+                    <p class="text-sm font-semibold text-slate-900">{{ ticket.usuario.get_full_name|default:ticket.usuario.username }}</p>
+                    <p class="text-xs text-slate-500">{{ ticket.usuario.email }}</p>
+                    <a href="{% url 'editar_usuario' ticket.usuario.id %}"
+                        class="mt-3 flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-700 font-semibold">
+                        <i class="bi bi-person-gear"></i> Ver perfil completo
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Auto-scroll al último mensaje
+    const chat = document.getElementById('chat-container');
+    if (chat) chat.scrollTop = chat.scrollHeight;
+</script>
+{% endblock %}

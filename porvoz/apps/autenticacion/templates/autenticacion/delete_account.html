@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20">
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
+        </button>
+
+        <div class="max-w-lg mx-auto mt-12 lg:mt-0">
+            <a href="{% url 'edit_profile' %}?tab=perfil" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 mb-6">
+                <i class="bi bi-arrow-left"></i>Volver al perfil
+            </a>
+
+            <div class="bg-white rounded-2xl border border-red-200 shadow-sm overflow-hidden">
+                <div class="bg-red-50 border-b border-red-200 px-6 py-5 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                        <i class="bi bi-exclamation-triangle text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base font-bold text-red-900">Eliminar cuenta</h1>
+                        <p class="text-xs text-red-700 mt-0.5">Esta acción es irreversible</p>
+                    </div>
+                </div>
+
+                <div class="p-6 space-y-5">
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 font-medium">{{ message }}</div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 text-sm text-slate-700">
+                        <p class="font-semibold text-slate-900 mb-2">Al eliminar tu cuenta se borrará:</p>
+                        <p class="flex items-center gap-2"><i class="bi bi-x-circle text-red-400 shrink-0"></i>Tu perfil y datos personales</p>
+                        <p class="flex items-center gap-2"><i class="bi bi-x-circle text-red-400 shrink-0"></i>Todos tus pacientes y medicamentos</p>
+                        <p class="flex items-center gap-2"><i class="bi bi-x-circle text-red-400 shrink-0"></i>Preferencias de notificaciones</p>
+                        <p class="flex items-center gap-2"><i class="bi bi-check2 text-slate-400 shrink-0"></i>El historial de llamadas se anonimiza (no se borra, protege registros médicos)</p>
+                    </div>
+
+                    <form method="post" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                                Escribe <strong>ELIMINAR</strong> para confirmar
+                            </label>
+                            <input type="text" name="confirm_text" placeholder="ELIMINAR" autocomplete="off"
+                                class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-colors">
+                        </div>
+                        <div class="flex gap-3 pt-2">
+                            <a href="{% url 'edit_profile' %}?tab=perfil"
+                                class="flex-1 text-center rounded-xl border border-slate-200 bg-white text-slate-700 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                                Cancelar
+                            </a>
+                            <button type="submit"
+                                class="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white py-2.5 text-sm font-semibold transition-colors">
+                                Eliminar mi cuenta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+    {% include "footer.html" %}
+</div>
+{% endblock %}

@@ -84,6 +84,11 @@ class Medicamento(models.Model):
         help_text="Minutos de espera antes de reintentar la llamada.",
     )
     activo = models.BooleanField("Activo", default=True)
+    pausado = models.BooleanField("Pausado temporalmente", default=False)
+    pausado_hasta = models.DateField(
+        "Pausado hasta", null=True, blank=True,
+        help_text="Fecha en que se reactiva automáticamente"
+    )
     creado_en = models.DateTimeField("Fecha de creación", auto_now_add=True)
     actualizado_en = models.DateTimeField("Fecha de actualización", auto_now=True)
 

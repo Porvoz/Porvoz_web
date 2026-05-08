@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20">
+
+        <div class="mt-12 lg:mt-0 mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="bi bi-check-circle-fill text-emerald-500 text-lg"></i>
+                        <h1 class="text-2xl font-black text-slate-900 tracking-tight">
+                            {{ codigos|length }} código{{ codigos|length|pluralize }} generado{{ codigos|length|pluralize }}
+                        </h1>
+                    </div>
+                    <p class="text-sm text-slate-500">Plan <strong>{{ plan_display }}</strong> · {{ duracion_meses }} mes{{ duracion_meses|pluralize:"es" }}</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="copiarTodos()" class="inline-flex items-center gap-2 border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-4 py-2 rounded-xl text-sm transition-colors">
+                        <i class="bi bi-clipboard"></i> Copiar todos
+                    </button>
+                    <a href="{% url 'crear_codigos' %}" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors">
+                        <i class="bi bi-plus-circle"></i> Crear más
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de códigos -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+            <div class="divide-y divide-slate-100" id="lista-codigos">
+                {% for codigo in codigos %}
+                <div class="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors">
+                    <code class="text-sm font-mono font-bold text-slate-900 tracking-widest codigo-texto select-all">{{ codigo.codigo }}</code>
+                    <div class="flex items-center gap-4 text-xs text-slate-500">
+                        <span>Canjear antes del {{ codigo.fecha_expiracion|date:"d/m/Y" }}</span>
+                        <button onclick="copiarCodigo('{{ codigo.codigo }}', this)"
+                            class="flex items-center gap-1 text-slate-600 hover:text-slate-900 font-semibold transition-colors">
+                            <i class="bi bi-clipboard"></i> Copiar
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Instrucciones para el usuario -->
+        <div class="bg-blue-50 rounded-2xl border border-blue-200 p-5">
+            <h3 class="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
+                <i class="bi bi-info-circle"></i> ¿Cómo lo usa el usuario?
+            </h3>
+            <ol class="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                <li>El usuario inicia sesión en Porvoz</li>
+                <li>Va a <strong>Mi cuenta → Planes</strong></li>
+                <li>Ingresa el código en el campo "¿Tienes un código de acceso?"</li>
+                <li>El plan se activa inmediatamente — el tiempo corre desde ese momento</li>
+            </ol>
+        </div>
+    </main>
+
+    {% include "footer.html" %}
+</div>
+
+<script>
+function copiarCodigo(codigo, btn) {
+    navigator.clipboard.writeText(codigo).then(() => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2"></i> Copiado';
+        btn.classList.add('text-emerald-600');
+        setTimeout(() => { btn.innerHTML = original; btn.classList.remove('text-emerald-600'); }, 1500);
+    });
+}
+
+function copiarTodos() {
+    const codigos = [...document.querySelectorAll('.codigo-texto')].map(el => el.textContent.trim()).join('\n');
+    navigator.clipboard.writeText(codigos).then(() => {
+        const btn = document.querySelector('[onclick="copiarTodos()"]');
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2"></i> Copiados';
+        setTimeout(() => btn.innerHTML = original, 1500);
+    });
+}
+</script>
+{% endblock %}

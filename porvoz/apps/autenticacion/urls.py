@@ -9,6 +9,7 @@ urlpatterns = [
     path("login/", views.login_view, name="login"),
     path("register/", views.register_view, name="register"),
     path("logout/", views.logout_view, name="logout"),
+    path("cuenta/eliminar/", views.delete_account_view, name="delete_account"),
 
     # Recuperación de contraseña — 4 pasos con views built-in de Django
     path(

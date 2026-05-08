@@ -1,16 +1,17 @@
 """
 Datos de planes, límites y verificación de cuotas.
 
-Costo real por llamada (Twilio Colombia móvil $0.0377 USD/min ≈ 158 COP/min, 20 s promedio):
-    53 COP base + 35% colchón = ~75 COP por llamada
+Costo real por llamada (Twilio Colombia ~$0.013 USD/min, 1.5 min promedio, $4.100 COP/USD):
+    ~$80 COP por llamada
 
-Márgenes (caso máximo: paciente con 4-6 medicamentos/día ≈ 5-7 llamadas/día):
-    Básico       ($0):         150 llamadas → costo ~11.250 COP  (adquisición)
-    Familiar     ($59.900):    500 llamadas → costo ~37.500 COP  → ganancia ~22.400 COP/usuario (margen 37%)
-    Profesional ($299.900):  3.000 llamadas → costo ~225.000 COP → ganancia ~74.900 COP/usuario (margen 25%)
+Planes:
+    Gratuito  ($0):           15 llamadas  → costo ~$1.200 COP  (adquisición)
+    Básico    ($24.900):      90 llamadas  → costo ~$7.200 COP  → margen ~$13.000 COP (52%)
+    Familiar  ($59.900):     300 llamadas  → costo ~$24.000 COP → margen ~$27.000 COP (45%)
+    Profesional ($139.900):  900 llamadas  → costo ~$72.000 COP → margen ~$58.000 COP (42%)
 """
 
-from datetime import date
+from datetime import date, timedelta
 
 from apps.core.models import Perfil
 
@@ -21,18 +22,23 @@ from apps.core.models import Perfil
 PLAN_LIMITS = {
     Perfil.PLAN_FREEMIUM: {
         "max_pacientes": 1,
-        "max_medicamentos_por_paciente": 5,
-        "max_llamadas_mes": 150,
+        "max_medicamentos_por_paciente": 2,
+        "max_llamadas_mes": 15,
     },
     Perfil.PLAN_GROWTH: {
-        "max_pacientes": 3,
-        "max_medicamentos_por_paciente": None,  # ilimitado
-        "max_llamadas_mes": 500,
+        "max_pacientes": 1,
+        "max_medicamentos_por_paciente": 5,
+        "max_llamadas_mes": 90,
     },
     Perfil.PLAN_MULTI_BUSINESS: {
-        "max_pacientes": 20,
+        "max_pacientes": 4,
         "max_medicamentos_por_paciente": None,  # ilimitado
-        "max_llamadas_mes": 3000,
+        "max_llamadas_mes": 300,
+    },
+    Perfil.PLAN_PROFESIONAL: {
+        "max_pacientes": 10,
+        "max_medicamentos_por_paciente": None,  # ilimitado
+        "max_llamadas_mes": 900,
     },
 }
 
@@ -42,78 +48,105 @@ PLAN_LIMITS = {
 
 PLANES_DATA = {
     Perfil.PLAN_FREEMIUM: {
-        "nombre": "Básico",
-        "tagline": "Empieza sin costo. Ideal para conocer Porvoz.",
+        "nombre": "Gratuito",
+        "tagline": "Prueba Porvoz sin costo. Sin tarjeta requerida.",
         "precio": "$0",
         "precio_cop": None,
         "precio_mensual": 0,
         "destacado": False,
         "caracteristicas": [
             "1 paciente",
-            "Hasta 5 medicamentos",
-            "150 llamadas automatizadas/mes",
+            "Hasta 2 medicamentos",
+            "15 llamadas automatizadas/mes",
             "Dashboard básico",
-            "Historial 30 días",
+        ],
+        "no_incluye": [
+            "Soporte prioritario",
+            "Historial extendido",
         ],
         "limites": PLAN_LIMITS[Perfil.PLAN_FREEMIUM],
         "boton_texto": "Empezar gratis",
-        "boton_estilo": "border-slate-700 text-slate-700 hover:bg-slate-50",
+        "boton_estilo": "border border-slate-300 text-slate-700 hover:bg-slate-50",
+        "color_badge": "bg-slate-100 text-slate-600",
     },
     Perfil.PLAN_GROWTH: {
+        "nombre": "Básico",
+        "tagline": "Un paciente bajo control total, todos los días.",
+        "precio": "$24.900",
+        "precio_cop": "24.900",
+        "precio_mensual": 24900,
+        "destacado": False,
+        "caracteristicas": [
+            "1 paciente",
+            "Hasta 5 medicamentos",
+            "90 llamadas automatizadas/mes",
+            "Dashboard completo",
+            "Historial 3 meses",
+            "Alertas por correo",
+        ],
+        "limites": PLAN_LIMITS[Perfil.PLAN_GROWTH],
+        "boton_texto": "Contratar Básico",
+        "boton_estilo": "border border-slate-700 text-slate-700 hover:bg-slate-50",
+        "color_badge": "bg-blue-100 text-blue-700",
+    },
+    Perfil.PLAN_MULTI_BUSINESS: {
         "nombre": "Familiar",
-        "tagline": "Para el cuidado diario de hasta 3 pacientes.",
+        "tagline": "Cuida a toda la familia desde un solo lugar.",
         "precio": "$59.900",
         "precio_cop": "59.900",
         "precio_mensual": 59900,
         "destacado": True,
         "caracteristicas": [
-            "Hasta 3 pacientes",
+            "Hasta 4 pacientes",
             "Medicamentos ilimitados",
-            "500 llamadas automatizadas/mes",
+            "300 llamadas automatizadas/mes",
             "Dashboard completo",
             "Historial 6 meses",
-            "Llamadas con IA en español",
             "Alertas de adherencia",
             "Soporte por correo",
         ],
-        "limites": PLAN_LIMITS[Perfil.PLAN_GROWTH],
+        "limites": PLAN_LIMITS[Perfil.PLAN_MULTI_BUSINESS],
         "boton_texto": "Contratar Familiar",
         "boton_estilo": "bg-slate-800 text-white hover:bg-slate-700",
+        "color_badge": "bg-indigo-100 text-indigo-700",
     },
-    Perfil.PLAN_MULTI_BUSINESS: {
+    Perfil.PLAN_PROFESIONAL: {
         "nombre": "Profesional",
-        "tagline": "Para clínicas, centros geriátricos y equipos de salud.",
-        "precio": "$299.900",
-        "precio_cop": "299.900",
-        "precio_mensual": 299900,
+        "tagline": "Para cuidadores independientes y equipos de salud.",
+        "precio": "$139.900",
+        "precio_cop": "139.900",
+        "precio_mensual": 139900,
         "destacado": False,
         "caracteristicas": [
-            "Hasta 20 pacientes",
+            "Hasta 10 pacientes",
             "Medicamentos ilimitados",
-            "3.000 llamadas automatizadas/mes",
+            "900 llamadas automatizadas/mes",
             "Dashboard completo",
             "Historial completo",
-            "Llamadas con IA en español",
+            "Reportes de adherencia en PDF",
             "Alertas de adherencia",
-            "Reportes de adherencia",
             "Soporte prioritario",
         ],
-        "limites": PLAN_LIMITS[Perfil.PLAN_MULTI_BUSINESS],
+        "limites": PLAN_LIMITS[Perfil.PLAN_PROFESIONAL],
         "boton_texto": "Contratar Profesional",
-        "boton_estilo": "border-slate-800 text-slate-800 hover:bg-slate-100",
+        "boton_estilo": "border border-slate-800 text-slate-800 hover:bg-slate-100",
+        "color_badge": "bg-amber-100 text-amber-700",
     },
 }
+
+_ORDEN_PLANES = [
+    Perfil.PLAN_FREEMIUM,
+    Perfil.PLAN_GROWTH,
+    Perfil.PLAN_MULTI_BUSINESS,
+    Perfil.PLAN_PROFESIONAL,
+]
 
 
 def obtener_planes(plan_actual: str | None = None) -> list[dict]:
     """Retorna la lista de planes con marca de plan actual."""
     planes = [
         {**PLANES_DATA[key], "plan_key": key}
-        for key in [
-            Perfil.PLAN_FREEMIUM,
-            Perfil.PLAN_GROWTH,
-            Perfil.PLAN_MULTI_BUSINESS,
-        ]
+        for key in _ORDEN_PLANES
     ]
     for plan in planes:
         plan["es_plan_actual"] = (
@@ -123,9 +156,37 @@ def obtener_planes(plan_actual: str | None = None) -> list[dict]:
 
 
 # ------------------------------------------------------------------
-# PlanService — verificación de cuotas
+# Historial de facturación (simulado para UI)
 # ------------------------------------------------------------------
 
+def generar_historial_facturacion(perfil) -> list[dict]:
+    """Genera historial de facturación simulado para la UI."""
+    if perfil.plan == Perfil.PLAN_FREEMIUM:
+        return []
+    datos = PLANES_DATA.get(perfil.plan, {})
+    precio = datos.get("precio_mensual", 0)
+    nombre = datos.get("nombre", "")
+    if not precio:
+        return []
+    base = perfil.plan_expiration or date.today()
+    historial = []
+    for i in range(3):
+        fecha_cobro = base - timedelta(days=30 * i)
+        if fecha_cobro > date.today():
+            continue
+        monto = f"${precio:,.0f}".replace(",", ".")
+        historial.append({
+            "fecha": fecha_cobro,
+            "descripcion": f"Plan {nombre} — suscripción mensual",
+            "monto": f"{monto} COP",
+            "estado": "Pagado",
+        })
+    return historial
+
+
+# ------------------------------------------------------------------
+# PlanService — verificación de cuotas
+# ------------------------------------------------------------------
 
 class PlanService:
     """Verifica límites del plan activo de un usuario."""
@@ -177,7 +238,11 @@ class PlanService:
         perfil = usuario.perfil
         hoy = date.today()
 
-        # Verificar expiración del plan (solo para planes de pago)
+        if perfil.plan_estado == Perfil.ESTADO_PAUSADO:
+            return False, "Tu plan está pausado. Reactívalo para continuar con las llamadas."
+        if perfil.plan_estado == Perfil.ESTADO_CANCELADO and perfil.plan_cancelacion_fecha and perfil.plan_cancelacion_fecha <= hoy:
+            return False, "Tu plan fue cancelado. Activa un nuevo plan para continuar."
+
         if perfil.plan != Perfil.PLAN_FREEMIUM and perfil.plan_expiration and perfil.plan_expiration < hoy:
             return (
                 False,
@@ -203,7 +268,6 @@ class PlanService:
 
     @staticmethod
     def get_uso_actual(usuario) -> dict:
-        """Retorna uso actual del usuario para mostrar en UI."""
         from apps.llamadas.models import Llamada
         from apps.pacientes.models import Paciente
 

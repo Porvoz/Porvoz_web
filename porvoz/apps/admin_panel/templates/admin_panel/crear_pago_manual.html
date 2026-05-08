@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20">
+        <div class="mb-8 mt-12 lg:mt-0">
+            <a href="{% url 'historial_pagos' %}" class="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 mb-2 w-fit">
+                <i class="bi bi-arrow-left"></i> Volver a pagos
+            </a>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Registrar Pago Manual</h1>
+            <p class="text-sm text-slate-500 mt-1">Activa o renueva el plan de un usuario con comprobante opcional</p>
+        </div>
+
+        {% if messages %}{% for msg in messages %}
+        <div class="mb-6 px-4 py-3 rounded-xl text-sm font-semibold {% if msg.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200{% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">{{ msg }}</div>
+        {% endfor %}{% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                <form method="post" enctype="multipart/form-data" class="space-y-5">
+                    {% csrf_token %}
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="bi bi-person text-slate-500"></i> Usuario y Plan
+                        </h2>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Usuario *</label>
+                            <div class="relative mb-2">
+                                <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="usuario-search" placeholder="Buscar por nombre, usuario o email..."
+                                    class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                            </div>
+                            <select name="usuario_id" id="usuario-select" required size="5"
+                                class="w-full border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                                {% for u in usuarios %}
+                                <option value="{{ u.id }}"
+                                    data-search="{{ u.get_full_name|lower }} {{ u.username|lower }} {{ u.email|lower }}"
+                                    class="px-3 py-2">
+                                    {{ u.get_full_name|default:u.username }} · @{{ u.username }} · {{ u.email }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <script>
+                            document.getElementById('usuario-search').addEventListener('input', function() {
+                                const q = this.value.toLowerCase();
+                                document.querySelectorAll('#usuario-select option').forEach(opt => {
+                                    opt.hidden = q && !opt.dataset.search.includes(q);
+                                });
+                            });
+                            </script>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Plan *</label>
+                                <select name="plan" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                                    {% for val, label in planes %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Duración *</label>
+                                <select name="duracion_meses" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                                    <option value="1">1 mes</option>
+                                    <option value="3">3 meses</option>
+                                    <option value="6">6 meses</option>
+                                    <option value="12">12 meses</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="bi bi-credit-card text-slate-500"></i> Detalle del Pago
+                        </h2>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tipo de pago *</label>
+                                <select name="tipo_pago" required id="tipo_pago_select" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                                    {% for val, label in tipos_pago %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div id="metodo_row">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Método de transferencia</label>
+                                <select name="metodo_transferencia" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                                    <option value="">— Seleccionar —</option>
+                                    {% for val, label in metodos %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Monto (COP)</label>
+                            <input type="number" name="monto" min="0" step="100" placeholder="Ej: 59900"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                        </div>
+                        <script>
+                            document.getElementById('tipo_pago_select').addEventListener('change', function() {
+                                document.getElementById('metodo_row').style.display =
+                                    this.value === 'transferencia' ? 'block' : 'none';
+                            });
+                            document.getElementById('metodo_row').style.display = 'none';
+                        </script>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Referencia / # Comprobante</label>
+                            <input type="text" name="referencia_pago" placeholder="Ej: 2024-TR-00198"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Comprobante de pago
+                                <span class="font-normal text-slate-400">(imagen o PDF)</span>
+                            </label>
+                            <input type="file" name="comprobante" accept=".jpg,.jpeg,.png,.pdf"
+                                class="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Notas internas</label>
+                            <textarea name="notas" rows="3" placeholder="Ej: Pago recibido vía Nequi, código acordado con el cliente..."
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none resize-none"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="submit" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                            <i class="bi bi-check-circle"></i> Registrar pago y activar plan
+                        </button>
+                        <a href="{% url 'historial_pagos' %}" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 text-sm font-semibold transition-colors">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-blue-50 rounded-2xl border border-blue-200 p-4">
+                    <h3 class="text-xs font-bold text-blue-900 mb-2 flex items-center gap-1.5"><i class="bi bi-info-circle"></i> ¿Qué hace esto?</h3>
+                    <ul class="text-xs text-blue-800 space-y-1.5">
+                        <li>• Cambia el plan del usuario inmediatamente</li>
+                        <li>• Calcula la fecha de vencimiento según duración</li>
+                        <li>• Guarda el comprobante en el historial</li>
+                        <li>• Registra quién procesó el pago</li>
+                    </ul>
+                </div>
+                <div class="bg-amber-50 rounded-2xl border border-amber-200 p-4">
+                    <h3 class="text-xs font-bold text-amber-900 mb-2">Precios de referencia</h3>
+                    <dl class="text-xs text-amber-800 space-y-1">
+                        <div class="flex justify-between"><dt>Gratuito</dt><dd class="font-semibold">$0</dd></div>
+                        <div class="flex justify-between"><dt>Básico</dt><dd class="font-semibold">$24.900/mes</dd></div>
+                        <div class="flex justify-between"><dt>Familiar</dt><dd class="font-semibold">$59.900/mes</dd></div>
+                        <div class="flex justify-between"><dt>Profesional</dt><dd class="font-semibold">$139.900/mes</dd></div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -27,8 +27,12 @@ class NotificacionService:
         fecha_programada: datetime = None,
         prioridad: str = None,
         url_detalle: str = None,
-    ) -> Notificacion:
+    ) -> Notificacion | None:
         """Crea una notificación de cualquier tipo."""
+        # Usuarios staff son cuentas de control, no reciben notificaciones operacionales
+        if usuario.is_staff:
+            return None
+
         tipos_validos = {
             Notificacion.TIPO_SISTEMA,
             Notificacion.TIPO_RECORDATORIO,

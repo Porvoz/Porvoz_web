@@ -360,14 +360,14 @@ class DashboardService:
         pacientes = DashboardService.obtener_pacientes(usuario, ordenar)
         stats_llamadas = DashboardService.obtener_estadisticas_llamadas(usuario)
         uso_plan = PlanService.get_uso_actual(usuario)
+        # Onboarding: usuario sin pacientes ni medicamentos es nuevo
+        mostrar_onboarding = not pacientes and not Llamada.objects.filter(usuario=usuario).exists()
 
         return {
             "perfil": perfil,
             "pacientes": pacientes,
             "total_medicamentos": DashboardService.obtener_total_medicamentos(usuario),
-            "proximos_recordatorios": DashboardService.obtener_proximos_recordatorios(
-                usuario
-            ),
+            "proximos_recordatorios": DashboardService.obtener_proximos_recordatorios(usuario),
             "alertas_activas": DashboardService.obtener_alertas_activas(usuario),
             "proximas_llamadas": DashboardService.obtener_proximas_llamadas(usuario),
             "actividad_reciente": DashboardService.obtener_actividad_reciente(usuario),
@@ -377,6 +377,7 @@ class DashboardService:
             "pacientes_sin_medicamentos": [
                 p for p in pacientes if p.medicamentos.count() == 0
             ],
+            "mostrar_onboarding": mostrar_onboarding,
             **stats_llamadas,
             "opciones_ordenar": [
                 ("recientes", "Más recientes"),

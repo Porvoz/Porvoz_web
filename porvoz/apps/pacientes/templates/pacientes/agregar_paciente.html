@@ -204,12 +204,39 @@
                             <p class="text-xs text-slate-500 mt-2">Agrega una por una. Opcional.</p>
                         </div>
 
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-800 mb-2">Médico tratante</label>
+                                <input name="medico_tratante" type="text" placeholder="Nombre del médico"
+                                    class="block w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-800 mb-2">Tipo de sangre</label>
+                                <select name="tipo_sangre" class="block w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all">
+                                    <option value="">Desconocido</option>
+                                    {% for ts in "O+ O- A+ A- B+ B- AB+ AB-"|split:" " %}
+                                    <option value="{{ ts }}">{{ ts }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-800 mb-2">EPS / Aseguradora</label>
+                                <input name="eps" type="text" placeholder="Ej: Sura, Compensar, Nueva EPS..."
+                                    class="block w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-800 mb-2">Alergias conocidas</label>
+                                <input name="alergias" type="text" placeholder="Penicilina, Aspirina, Mariscos..."
+                                    class="block w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all">
+                            </div>
+                        </div>
+
                         <div>
                             <label class="block text-sm font-semibold text-slate-800 mb-2">Notas médicas</label>
                             <textarea
                                 name="notas"
                                 rows="3"
-                                placeholder="Alergias, observaciones importantes, historial médico relevante..."
+                                placeholder="Observaciones importantes, historial médico relevante..."
                                 class="block w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all resize-none"
                             ></textarea>
                         </div>

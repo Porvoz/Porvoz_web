@@ -150,6 +150,44 @@ class PerfilService:
         return 365
 
     @staticmethod
+    def pausar_plan(perfil: Perfil) -> tuple[bool, str | None]:
+        if perfil.plan == Perfil.PLAN_FREEMIUM:
+            return False, "El plan gratuito no se puede pausar."
+        if perfil.plan_estado == Perfil.ESTADO_PAUSADO:
+            return False, "El plan ya está pausado."
+        if perfil.plan_estado == Perfil.ESTADO_CANCELADO:
+            return False, "El plan está cancelado. No se puede pausar."
+        perfil.plan_estado = Perfil.ESTADO_PAUSADO
+        perfil.plan_pausa_hasta = date.today() + timedelta(days=30)
+        perfil.save()
+        return True, None
+
+    @staticmethod
+    def reactivar_plan(perfil: Perfil) -> tuple[bool, str | None]:
+        if perfil.plan_estado != Perfil.ESTADO_PAUSADO:
+            return False, "El plan no está pausado."
+        dias_pausado = (date.today() - perfil.plan_pausa_hasta + timedelta(days=30)).days
+        if perfil.plan_expiration and dias_pausado > 0:
+            perfil.plan_expiration = perfil.plan_expiration + timedelta(days=dias_pausado)
+        perfil.plan_estado = Perfil.ESTADO_ACTIVO
+        perfil.plan_pausa_hasta = None
+        perfil.save()
+        return True, None
+
+    @staticmethod
+    def cancelar_plan(perfil: Perfil) -> tuple[bool, str | None]:
+        if perfil.plan == Perfil.PLAN_FREEMIUM:
+            return False, "El plan gratuito no requiere cancelación."
+        if perfil.plan_estado == Perfil.ESTADO_CANCELADO:
+            return False, "El plan ya está cancelado."
+        perfil.plan_estado = Perfil.ESTADO_CANCELADO
+        perfil.plan_cancelacion_fecha = (
+            perfil.plan_expiration or date.today() + timedelta(days=30)
+        )
+        perfil.save()
+        return True, None
+
+    @staticmethod
     def cambiar_plan(perfil: Perfil, nuevo_plan: str) -> tuple[bool, str | None]:
         """
         Cambia el plan del perfil a uno válido.
@@ -161,17 +199,16 @@ class PerfilService:
         Returns:
             Tuple[bool, Optional[str]] — (éxito, mensaje_error)
         """
-        planes_validos = [
-            Perfil.PLAN_FREEMIUM,
-            Perfil.PLAN_GROWTH,
-            Perfil.PLAN_MULTI_BUSINESS,
-        ]
+        planes_validos = [p for p, _ in Perfil.PLAN_CHOICES]
 
         if nuevo_plan not in planes_validos:
-            return False, f"Plan inválido. Opciones: {', '.join(planes_validos)}"
+            return False, f"Plan inválido."
 
         perfil.plan = nuevo_plan
         perfil.plan_expiration = date.today() + timedelta(days=365)
+        perfil.plan_estado = Perfil.ESTADO_ACTIVO
+        perfil.plan_pausa_hasta = None
+        perfil.plan_cancelacion_fecha = None
         perfil.save()
 
         return True, None

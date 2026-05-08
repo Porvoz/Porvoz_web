@@ -23,4 +23,9 @@ urlpatterns = [
         views.eliminar_medicamento_view,
         name="eliminar_medicamento",
     ),
+    path(
+        "<int:paciente_id>/<int:medicamento_id>/pausar/",
+        views.pausar_medicamento_view,
+        name="pausar_medicamento",
+    ),
 ]

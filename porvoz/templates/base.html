@@ -142,6 +142,13 @@
             }
         }
 
+        /* En mobile, el header del sidebar ya tiene el botón hamburguesa.
+           Ocultar los botones duplicados que están dentro del contenido de páginas. */
+        @media (max-width: 1023px) {
+            .btn-mobile-menu { display: none !important; }
+            main [data-mobile-menu-toggle] { display: none !important; }
+        }
+
         /* Sidebar overlay en móvil y tablet (< 1024px) - mismo breakpoint que lg */
         @media (max-width: 1023px) {
             .sidebar {
@@ -181,6 +188,51 @@
     {% block messages %}
         {% include "partials/messages.html" %}
     {% endblock %}
+
+    {% if user.is_authenticated and not user.is_staff %}
+    <!-- Banner de vencimiento de plan (solo usuarios normales) -->
+    {% if dias_plan_restantes is not None and dias_plan_restantes <= 7 %}
+    <div class="fixed top-0 lg:left-64 left-0 right-0 z-30 {% if dias_plan_restantes <= 1 %}bg-red-600{% elif dias_plan_restantes <= 3 %}bg-amber-500{% else %}bg-blue-600{% endif %} text-white text-sm font-semibold px-4 py-2 flex items-center justify-between gap-4 shadow-lg">
+        <span class="flex items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            {% if dias_plan_restantes <= 0 %}Tu plan venció — renueva ahora para seguir usando Porvoz
+            {% elif dias_plan_restantes == 1 %}Tu plan vence mañana — contáctanos para renovar
+            {% else %}Tu plan vence en {{ dias_plan_restantes }} días — contáctanos para renovar{% endif %}
+        </span>
+        <a href="https://wa.me/573000000000?text=Hola+Porvoz,+quiero+renovar+mi+plan" target="_blank"
+            class="flex-shrink-0 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">
+            Renovar por WhatsApp →
+        </a>
+    </div>
+    <div class="h-10"></div>
+    {% endif %}
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <!-- Botones flotantes — WhatsApp siempre visible, Soporte solo para usuarios -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-row gap-3 items-center">
+        <!-- WhatsApp (todos) -->
+        <a href="https://wa.me/573000000000?text=Hola+Porvoz,+necesito+ayuda" target="_blank"
+            class="group flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-full shadow-xl transition-all duration-200 overflow-hidden"
+            style="padding: 0.75rem 1rem;">
+            <i class="bi bi-whatsapp text-lg flex-shrink-0"></i>
+            <span class="text-sm font-semibold whitespace-nowrap max-w-0 group-hover:max-w-xs overflow-hidden transition-all duration-300 ease-in-out">
+                WhatsApp
+            </span>
+        </a>
+        {% if not user.is_staff %}
+        <!-- Soporte (solo usuarios normales) -->
+        <a href="{% url 'contactar_soporte' %}"
+            class="group flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white rounded-full shadow-xl transition-all duration-200 overflow-hidden"
+            style="padding: 0.75rem 1rem;">
+            <i class="bi bi-headset text-lg flex-shrink-0"></i>
+            <span class="text-sm font-semibold whitespace-nowrap max-w-0 group-hover:max-w-xs overflow-hidden transition-all duration-300 ease-in-out">
+                Soporte
+            </span>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
 
     <script>
         (function () {

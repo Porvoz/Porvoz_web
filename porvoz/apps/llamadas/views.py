@@ -746,3 +746,204 @@ def cancelar_llamada(request, llamada_id: int):
     if next_url.startswith("/"):
         return redirect(next_url)
     return redirect("historial_llamadas")
+
+
+@login_required
+def exportar_historial_pdf(request):
+    """
+    GET sin parámetros → muestra formulario de filtros.
+    GET con ?generar=1 → genera el PDF.
+    """
+    import io
+    import unicodedata
+    from datetime import date, timedelta
+
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import cm
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    pacientes_usuario = Paciente.objects.filter(usuario=request.user, activo=True).order_by("nombre")
+
+    periodos = [
+        ("mes_actual",     "Este mes"),
+        ("mes_anterior",   "Mes anterior"),
+        ("ultimos_3_meses","Últimos 3 meses"),
+        ("ultimos_6_meses","Últimos 6 meses"),
+        ("personalizado",  "Personalizado"),
+    ]
+
+    # Si no pidieron generar, mostrar el formulario
+    if "generar" not in request.GET:
+        return render(request, "llamadas/exportar_pdf.html", {
+            "pacientes": pacientes_usuario,
+            "periodos": periodos,
+        })
+
+    # --- Parámetros del formulario ---
+    hoy = date.today()
+    periodo = request.GET.get("periodo", "mes_actual")
+    paciente_id = request.GET.get("paciente", "")
+    estado_filtro = request.GET.get("estado", "")
+    resultado_filtro = request.GET.get("resultado", "")
+
+    # Calcular rango de fechas según periodo
+    if periodo == "mes_actual":
+        desde = hoy.replace(day=1)
+        hasta = hoy
+        periodo_label = hoy.strftime("%B %Y").capitalize()
+    elif periodo == "mes_anterior":
+        primer_dia_mes = hoy.replace(day=1)
+        hasta = primer_dia_mes - timedelta(days=1)
+        desde = hasta.replace(day=1)
+        periodo_label = desde.strftime("%B %Y").capitalize()
+    elif periodo == "ultimos_3_meses":
+        desde = (hoy - timedelta(days=90)).replace(day=1)
+        hasta = hoy
+        periodo_label = "Últimos 3 meses"
+    elif periodo == "ultimos_6_meses":
+        desde = (hoy - timedelta(days=180)).replace(day=1)
+        hasta = hoy
+        periodo_label = "Últimos 6 meses"
+    elif periodo == "personalizado":
+        try:
+            desde = date.fromisoformat(request.GET.get("desde", hoy.replace(day=1).isoformat()))
+            hasta = date.fromisoformat(request.GET.get("hasta", hoy.isoformat()))
+        except ValueError:
+            desde = hoy.replace(day=1)
+            hasta = hoy
+        periodo_label = f"{desde.strftime('%d/%m/%Y')} — {hasta.strftime('%d/%m/%Y')}"
+    else:
+        desde = hoy.replace(day=1)
+        hasta = hoy
+        periodo_label = hoy.strftime("%B %Y").capitalize()
+
+    # Construir queryset
+    qs = Llamada.objects.filter(
+        usuario=request.user,
+        fecha_programada__date__gte=desde,
+        fecha_programada__date__lte=hasta,
+    ).select_related("paciente", "medicamento").order_by("fecha_programada")
+
+    paciente_obj = None
+    if paciente_id:
+        try:
+            paciente_obj = Paciente.objects.get(id=int(paciente_id), usuario=request.user)
+            qs = qs.filter(paciente=paciente_obj)
+        except (Paciente.DoesNotExist, ValueError):
+            pass
+
+    ESTADO_LABELS = {
+        "programada": "Programada", "en_curso": "En curso",
+        "completada": "Completada", "fallida": "Fallida",
+    }
+    RESULTADO_LABELS = {
+        "confirmada": "Confirmada", "negativa": "Negativa",
+        "despues": "Después", "sin_confirmar": "Sin confirmar",
+        "rechazo_tratamiento": "Rechaza tto.", "emergencia": "Emergencia",
+    }
+
+    if estado_filtro:
+        qs = qs.filter(estado=estado_filtro)
+    if resultado_filtro:
+        qs = qs.filter(respuesta__resultado=resultado_filtro)
+
+    llamadas = list(qs)
+
+    # --- Generar PDF ---
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4,
+                            leftMargin=2*cm, rightMargin=2*cm,
+                            topMargin=2*cm, bottomMargin=2*cm)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    title_style = ParagraphStyle("title", parent=styles["Heading1"], fontSize=16, spaceAfter=4)
+    sub_style   = ParagraphStyle("sub", parent=styles["Normal"], fontSize=9,
+                                  textColor=colors.HexColor("#64748b"), spaceAfter=14)
+
+    titulo = f"Reporte de adherencia — {paciente_obj.get_display_nombre() if paciente_obj else 'Todos los pacientes'}"
+    subtitulo = f"{periodo_label} · {request.user.get_full_name() or request.user.username} · {hoy.strftime('%d/%m/%Y')}"
+    if estado_filtro:
+        subtitulo += f" · Estado: {ESTADO_LABELS.get(estado_filtro, estado_filtro)}"
+    if resultado_filtro:
+        subtitulo += f" · Resultado: {RESULTADO_LABELS.get(resultado_filtro, resultado_filtro)}"
+
+    elements.append(Paragraph(titulo, title_style))
+    elements.append(Paragraph(subtitulo, sub_style))
+
+    # Resumen rápido
+    total = len(llamadas)
+    def _es_confirmada(ll):
+        try:
+            return ll.respuesta.resultado == "confirmada"
+        except Exception:
+            return False
+    confirmadas = sum(1 for ll in llamadas if _es_confirmada(ll))
+    adherencia = round(confirmadas * 100 / total) if total else 0
+
+    summary_data = [
+        ["Total llamadas", "Confirmadas", "Adherencia"],
+        [str(total), str(confirmadas), f"{adherencia}%"],
+    ]
+    summary_table = Table(summary_data, colWidths=[5.5*cm, 5.5*cm, 5.5*cm])
+    summary_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f8fafc")),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 9),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e2e8f0")),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    # Tabla principal
+    headers = ["Fecha", "Hora", "Paciente", "Medicamento", "Estado", "Resultado"]
+    data = [headers]
+    for ll in llamadas:
+        resp = getattr(ll, "respuesta", None)
+        resultado_val = RESULTADO_LABELS.get(resp.resultado, resp.resultado) if resp else "—"
+        data.append([
+            ll.fecha_programada.strftime("%d/%m/%Y"),
+            ll.fecha_programada.strftime("%H:%M"),
+            (ll.paciente.get_display_nombre() if hasattr(ll.paciente, "get_display_nombre") else ll.paciente.nombre) if ll.paciente else "—",
+            ll.medicamento.nombre if ll.medicamento else "—",
+            ESTADO_LABELS.get(ll.estado, ll.estado),
+            resultado_val,
+        ])
+
+    col_widths = [2.4*cm, 1.6*cm, 4.2*cm, 4.2*cm, 2.8*cm, 2.5*cm]
+    table = Table(data, colWidths=col_widths, repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 8),
+        ("FONTSIZE", (0, 1), (-1, -1), 8),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
+        ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e2e8f0")),
+        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ]))
+    elements.append(table)
+
+    doc.build(elements)
+    buf.seek(0)
+
+    # Nombre del archivo con paciente
+    def _slug(s):
+        s = unicodedata.normalize("NFD", s)
+        s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+        return s.lower().replace(" ", "_")
+
+    paciente_slug = _slug(paciente_obj.get_display_nombre()) if paciente_obj else "todos"
+    filename = f"porvoz_{paciente_slug}_{desde.strftime('%Y%m%d')}_{hasta.strftime('%Y%m%d')}.pdf"
+
+    response = HttpResponse(buf, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response

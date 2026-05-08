@@ -1,0 +1,46 @@
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="bi bi-chat-dots text-slate-600"></i> Tickets de soporte
+        </h2>
+        <span class="text-xs text-slate-500">{{ tickets|length }} ticket{{ tickets|length|pluralize }}</span>
+    </div>
+
+    {% if tickets %}
+    <div class="divide-y divide-slate-100">
+        {% for ticket in tickets %}
+        <a href="{% url 'ticket_detalle' ticket.id %}" class="flex items-start gap-4 px-6 py-4 hover:bg-slate-50 transition-colors block">
+            <div class="flex-shrink-0 mt-0.5">
+                {% if ticket.estado == 'abierto' %}
+                <span class="inline-block w-2 h-2 rounded-full bg-orange-400"></span>
+                {% elif ticket.estado == 'en_progreso' %}
+                <span class="inline-block w-2 h-2 rounded-full bg-blue-400"></span>
+                {% elif ticket.estado == 'resuelto' %}
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                {% else %}
+                <span class="inline-block w-2 h-2 rounded-full bg-slate-300"></span>
+                {% endif %}
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-slate-900 truncate">{{ ticket.titulo }}</p>
+                <p class="text-xs text-slate-500 mt-0.5 truncate">{{ ticket.descripcion|truncatewords:12 }}</p>
+            </div>
+            <div class="flex-shrink-0 text-right">
+                <p class="text-xs text-slate-500">{{ ticket.creado_en|date:"d/m/Y" }}</p>
+                <p class="text-[10px] font-semibold mt-0.5
+                    {% if ticket.prioridad == 'alta' %}text-red-600
+                    {% elif ticket.prioridad == 'media' %}text-amber-600
+                    {% else %}text-slate-500{% endif %}">
+                    {{ ticket.get_prioridad_display }}
+                </p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="px-6 py-12 text-center">
+        <i class="bi bi-chat-dots text-3xl text-slate-300 block mb-2"></i>
+        <p class="text-sm text-slate-500">Este usuario no tiene tickets de soporte</p>
+    </div>
+    {% endif %}
+</div>

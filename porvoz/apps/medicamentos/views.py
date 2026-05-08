@@ -234,3 +234,38 @@ def eliminar_medicamento_view(
     context = {"paciente": paciente, "medicamento": medicamento}
     return render(request, "medicamentos/eliminar_medicamento.html", context)
 
+
+@login_required
+def pausar_medicamento_view(
+    request: HttpRequest, paciente_id: int, medicamento_id: int
+) -> HttpResponse:
+    """Pausa o reactiva un medicamento temporalmente."""
+    from datetime import date, timedelta
+    paciente = get_object_or_404(Paciente, id=paciente_id, usuario=request.user)
+    medicamento = get_object_or_404(Medicamento, id=medicamento_id, paciente=paciente)
+
+    if request.method == "POST":
+        if medicamento.pausado:
+            medicamento.pausado = False
+            medicamento.pausado_hasta = None
+            medicamento.save(update_fields=["pausado", "pausado_hasta"])
+            messages.success(request, f"Recordatorios de {medicamento.nombre} reactivados.")
+        else:
+            dias = int(request.POST.get("dias", 7))
+            dias = max(1, min(dias, 90))
+            medicamento.pausado = True
+            medicamento.pausado_hasta = date.today() + timedelta(days=dias)
+            medicamento.save(update_fields=["pausado", "pausado_hasta"])
+            messages.success(
+                request,
+                f"Recordatorios de {medicamento.nombre} pausados hasta el {medicamento.pausado_hasta.strftime('%d/%m/%Y')}."
+            )
+        return redirect("detalle_paciente", paciente_id=paciente_id)
+
+    context = {
+        "paciente": paciente,
+        "medicamento": medicamento,
+        "dias_opciones": [(3, "3 días"), (7, "7 días"), (14, "14 días"), (21, "21 días"), (30, "30 días"), (60, "60 días")],
+    }
+    return render(request, "medicamentos/pausar_medicamento.html", context)
+

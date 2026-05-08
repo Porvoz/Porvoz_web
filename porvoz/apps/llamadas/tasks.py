@@ -11,12 +11,22 @@ from celery import shared_task
 
 logger = logging.getLogger(__name__)
 
+# Backoff base: 30s → 60s → 120s (intento 0, 1, 2)
+_RETRY_BACKOFF_BASE = 30
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=30)
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=_RETRY_BACKOFF_BASE)
 def ejecutar_llamada_task(self, llamada_id: int, base_url: str):
-    """Ejecuta una llamada individual. Un task por llamada."""
+    """
+    Ejecuta una llamada individual con backoff exponencial.
+    Reintentos: 30s → 60s → 120s. Tras 3 fallos → DLQ (tarea marcada failed).
+    """
     from apps.llamadas.models import Llamada
     from apps.llamadas.services.llamada_service import LlamadaService
+    from apps.shared.middleware import get_correlation_id
+
+    correlation_id = get_correlation_id() or "no-request"
+    log_prefix = f"[LlamadaTask][{correlation_id}]"
 
     try:
         llamada = Llamada.objects.select_related(
@@ -24,10 +34,15 @@ def ejecutar_llamada_task(self, llamada_id: int, base_url: str):
         ).get(pk=llamada_id)
         LlamadaService._ejecutar_llamada_individual(llamada, base_url)
     except Llamada.DoesNotExist:
-        logger.error(f"[LlamadaTask] Llamada #{llamada_id} no encontrada")
+        logger.error(f"{log_prefix} Llamada #{llamada_id} no encontrada — descartando")
     except Exception as exc:
-        logger.error(f"[LlamadaTask] Error en llamada #{llamada_id}: {exc}")
-        raise self.retry(exc=exc) from exc
+        countdown = _RETRY_BACKOFF_BASE * (2 ** self.request.retries)
+        logger.warning(
+            f"{log_prefix} Error en llamada #{llamada_id} "
+            f"(intento {self.request.retries + 1}/{self.max_retries + 1}): {exc} "
+            f"— reintentando en {countdown}s"
+        )
+        raise self.retry(exc=exc, countdown=countdown) from exc
 
 
 @shared_task

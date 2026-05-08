@@ -7,6 +7,7 @@ from django.urls import reverse
 from apps.core.models import Perfil
 from apps.shared.services import TelefonoService
 from apps.usuarios.services import PerfilService, PlanService, obtener_planes
+from apps.usuarios.services.planes_service import generar_historial_facturacion
 
 
 @login_required
@@ -15,18 +16,58 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
     editando = request.GET.get("edit") == "1"
     tab_activo = request.GET.get("tab", "perfil")
 
-    # Manejar cambio de plan
-    if request.method == "POST" and request.POST.get("action") == "cambiar_plan":
+    _redir_planes = f"{reverse('edit_profile')}?tab=planes"
+
+    # Manejar acciones del plan
+    action = request.POST.get("action") if request.method == "POST" else None
+
+    if action == "cambiar_plan":
         nuevo_plan = request.POST.get("plan", "").strip()
         success, error_msg = PerfilService.cambiar_plan(perfil, nuevo_plan)
         if success:
-            messages.success(
-                request, f"Plan actualizado a {perfil.get_plan_display()}."
-            )
-            return redirect(f"{reverse('edit_profile')}?tab=planes")
+            messages.success(request, f"Plan actualizado a {perfil.get_plan_display()}.")
         else:
             messages.error(request, error_msg)
-            return redirect(f"{reverse('edit_profile')}?tab=planes")
+        return redirect(_redir_planes)
+
+    if action == "pausar_plan":
+        success, error_msg = PerfilService.pausar_plan(perfil)
+        if success:
+            fecha_str = perfil.plan_pausa_hasta.strftime("%d/%m/%Y")
+            messages.success(request, f"Plan pausado hasta el {fecha_str}. Las llamadas automáticas se detienen durante la pausa.")
+        else:
+            messages.error(request, error_msg)
+        return redirect(_redir_planes)
+
+    if action == "reactivar_plan":
+        success, error_msg = PerfilService.reactivar_plan(perfil)
+        if success:
+            messages.success(request, "Plan reactivado. Las llamadas automáticas se reanudan.")
+        else:
+            messages.error(request, error_msg)
+        return redirect(_redir_planes)
+
+    if action == "cancelar_plan":
+        success, error_msg = PerfilService.cancelar_plan(perfil)
+        if success:
+            fecha = perfil.plan_cancelacion_fecha.strftime("%d/%m/%Y")
+            messages.success(request, f"Suscripción cancelada. Tu plan seguirá activo hasta el {fecha}, luego bajará a Gratuito.")
+        else:
+            messages.error(request, error_msg)
+        return redirect(_redir_planes)
+
+    if action == "aplicar_codigo":
+        from apps.admin_panel.services import CodigoService
+        codigo_str = request.POST.get("codigo_acceso", "").strip()
+        if not codigo_str:
+            messages.error(request, "Por favor ingresa un código de acceso.")
+        else:
+            success, msg = CodigoService.aplicar_codigo(request.user, codigo_str)
+            if success:
+                messages.success(request, msg)
+            else:
+                messages.error(request, msg)
+        return redirect(_redir_planes)
 
     # Manejar actualización de perfil
     if request.method == "POST" and request.POST.get("action") != "cambiar_plan":
@@ -96,10 +137,14 @@ def complete_profile_view(request: HttpRequest) -> HttpResponse:
 
     planes = obtener_planes(plan_actual=perfil.plan)
     uso_actual = PlanService.get_uso_actual(request.user)
+    dias_restantes = PerfilService.get_dias_restantes_plan(perfil)
+    historial_facturacion = generar_historial_facturacion(perfil)
 
     context = {
         "perfil": perfil,
         "uso_actual": uso_actual,
+        "dias_restantes_plan": dias_restantes,
+        "historial_facturacion": historial_facturacion,
         "first_name": first_name,
         "last_name": last_name,
         "phone_country": phone_country,

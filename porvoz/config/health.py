@@ -31,6 +31,7 @@ def health_check(request):
         "services": {
             "database": "unknown",
             "cache": "unknown",
+            "celery": "unknown",
             "twilio": "unknown",
             "gemini": "unknown",
         },
@@ -59,7 +60,20 @@ def health_check(request):
         status["services"]["cache"] = "error"
         status["status"] = "degraded"
 
-    # 3. Twilio
+    # 3. Celery worker
+    try:
+        from config.celery import app as celery_app
+        insp = celery_app.control.inspect(timeout=2)
+        active = insp.active()
+        status["services"]["celery"] = "ok" if active else "no_workers"
+        if not active:
+            status["status"] = "degraded"
+    except Exception as e:
+        logger.error(f"[Health] Celery error: {e}")
+        status["services"]["celery"] = "error"
+        status["status"] = "degraded"
+
+    # 4. Twilio
     try:
         from apps.llamadas.services.proveedor_voz_service import ProveedorVozService
         client = ProveedorVozService.get_twilio_client()

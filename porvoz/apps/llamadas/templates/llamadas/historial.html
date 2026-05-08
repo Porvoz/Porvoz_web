@@ -36,6 +36,9 @@
                     </a>
                     {% endif %}{% endfor %}
                     {% else %}
+                    <a href="{% url 'exportar_historial_pdf' %}" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                        <i class="bi bi-file-earmark-pdf"></i>Exportar PDF
+                    </a>
                     <a href="{% url 'dashboard' %}" class="btn-dashboard-primary self-start sm:self-center">
                         <i class="bi bi-house"></i>
                         Panel principal
@@ -48,15 +51,15 @@
         <!-- Filtros compactos -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6">
             <form method="get" class="space-y-3">
-                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
                     <!-- Búsqueda -->
-                    <div class="sm:col-span-5 relative">
+                    <div class="sm:col-span-2 lg:col-span-4 relative">
                         <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" name="paciente_search" value="{{ request.GET.paciente_search|default:'' }}" placeholder="Buscar paciente o medicamento..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-400 transition-all">
                     </div>
 
                     <!-- Estado -->
-                    <div class="sm:col-span-3">
+                    <div class="lg:col-span-2">
                         <select name="estado" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer hover:border-slate-400 transition-all">
                             <option value="">Todos los estados</option>
                             <option value="completada" {% if estado_filtro == 'completada' %}selected{% endif %}>Completadas</option>
@@ -68,7 +71,7 @@
 
                     <!-- Paciente -->
                     {% if pacientes %}
-                    <div class="sm:col-span-2">
+                    <div class="lg:col-span-3">
                         <select name="paciente" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer hover:border-slate-400 transition-all">
                             <option value="">Todos los pacientes</option>
                             {% for p in pacientes %}
@@ -80,7 +83,7 @@
 
                     <!-- Medicamento -->
                     {% if medicamentos %}
-                    <div class="sm:col-span-2">
+                    <div class="lg:col-span-3">
                         <select name="medicamento" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer hover:border-slate-400 transition-all">
                             <option value="">Todos los medicamentos</option>
                             {% for m in medicamentos %}

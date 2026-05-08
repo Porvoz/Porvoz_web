@@ -7,7 +7,9 @@ from apps.dashboard.services import DashboardService
 
 @login_required
 def dashboard_router(request: HttpRequest) -> HttpResponse:
-    """Redirige al dashboard unificado."""
+    """Redirige al dashboard correspondiente según rol."""
+    if request.user.is_staff:
+        return redirect("admin_dashboard")
     return redirect("dashboard")
 
 
@@ -34,6 +36,7 @@ def dashboard_unificado(request: HttpRequest) -> HttpResponse:
         "pacientes_sin_medicamentos": datos["pacientes_sin_medicamentos"],
         "alertas_activas": datos["alertas_activas"],
         "proximas_llamadas": datos["proximas_llamadas"],
+        "mostrar_onboarding": datos["mostrar_onboarding"],
     }
 
     return render(request, "dashboard/dashboard.html", context)

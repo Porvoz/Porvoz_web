@@ -107,6 +107,18 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.llamadas.tasks.ejecutar_llamadas_pendientes_task",
         "schedule": 60.0,
     },
+    "verificar-estados-plan": {
+        "task": "apps.usuarios.tasks.verificar_estados_plan_task",
+        "schedule": 86400.0,
+    },
+    "reactivar-medicamentos-pausados": {
+        "task": "apps.medicamentos.tasks.reactivar_medicamentos_pausados_task",
+        "schedule": 86400.0,
+    },
+    "resumen-semanal": {
+        "task": "apps.usuarios.tasks_email.enviar_resumen_semanal_task",
+        "schedule": 604800.0,  # cada 7 días
+    },
 }
 
 # Email: SMTP — credentials are already required by the fail-fast block.

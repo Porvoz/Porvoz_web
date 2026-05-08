@@ -104,16 +104,10 @@ class PlanServiceTest(TestCase):
         self.assertFalse(puede)
 
     def test_paciente_bajo_limite_growth(self):
-        """Growth plan allows adding patient when under limit."""
+        """Básico (growth) allows 1 patient — under limit when 0 exist."""
         self.perfil.plan = Perfil.PLAN_GROWTH
         self.perfil.save()
 
-        for i in range(2):
-            Paciente.objects.create(
-                usuario=self.user,
-                nombre=f"Paciente {i + 1}",
-                telefono=f"+5730099900{i:02d}"
-            )
-
+        # Sin pacientes aún → puede agregar el primero (límite = 1)
         puede, msg = PlanService.puede_agregar_paciente(self.user)
         self.assertTrue(puede)

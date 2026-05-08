@@ -2,9 +2,11 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
+from django_ratelimit.decorators import ratelimit
 
 from apps.autenticacion.services import RegistroService
 from apps.usuarios.services import PerfilService
@@ -14,11 +16,19 @@ User = get_user_model()
 
 
 @never_cache
+@ratelimit(key="ip", rate="5/15m", method="POST", block=False)
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         return redirect("dashboard_router")
 
     if request.method == "POST":
+        if getattr(request, "limited", False):
+            messages.error(
+                request,
+                "Demasiados intentos fallidos. Espera 15 minutos antes de intentar de nuevo.",
+            )
+            return render(request, "autenticacion/login.html")
+
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "").strip()
         if not username or not password:
@@ -28,12 +38,33 @@ def login_view(request: HttpRequest) -> HttpResponse:
             if user is not None:
                 login(request, user)
                 return redirect("dashboard_router")
+            logger.warning("login_failed username=%s ip=%s", username, request.META.get("REMOTE_ADDR"))
             messages.error(
                 request,
                 "Usuario o contraseña incorrectos. Verifica los datos e intenta de nuevo.",
             )
 
     return render(request, "autenticacion/login.html")
+
+
+@login_required
+def delete_account_view(request: HttpRequest) -> HttpResponse:
+    """Eliminación de cuenta en 2 pasos — cumple ARCC Ley 1581."""
+    if request.method == "POST":
+        confirm = request.POST.get("confirm_text", "").strip()
+        if confirm != "ELIMINAR":
+            messages.error(request, "Debes escribir exactamente: ELIMINAR")
+            return render(request, "autenticacion/delete_account.html")
+        user = request.user
+        logger.info("account_deleted username=%s", user.username)
+        # Anonimizar llamadas antes de borrar
+        from apps.llamadas.models import Llamada
+        Llamada.objects.filter(usuario=user).update(usuario=None)
+        logout(request)
+        user.delete()
+        messages.success(request, "Tu cuenta fue eliminada. Lamentamos verte partir.")
+        return redirect("login")
+    return render(request, "autenticacion/delete_account.html")
 
 
 @never_cache

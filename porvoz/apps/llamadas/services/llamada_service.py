@@ -17,7 +17,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 
 from apps.llamadas.models import AuditoriaLog, Llamada, RespuestaLlamada
@@ -379,23 +379,24 @@ class LlamadaService:
         Returns:
             RespuestaLlamada creada o actualizada
         """
-        llamada = Llamada.objects.filter(call_sid=call_sid).first()
-        if not llamada:
-            logger.warning(
-                f"[LlamadaService] No se encontró llamada con call_sid={call_sid}"
+        with transaction.atomic():
+            llamada = Llamada.objects.select_for_update().filter(call_sid=call_sid).first()
+            if not llamada:
+                logger.warning(
+                    f"[LlamadaService] No se encontró llamada con call_sid={call_sid}"
+                )
+                return None
+
+            resultado_final = resultado or RespuestaLlamada.RESULTADO_SIN_CONFIRMAR
+
+            respuesta, _ = RespuestaLlamada.objects.update_or_create(
+                llamada=llamada,
+                defaults={
+                    "como_respondio": como_respondio,
+                    "resultado": resultado_final,
+                    "transcripcion": transcripcion,
+                },
             )
-            return None
-
-        resultado_final = resultado or RespuestaLlamada.RESULTADO_SIN_CONFIRMAR
-
-        respuesta, _ = RespuestaLlamada.objects.update_or_create(
-            llamada=llamada,
-            defaults={
-                "como_respondio": como_respondio,
-                "resultado": resultado_final,
-                "transcripcion": transcripcion,
-            },
-        )
 
         if como_respondio in (
             RespuestaLlamada.RESPUESTA_NO_ATENDIDA,
