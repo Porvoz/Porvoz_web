@@ -20,13 +20,6 @@ def login_view(request: HttpRequest) -> HttpResponse:
         return redirect("dashboard_router")
 
     if request.method == "POST":
-        if getattr(request, "limited", False):
-            messages.error(
-                request,
-                "Demasiados intentos fallidos. Espera 15 minutos antes de intentar de nuevo.",
-            )
-            return render(request, "autenticacion/login.html")
-
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "").strip()
         if not username or not password:
