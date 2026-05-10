@@ -33,4 +33,6 @@ class CorrelationIdMiddleware:
         _local.correlation_id = correlation_id
         response = self.get_response(request)
         response["X-Correlation-Id"] = correlation_id
+        if request.user.is_authenticated:
+            response["Cache-Control"] = "no-cache, no-store, must-revalidate"
         return response
