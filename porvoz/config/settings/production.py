@@ -47,16 +47,28 @@ if not ALLOWED_HOSTS or ALLOWED_HOSTS == ["*"]:
 # Trust X-Forwarded-Proto from nginx proxy
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = False  # nginx handles TLS termination
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
-# CSRF trusted origins (para formularios POST)
-_csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS", "")
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_origins.split(",") if origin.strip()]
+_csrf_origins = os.getenv(
+    "CSRF_TRUSTED_ORIGINS",
+    "http://54.164.24.119,https://54.164.24.119"
+)
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in _csrf_origins.split(",")
+    if origin.strip()
+]
+
 if not CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in ALLOWED_HOSTS]
-    CSRF_TRUSTED_ORIGINS += [f"https://{host}" for host in ALLOWED_HOSTS]
+    CSRF_TRUSTED_ORIGINS = [
+        f"http://{host}" for host in ALLOWED_HOSTS
+    ]
 
+    CSRF_TRUSTED_ORIGINS += [
+        f"https://{host}" for host in ALLOWED_HOSTS
+    ]
 # Database: PostgreSQL — DATABASE_URL is already required by the fail-fast block above.
 database_url = os.getenv("DATABASE_URL", "")
 _m = re.match(

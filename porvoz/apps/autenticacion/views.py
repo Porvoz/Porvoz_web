@@ -6,7 +6,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
-from django_ratelimit.decorators import ratelimit
 
 from apps.autenticacion.services import RegistroService
 from apps.usuarios.services import PerfilService
@@ -16,7 +15,6 @@ User = get_user_model()
 
 
 @never_cache
-@ratelimit(key="ip", rate="5/15m", method="POST", block=False)
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         return redirect("dashboard_router")
