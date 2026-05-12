@@ -1,36 +1,30 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
-# Migraciones y assets estáticos solo se ejecutan en el contenedor web
-# (gunicorn). Los workers de Celery comparten el volumen y solo necesitan
-# arrancar — evitamos colisiones de migrate concurrente.
-case "$1" in
-  celery-worker)
-    echo "[entrypoint] Starting Celery worker..."
-    exec celery -A config worker --loglevel=info --concurrency=2
-    ;;
-  celery-beat)
-    echo "[entrypoint] Starting Celery beat..."
-    exec celery -A config beat --loglevel=info \
-        --scheduler django_celery_beat.schedulers:DatabaseScheduler
-    ;;
-  flower)
-    echo "[entrypoint] Starting Flower..."
-    exec celery -A config flower --address=0.0.0.0 --port=5555
-    ;;
-  *)
-    echo "[entrypoint] Running migrations..."
-    python manage.py migrate --noinput
+echo "[Entrypoint] Starting Django app..."
 
-    echo "[entrypoint] Collecting static files..."
-    python manage.py collectstatic --noinput
+# Cambiar a directorio de la app
+cd /app/porvoz
 
-    echo "[entrypoint] Starting Gunicorn..."
-    exec gunicorn config.wsgi:application \
-      --bind 0.0.0.0:8000 \
-      --workers 2 \
-      --timeout 120 \
-      --access-logfile - \
-      --error-logfile -
-    ;;
-esac
+# Ejecutar collectstatic si no existe o si está vacío el volumen
+if [ ! -d "/app/staticfiles" ] || [ -z "$(ls -A /app/staticfiles)" ]; then
+    echo "[Entrypoint] Ejecutando collectstatic..."
+    python manage.py collectstatic --noinput --clear --settings=config.settings.production --verbosity 2
+    echo "[Entrypoint] ✓ Collectstatic completado"
+fi
+
+# Ejecutar migraciones
+echo "[Entrypoint] Ejecutando migraciones..."
+python manage.py migrate --settings=config.settings.production
+echo "[Entrypoint] ✓ Migraciones completadas"
+
+# Iniciar gunicorn
+echo "[Entrypoint] Iniciando gunicorn..."
+exec gunicorn config.wsgi:application \
+  --bind 0.0.0.0:10000 \
+  --workers 4 \
+  --worker-class sync \
+  --timeout 60 \
+  --access-logfile - \
+  --error-logfile - \
+  --log-level info

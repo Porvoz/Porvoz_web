@@ -142,3 +142,9 @@ CELERY_BEAT_SCHEDULE = {
 
 # Email: SMTP — credentials are already required by the fail-fast block.
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# Static files in production: collectstatic copies to /app/staticfiles (Docker volume)
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]  # Inherit from base.py
+
