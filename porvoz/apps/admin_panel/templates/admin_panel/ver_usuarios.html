@@ -15,10 +15,16 @@
                     · {{ total_usuarios }} total
                 </p>
             </div>
-            <a href="{% url 'crear_usuario_admin' %}"
-                class="self-start sm:self-center inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-colors">
-                <i class="bi bi-person-plus"></i> Crear usuario
-            </a>
+            <div class="flex gap-2">
+                <a href="{% url 'crear_usuario_admin' %}"
+                    class="self-start sm:self-center inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-colors">
+                    <i class="bi bi-person-plus"></i> Crear usuario
+                </a>
+                <a href="{% url 'admin_dashboard' %}" class="btn-dashboard-primary self-start sm:self-center">
+                    <i class="bi bi-house"></i>
+                    Ir a Dashboard
+                </a>
+            </div>
         </div>
 
         <!-- Search + filter pills -->
