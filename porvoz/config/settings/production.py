@@ -10,28 +10,29 @@ import re
 DEBUG = False
 
 # -----------------------------------------------------------------------------
-# Fail-fast: every variable required to safely run the system in production
-# must be present at import time. Better to crash on boot than at runtime in
-# the middle of a Twilio webhook.
-# -----------------------------------------------------------------------------
-_REQUIRED_ENV = (
-    "DJANGO_SECRET_KEY",
-    "ALLOWED_HOSTS",
-    "DATABASE_URL",
-    "EMAIL_HOST_USER",
-    "EMAIL_HOST_PASSWORD",
-    "TWILIO_ACCOUNT_SID",
-    "TWILIO_AUTH_TOKEN",
-    "TWILIO_FROM_NUMBER",
-    "TWILIO_BASE_URL",
-    "GEMINI_API_KEY",
-)
-_missing = [name for name in _REQUIRED_ENV if not os.getenv(name)]
-if _missing:
-    raise RuntimeError(
-        "Production startup aborted — missing required environment variables: "
-        + ", ".join(_missing)
+# Fail-fast: every variable required for production must be present
+# Allow missing vars in local development (detected by missing DATABASE_URL)
+_is_production = bool(os.getenv("DATABASE_URL"))
+
+if _is_production:
+    _REQUIRED_ENV = (
+        "DJANGO_SECRET_KEY",
+        "ALLOWED_HOSTS",
+        "DATABASE_URL",
+        "EMAIL_HOST_USER",
+        "EMAIL_HOST_PASSWORD",
+        "TWILIO_ACCOUNT_SID",
+        "TWILIO_AUTH_TOKEN",
+        "TWILIO_FROM_NUMBER",
+        "TWILIO_BASE_URL",
+        "GEMINI_API_KEY",
     )
+    _missing = [name for name in _REQUIRED_ENV if not os.getenv(name)]
+    if _missing:
+        raise RuntimeError(
+            "Production startup aborted — missing required environment variables: "
+            + ", ".join(_missing)
+        )
 
 if SECRET_KEY == "dev-secret-key-change-me":
     raise RuntimeError("DJANGO_SECRET_KEY must not use the development default in production")
@@ -39,8 +40,14 @@ if SECRET_KEY == "dev-secret-key-change-me":
 # Security
 _allowed = os.getenv("ALLOWED_HOSTS", "")
 ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
-if not ALLOWED_HOSTS or ALLOWED_HOSTS == ["*"]:
-    raise RuntimeError("ALLOWED_HOSTS must be an explicit list of hostnames in production")
+
+if _is_production:
+    if not ALLOWED_HOSTS or ALLOWED_HOSTS == ["*"]:
+        raise RuntimeError("ALLOWED_HOSTS must be an explicit list of hostnames in production")
+else:
+    # Allow development locally
+    if not ALLOWED_HOSTS:
+        ALLOWED_HOSTS = ["localhost", "127.0.0.1", "*.localhost"]
 
 # Trust X-Forwarded-Proto from Railway proxy (HTTPS on frontend, HTTP on backend)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -66,27 +73,37 @@ if _csrf_custom:
         for origin in _csrf_custom.split(",")
         if origin.strip()
     ])
-# Database: PostgreSQL — DATABASE_URL is already required by the fail-fast block above.
+# Database: PostgreSQL in production, SQLite fallback for local dev
 database_url = os.getenv("DATABASE_URL", "")
-_m = re.match(
-    r"postgres(?:ql)?://([^:]+):([^@]+)@([^:/]+)(?::(\d+))?/(.+)",
-    database_url
-)
-if not _m:
-    raise RuntimeError(f"Invalid DATABASE_URL format: {database_url}")
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "USER": _m.group(1),
-        "PASSWORD": _m.group(2),
-        "HOST": _m.group(3),
-        "PORT": _m.group(4) or "5432",
-        "NAME": _m.group(5),
-        "CONN_MAX_AGE": 600,
-        "ATOMIC_REQUESTS": True,
+if _is_production:
+    _m = re.match(
+        r"postgres(?:ql)?://([^:]+):([^@]+)@([^:/]+)(?::(\d+))?/(.+)",
+        database_url
+    )
+    if not _m:
+        raise RuntimeError(f"Invalid DATABASE_URL format: {database_url}")
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "USER": _m.group(1),
+            "PASSWORD": _m.group(2),
+            "HOST": _m.group(3),
+            "PORT": _m.group(4) or "5432",
+            "NAME": _m.group(5),
+            "CONN_MAX_AGE": 600,
+            "ATOMIC_REQUESTS": True,
+        }
     }
-}
+else:
+    # Fallback to SQLite for local development
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # Sessions: persist in PostgreSQL (Railway provides PGHOST, PGPORT, etc.)
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
