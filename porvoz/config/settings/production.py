@@ -154,8 +154,9 @@ CELERY_BEAT_SCHEDULE = {
 # Email: SMTP — credentials are already required by the fail-fast block.
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-# Sessions: use database backend in production (persists across deploys/restarts)
-SESSION_ENGINE = "django.contrib.sessions.backends.db"
+# Sessions: use cache backend (faster, works without DB migration)
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
