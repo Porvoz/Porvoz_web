@@ -199,19 +199,18 @@
             {% elif dias_plan_restantes == 1 %}Tu plan vence mañana — contáctanos para renovar
             {% else %}Tu plan vence en {{ dias_plan_restantes }} días — contáctanos para renovar{% endif %}
         </span>
-        <a href="https://wa.me/573000000000?text=Hola+Porvoz,+quiero+renovar+mi+plan" target="_blank"
-            class="flex-shrink-0 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">
-            Renovar por WhatsApp →
+        <a href="{% url 'crear_pago_manual' %}" class="flex-shrink-0 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">
+            Renovar ahora →
         </a>
     </div>
     <div class="h-10"></div>
     {% endif %}
     {% endif %}
 
-    {% if user.is_authenticated %}
-    <!-- Botones flotantes — WhatsApp siempre visible, Soporte solo para usuarios -->
-    <div class="fixed bottom-6 right-6 z-50 flex flex-row gap-3 items-center">
-        <!-- WhatsApp (todos) -->
+    {% if not user.is_authenticated %}
+    <!-- Botones flotantes — Solo en login/registro (no autenticado) -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-end">
+        <!-- WhatsApp -->
         <a href="https://wa.me/573000000000?text=Hola+Porvoz,+necesito+ayuda" target="_blank"
             class="group flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-full shadow-xl transition-all duration-200 overflow-hidden"
             style="padding: 0.75rem 1rem;">
@@ -220,17 +219,6 @@
                 WhatsApp
             </span>
         </a>
-        {% if not user.is_staff %}
-        <!-- Soporte (solo usuarios normales) -->
-        <a href="{% url 'contactar_soporte' %}"
-            class="group flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white rounded-full shadow-xl transition-all duration-200 overflow-hidden"
-            style="padding: 0.75rem 1rem;">
-            <i class="bi bi-headset text-lg flex-shrink-0"></i>
-            <span class="text-sm font-semibold whitespace-nowrap max-w-0 group-hover:max-w-xs overflow-hidden transition-all duration-300 ease-in-out">
-                Soporte
-            </span>
-        </a>
-        {% endif %}
     </div>
     {% endif %}
 
