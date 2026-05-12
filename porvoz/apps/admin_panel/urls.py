@@ -14,4 +14,7 @@ urlpatterns = [
     path("tickets/", views.tickets_soporte, name="tickets_soporte"),
     path("tickets/<int:ticket_id>/", views.ticket_detalle, name="ticket_detalle"),
     path("contacto/", views.contactar_soporte, name="contactar_soporte"),
+    # Rutas para que usuarios normales vean sus tickets
+    path("mis-tickets/", views.mis_tickets, name="mis_tickets"),
+    path("mis-tickets/<int:ticket_id>/", views.mi_ticket_detalle, name="mi_ticket_detalle"),
 ]

@@ -11,7 +11,7 @@ from django.db.models import Count, Q, Sum
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from apps.admin_panel.models import CodigoAcceso, MensajeTicket, PagoHistorico, TicketSoporte
+from apps.admin_panel.models import CodigoAcceso, ConfiguracionPlan, MensajeTicket, PagoHistorico, TicketSoporte
 from apps.autenticacion.services import RegistroService
 from apps.core.models import Perfil
 from apps.llamadas.models import Llamada, RespuestaLlamada
@@ -23,6 +23,8 @@ def es_admin(user):
     return user.is_staff
 
 
+@login_required
+@user_passes_test(es_admin)
 @login_required
 @user_passes_test(es_admin)
 def admin_dashboard(request):
@@ -100,9 +102,27 @@ def admin_dashboard(request):
 @login_required
 @user_passes_test(es_admin)
 def crear_codigos(request):
-    """Admin crea códigos de acceso"""
+    """Admin crea códigos de acceso y gestiona precios de planes"""
 
-    if request.method == "POST":
+    # Manejar actualización de precios de planes
+    if request.method == "POST" and request.POST.get("accion") == "actualizar_planes":
+        for plan_key in [Perfil.PLAN_FREEMIUM, Perfil.PLAN_GROWTH, Perfil.PLAN_MULTI_BUSINESS, Perfil.PLAN_PROFESIONAL]:
+            try:
+                config = ConfiguracionPlan.objects.get(plan=plan_key)
+                precio = request.POST.get(f"precio_{plan_key}")
+                costo = request.POST.get(f"costo_{plan_key}")
+                if precio:
+                    config.precio_mensual = int(precio)
+                if costo:
+                    config.costo_estimado = int(costo)
+                config.save()
+            except ConfiguracionPlan.DoesNotExist:
+                pass
+        messages.success(request, "Precios de planes actualizados")
+        return redirect("crear_codigos")
+
+    # Manejar creación de códigos
+    if request.method == "POST" and request.POST.get("accion") == "crear_codigos":
         plan = request.POST.get("plan")
         cantidad = int(request.POST.get("cantidad", 1))
         duracion_meses = int(request.POST.get("duracion_meses", 1))
@@ -123,9 +143,9 @@ def crear_codigos(request):
             )
             codigos_creados.append(codigo)
 
-        messages.success(request, f"✅ {cantidad} código(s) creado(s)")
+        messages.success(request, f"{cantidad} código(s) creado(s)")
 
-        plan_display = dict(CodigoAcceso.PLAN_CHOICES).get(plan, plan)
+        plan_display = dict(Perfil.PLAN_CHOICES).get(plan, plan)
         context = {
             "codigos": codigos_creados,
             "plan_display": plan_display,
@@ -133,14 +153,27 @@ def crear_codigos(request):
         }
         return render(request, "admin_panel/codigos_creados.html", context)
 
+    # GET: mostrar formulario
+    configuraciones = ConfiguracionPlan.objects.all()
+    planes_info = []
+    for config in configuraciones:
+        planes_info.append({
+            "plan_key": config.plan,
+            "nombre": config.nombre,
+            "precio": f"${config.precio_mensual:,.0f}" if config.precio_mensual else "$0",
+            "precio_mensual": config.precio_mensual,
+            "costo_estimado": config.costo_estimado,
+            "margen": config.margen_neto(),
+            "porcentaje_margen": config.porcentaje_margen(),
+            "limite_pacientes": config.limite_pacientes,
+            "limite_medicamentos": config.limite_medicamentos or "Ilimitado",
+            "limite_llamadas": config.limite_llamadas_mes,
+        })
+
     context = {
         "planes": Perfil.PLAN_CHOICES,
-        "planes_info": [
-            ("freemium",       "Gratuito",     "$0",           "person",  ["1 paciente", "2 medicamentos", "15 llamadas/mes"]),
-            ("growth",         "Básico",       "$24.900/mes",  "person",  ["1 paciente", "5 medicamentos", "90 llamadas/mes"]),
-            ("multi_business", "Familiar",     "$59.900/mes",  "people",  ["4 pacientes", "Medicamentos ilimitados", "300 llamadas/mes"]),
-            ("profesional",    "Profesional",  "$139.900/mes", "people",  ["10 pacientes", "Medicamentos ilimitados", "900 llamadas/mes"]),
-        ],
+        "planes_info": planes_info,
+        "configuraciones": configuraciones,
     }
     return render(request, "admin_panel/crear_codigos.html", context)
 
@@ -347,6 +380,19 @@ def ticket_detalle(request, ticket_id):
                 if ticket.estado == TicketSoporte.ESTADO_ABIERTO:
                     ticket.estado = TicketSoporte.ESTADO_EN_PROGRESO
                     ticket.save()
+
+                # Enviar notificación al usuario si tiene cuenta
+                if ticket.usuario:
+                    from apps.notificaciones.models import Notificacion
+                    Notificacion.objects.create(
+                        usuario=ticket.usuario,
+                        titulo=f"Respuesta en tu ticket: {ticket.titulo[:50]}",
+                        mensaje=contenido[:100] + ("..." if len(contenido) > 100 else ""),
+                        tipo=Notificacion.TIPO_SOPORTE,
+                        url=f"/soporte/tickets/{ticket.id}/",
+                        es_leida=False,
+                    )
+                messages.success(request, "Respuesta enviada y notificación enviada al usuario.")
 
         elif accion == "cambiar_estado":
             nuevo_estado = request.POST.get("estado")
@@ -599,11 +645,21 @@ def crear_pago_manual(request):
         return redirect("historial_pagos")
 
     usuarios = User.objects.filter(is_staff=False, is_active=True).order_by("first_name", "username")
+
+    # Precios por plan (mensual en COP)
+    precios_planes = {
+        Perfil.PLAN_FREEMIUM: 0,
+        Perfil.PLAN_GROWTH: 24_900,
+        Perfil.PLAN_MULTI_BUSINESS: 59_900,
+        Perfil.PLAN_PROFESIONAL: 139_900,
+    }
+
     context = {
         "usuarios": usuarios,
         "planes": Perfil.PLAN_CHOICES,
         "tipos_pago": PagoHistorico.TIPO_CHOICES,
         "metodos": PagoHistorico.METODO_CHOICES,
+        "precios_planes": precios_planes,
     }
     return render(request, "admin_panel/crear_pago_manual.html", context)
 
@@ -680,3 +736,55 @@ def crear_usuario_admin(request):
 
     context = {"planes": Perfil.PLAN_CHOICES}
     return render(request, "admin_panel/crear_usuario.html", context)
+
+
+# ─── USUARIO: VER MIS TICKETS ─────────────────────────────────────────────────
+
+@login_required
+def mis_tickets(request):
+    """Lista de tickets del usuario autenticado"""
+    if request.user.is_staff:
+        return redirect("tickets_soporte")
+
+    tickets = TicketSoporte.objects.filter(usuario=request.user).order_by("-creado_en")
+    context = {
+        "tickets": tickets,
+        "titulo": "Mis Solicitudes de Soporte",
+    }
+    return render(request, "soporte/mis_tickets.html", context)
+
+
+@login_required
+def mi_ticket_detalle(request, ticket_id):
+    """Detalle de un ticket para el usuario (ver conversación y responder)"""
+    if request.user.is_staff:
+        return redirect("ticket_detalle", ticket_id=ticket_id)
+
+    try:
+        ticket = TicketSoporte.objects.select_related("asignado_a").get(id=ticket_id, usuario=request.user)
+    except TicketSoporte.DoesNotExist:
+        messages.error(request, "Ticket no encontrado.")
+        return redirect("mis_tickets")
+
+    if request.method == "POST":
+        contenido = request.POST.get("contenido", "").strip()
+        if contenido:
+            MensajeTicket.objects.create(
+                ticket=ticket,
+                autor=request.user,
+                es_admin=False,
+                contenido=contenido,
+            )
+            if ticket.estado == TicketSoporte.ESTADO_RESUELTO:
+                ticket.estado = TicketSoporte.ESTADO_ABIERTO
+            ticket.save()
+            messages.success(request, "Tu mensaje ha sido enviado.")
+            return redirect("mi_ticket_detalle", ticket_id=ticket.id)
+
+    mensajes = ticket.mensajes.select_related("autor").all()
+    context = {
+        "ticket": ticket,
+        "mensajes": mensajes,
+        "es_usuario": True,
+    }
+    return render(request, "soporte/mi_ticket_detalle.html", context)

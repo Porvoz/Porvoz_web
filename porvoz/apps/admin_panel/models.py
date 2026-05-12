@@ -367,3 +367,74 @@ class MensajeTicket(models.Model):
     def __str__(self):
         quien = "Admin" if self.es_admin else "Usuario"
         return f"[{quien}] {self.ticket.titulo[:30]}"
+
+
+class ConfiguracionPlan(models.Model):
+    """Configuración de planes: precios, costos, límites (editable por admin)"""
+
+    plan = models.CharField(
+        max_length=20,
+        choices=Perfil.PLAN_CHOICES,
+        unique=True,
+        db_index=True,
+        help_text="Clave del plan (freemium, growth, multi_business, profesional)",
+    )
+    nombre = models.CharField(
+        max_length=100,
+        help_text="Nombre del plan (Gratuito, Básico, Familiar, Profesional)",
+    )
+    descripcion = models.TextField(
+        blank=True,
+        help_text="Descripción breve del plan",
+    )
+    precio_mensual = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+        help_text="Precio mensual en COP que cobra el usuario",
+    )
+    costo_estimado = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+        help_text="Costo estimado mensual (Twilio + infraestructura)",
+    )
+    limite_pacientes = models.IntegerField(
+        default=1,
+        help_text="Cantidad máxima de pacientes",
+    )
+    limite_medicamentos = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Máximo medicamentos por paciente (null = ilimitado)",
+    )
+    limite_llamadas_mes = models.IntegerField(
+        default=15,
+        help_text="Máximo de llamadas automatizadas por mes",
+    )
+    activo = models.BooleanField(
+        default=True,
+        help_text="Si es False, este plan no aparece en el login",
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["precio_mensual"]
+        verbose_name = "Configuración de Plan"
+        verbose_name_plural = "Configuraciones de Planes"
+
+    def margen_neto(self):
+        """Calcula el margen neto del plan"""
+        if self.precio_mensual == 0:
+            return 0
+        return int(self.precio_mensual) - int(self.costo_estimado)
+
+    def porcentaje_margen(self):
+        """Porcentaje de margen"""
+        if self.precio_mensual == 0:
+            return 0
+        return round((self.margen_neto() / int(self.precio_mensual)) * 100, 1)
+
+    def __str__(self):
+        return f"{self.nombre} (${self.precio_mensual:,.0f} COP)"

@@ -97,7 +97,10 @@
         <a href="{% url 'edit_profile' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'edit_profile' or request.resolver_match.url_name == 'change_password' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
             <i class="bi bi-gear mr-2"></i><span class="label-text">Mi cuenta</span>
         </a>
-        <div class="px-2 mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2 label-text">General</div>
+        <div class="px-2 mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2 label-text">Soporte</div>
+        <a href="{% url 'mis_tickets' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'mis_tickets' or request.resolver_match.url_name == 'mi_ticket_detalle' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
+            <i class="bi bi-chat-dots mr-2"></i><span class="label-text">Mis Tickets</span>
+        </a>
         <a href="{% url 'guide' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'guide' %}bg-slate-600 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
             <i class="bi bi-question-circle mr-2"></i><span class="label-text">Ayuda</span>
         </a>

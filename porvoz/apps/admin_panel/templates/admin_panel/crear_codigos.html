@@ -24,6 +24,64 @@
         </div>
         {% endfor %}{% endif %}
 
+        <!-- Sección Editar Precios de Planes (Collapsible) -->
+        <details class="bg-blue-50 border border-blue-200 rounded-2xl shadow-sm mb-8" open>
+            <summary class="cursor-pointer p-5 font-semibold text-blue-900 flex items-center gap-2 hover:bg-blue-100 transition-colors">
+                <i class="bi bi-sliders"></i>
+                Editar Precios y Costos de Planes
+            </summary>
+            <div class="p-6 border-t border-blue-200 bg-white">
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="actualizar_planes">
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200">
+                                    <th class="text-left py-3 px-4 font-semibold text-slate-900">Plan</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-slate-900">Precio Mensual (COP)</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-slate-900">Costo Estimado (COP)</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-slate-900">Margen Neto</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-slate-900">% Margen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for config in configuraciones %}
+                                <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                    <td class="py-3 px-4 font-medium text-slate-900">{{ config.nombre }}</td>
+                                    <td class="py-3 px-4">
+                                        <input type="number" name="precio_{{ config.plan }}" value="{{ config.precio_mensual }}"
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-right text-sm" step="100">
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <input type="number" name="costo_{{ config.plan }}" value="{{ config.costo_estimado }}"
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-right text-sm" step="100">
+                                    </td>
+                                    <td class="py-3 px-4 text-right">
+                                        <span class="inline-block px-3 py-1 bg-slate-100 text-slate-700 rounded text-xs font-semibold">
+                                            ${{ config.margen_neto|default:"0" }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right">
+                                        <span class="inline-block px-3 py-1 {% if config.porcentaje_margen > 40 %}bg-emerald-100 text-emerald-700{% elif config.porcentaje_margen > 20 %}bg-amber-100 text-amber-700{% else %}bg-red-100 text-red-700{% endif %} rounded text-xs font-semibold">
+                                            {{ config.porcentaje_margen }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex justify-end pt-4">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-xl transition-colors">
+                            <i class="bi bi-check-lg"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </details>
+
         <form method="post" class="space-y-6">
             {% csrf_token %}
 
@@ -33,22 +91,22 @@
                 <p class="text-xs text-slate-500 mb-5">Cada plan tiene límites distintos. El código activa exactamente ese plan.</p>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-                    {% for val, nombre, precio, icono, limites in planes_info %}
+                    {% for plan in planes_info %}
                     <label class="cursor-pointer">
-                        <input type="radio" name="plan" value="{{ val }}" class="sr-only peer" {% if forloop.first %}required{% endif %}>
+                        <input type="radio" name="plan" value="{{ plan.plan_key }}" class="sr-only peer" {% if forloop.first %}required{% endif %}>
                         <div class="h-full p-4 rounded-xl border-2 border-slate-200 bg-white peer-checked:border-indigo-500 peer-checked:bg-indigo-50 transition-all relative">
                             <!-- Check cuando está seleccionado -->
                             <div class="absolute top-3 right-3 w-5 h-5 rounded-full border-2 border-slate-300 peer-checked:border-indigo-500 flex items-center justify-center opacity-0 peer-checked:opacity-100 transition-all">
                                 <i class="bi bi-check text-indigo-600 text-xs font-black"></i>
                             </div>
                             <div class="mb-1">
-                                <span class="text-sm font-bold text-slate-900">{{ nombre }}</span>
+                                <span class="text-sm font-bold text-slate-900">{{ plan.nombre }}</span>
                             </div>
-                            <div class="text-xs font-semibold text-indigo-600 mb-3">{{ precio }}</div>
+                            <div class="text-xs font-semibold text-indigo-600 mb-3">{{ plan.precio }}</div>
                             <ul class="text-[11px] text-slate-500 space-y-1">
-                                {% for limite in limites %}
-                                <li class="flex items-center gap-1.5"><i class="bi bi-check2 text-slate-400"></i> {{ limite }}</li>
-                                {% endfor %}
+                                <li class="flex items-center gap-1.5"><i class="bi bi-check2 text-slate-400"></i> {{ plan.limite_pacientes }} paciente(s)</li>
+                                <li class="flex items-center gap-1.5"><i class="bi bi-check2 text-slate-400"></i> Hasta {{ plan.limite_medicamentos }} medicamentos</li>
+                                <li class="flex items-center gap-1.5"><i class="bi bi-check2 text-slate-400"></i> {{ plan.limite_llamadas }} llamadas/mes</li>
                             </ul>
                         </div>
                     </label>
@@ -98,6 +156,9 @@
                         class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
                 </div>
             </div>
+
+            <!-- Hidden action field -->
+            <input type="hidden" name="accion" value="crear_codigos">
 
             <!-- Submit -->
             <button type="submit"
