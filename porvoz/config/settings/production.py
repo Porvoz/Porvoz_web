@@ -48,25 +48,20 @@ SECURE_SSL_REDIRECT = False  # nginx handles TLS termination
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 
-_csrf_origins = os.getenv(
-    "CSRF_TRUSTED_ORIGINS",
-    "http://54.164.24.119,https://54.164.24.119"
-)
-
 CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in _csrf_origins.split(",")
-    if origin.strip()
+    f"http://{host}" for host in ALLOWED_HOSTS
+] + [
+    f"https://{host}" for host in ALLOWED_HOSTS
 ]
 
-if not CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS = [
-        f"http://{host}" for host in ALLOWED_HOSTS
-    ]
-
-    CSRF_TRUSTED_ORIGINS += [
-        f"https://{host}" for host in ALLOWED_HOSTS
-    ]
+# Allow additional origins from env var if needed
+_csrf_custom = os.getenv("CSRF_TRUSTED_ORIGINS", "")
+if _csrf_custom:
+    CSRF_TRUSTED_ORIGINS.extend([
+        origin.strip()
+        for origin in _csrf_custom.split(",")
+        if origin.strip()
+    ])
 # Database: PostgreSQL — DATABASE_URL is already required by the fail-fast block above.
 database_url = os.getenv("DATABASE_URL", "")
 _m = re.match(
