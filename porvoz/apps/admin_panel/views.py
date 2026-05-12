@@ -676,7 +676,7 @@ def crear_pago_manual(request):
 
     # Precios por plan desde DB (fallback a hardcodeados)
     precios_planes = {}
-    for plan_key, plan_display in Perfil.PLAN_CHOICES:
+    for plan_key, _plan_display in Perfil.PLAN_CHOICES:
         try:
             config = ConfiguracionPlan.objects.get(plan=plan_key)
             precios_planes[plan_key] = int(config.precio_mensual)

@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
-from apps.core.models import Perfil
+
 from apps.admin_panel.models import ConfiguracionPlan
+from apps.core.models import Perfil
 
 
 class Command(BaseCommand):
