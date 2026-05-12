@@ -42,11 +42,15 @@ ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
 if not ALLOWED_HOSTS or ALLOWED_HOSTS == ["*"]:
     raise RuntimeError("ALLOWED_HOSTS must be an explicit list of hostnames in production")
 
-# Trust X-Forwarded-Proto from nginx proxy
+# Trust X-Forwarded-Proto from Railway proxy (HTTPS on frontend, HTTP on backend)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = False  # nginx handles TLS termination
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = False  # Railway handles TLS termination
+
+# Cookies must be secure when using HTTPS (detected via SECURE_PROXY_SSL_HEADER)
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
 
 CSRF_TRUSTED_ORIGINS = [
     f"http://{host}" for host in ALLOWED_HOSTS
@@ -87,7 +91,6 @@ DATABASES = {
 # Sessions: persist in PostgreSQL (Railway provides PGHOST, PGPORT, etc.)
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
-SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 
 # Cache: Redis (optional) or database
