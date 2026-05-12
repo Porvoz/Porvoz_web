@@ -18,8 +18,6 @@ _REQUIRED_ENV = (
     "DJANGO_SECRET_KEY",
     "ALLOWED_HOSTS",
     "DATABASE_URL",
-    "REDIS_URL",
-    "CELERY_BROKER_URL",
     "EMAIL_HOST_USER",
     "EMAIL_HOST_PASSWORD",
     "TWILIO_ACCOUNT_SID",
@@ -91,23 +89,35 @@ DATABASES = {
     }
 }
 
-# Cache: Redis — REDIS_URL is already required by the fail-fast block above.
+# Cache: Redis (optional) or database
 redis_url = os.getenv("REDIS_URL", "")
-
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": redis_url,
-        "OPTIONS": {
-            "socket_connect_timeout": 5,
-            "socket_timeout": 5,
-            "socket_keepalive": True,
-        },
+if redis_url:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": redis_url,
+            "OPTIONS": {
+                "socket_connect_timeout": 5,
+                "socket_timeout": 5,
+                "socket_keepalive": True,
+            },
+        }
     }
-}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": "django_cache_table",
+        }
+    }
 
-# Celery: Async task queue — CELERY_BROKER_URL is already required by the fail-fast block.
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", redis_url)
+# Celery: Async task queue (optional, uses DB backend if no Redis)
+celery_broker = os.getenv("CELERY_BROKER_URL", redis_url)
+if celery_broker:
+    CELERY_BROKER_URL = celery_broker
+else:
+    CELERY_BROKER_URL = "memory://"
+
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_CACHE_BACKEND = "default"
 CELERY_ACCEPT_CONTENT = ["json"]
@@ -117,6 +127,7 @@ CELERY_TIMEZONE = "America/Bogota"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 300  # 5 min max per task
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_TASK_ALWAYS_EAGER = True  # Run tasks synchronously without a broker
 
 # Periodic task: scan for due Llamadas every 60s and dispatch one task per call.
 # DatabaseScheduler upserts these entries into django_celery_beat tables on boot,
@@ -142,6 +153,12 @@ CELERY_BEAT_SCHEDULE = {
 
 # Email: SMTP — credentials are already required by the fail-fast block.
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# Sessions: use database backend in production (persists across deploys/restarts)
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+SESSION_COOKIE_AGE = 1209600  # 2 weeks
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
 
 # Static files in production: collectstatic copies to /app/staticfiles (Docker volume)
 STATIC_URL = "/static/"
