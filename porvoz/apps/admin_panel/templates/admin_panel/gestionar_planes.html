@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20">
+
+        <!-- Header -->
+        <div class="mb-8 mt-12 lg:mt-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Gestionar Planes</h1>
+                <p class="text-sm text-slate-500 mt-0.5">Edita precios, costos y visualiza márgenes de cada plan</p>
+            </div>
+            <a href="{% url 'admin_dashboard' %}" class="btn-dashboard-primary self-start sm:self-center">
+                <i class="bi bi-house"></i>
+                Ir a Dashboard
+            </a>
+        </div>
+
+        {% if messages %}{% for msg in messages %}
+        <div class="mb-5 px-4 py-3 rounded-xl text-sm font-semibold {% if msg.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200{% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">
+            {{ msg }}
+        </div>
+        {% endfor %}{% endif %}
+
+        <!-- Form -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for config in configuraciones %}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <!-- Nombre del plan -->
+                    <h2 class="text-lg font-bold text-slate-900 mb-5">{{ config.nombre }}</h2>
+
+                    <!-- Precio Mensual -->
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Precio Mensual (COP)</label>
+                        <input type="number" name="precio_{{ config.plan }}" value="{{ config.precio_mensual }}"
+                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-right text-sm focus:ring-2 focus:ring-slate-800 outline-none" step="100">
+                    </div>
+
+                    <!-- Costo Estimado -->
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Costo Estimado (COP)</label>
+                        <input type="number" name="costo_{{ config.plan }}" value="{{ config.costo_estimado }}"
+                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-right text-sm focus:ring-2 focus:ring-slate-800 outline-none" step="100">
+                    </div>
+
+                    <!-- Separador -->
+                    <div class="border-t border-slate-100 my-4 pt-4">
+
+                    <!-- Margen Neto (lectura) -->
+                    <div class="mb-3">
+                        <p class="text-xs font-semibold text-slate-600 mb-1">Margen Neto:</p>
+                        <p class="text-lg font-bold {% if config.margen_neto < 0 %}text-red-600{% else %}text-emerald-600{% endif %}">
+                            ${{ config.margen_neto|default:"0" }}
+                        </p>
+                    </div>
+
+                    <!-- % Margen (lectura) -->
+                    <div>
+                        <p class="text-xs font-semibold text-slate-600 mb-1">% Margen:</p>
+                        <div class="inline-block px-3 py-1.5 rounded-lg text-sm font-bold {% if config.porcentaje_margen < 0 %}bg-red-100 text-red-700{% elif config.porcentaje_margen > 40 %}bg-emerald-100 text-emerald-700{% elif config.porcentaje_margen > 20 %}bg-amber-100 text-amber-700{% else %}bg-red-100 text-red-700{% endif %}">
+                            {{ config.porcentaje_margen }}%
+                        </div>
+                    </div>
+
+                    </div>
+
+                    <!-- Límites del plan (lectura) -->
+                    <div class="bg-slate-50 rounded-xl p-3 mt-4 text-xs space-y-2">
+                        <p><strong class="text-slate-700">Pacientes:</strong> <span class="text-slate-600">{{ config.limite_pacientes }}</span></p>
+                        <p><strong class="text-slate-700">Medicamentos:</strong> <span class="text-slate-600">{{ config.limite_medicamentos|default:"Ilimitado" }}</span></p>
+                        <p><strong class="text-slate-700">Llamadas/mes:</strong> <span class="text-slate-600">{{ config.limite_llamadas_mes }}</span></p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Submit -->
+            <div class="flex gap-3">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                    <i class="bi bi-check-lg"></i> Guardar Cambios
+                </button>
+                <a href="{% url 'admin_dashboard' %}" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-bold px-8 py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                    <i class="bi bi-x-lg"></i> Cancelar
+                </a>
+            </div>
+        </form>
+
+    </main>
+
+    {% include "footer.html" %}
+</div>
+{% endblock %}

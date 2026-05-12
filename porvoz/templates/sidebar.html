@@ -65,6 +65,9 @@
         <a href="{% url 'ver_codigos' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'ver_codigos' %}bg-slate-800 text-white{% else %}text-slate-700 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
             <i class="bi bi-key mr-2"></i><span class="label-text">Ver Códigos</span>
         </a>
+        <a href="{% url 'gestionar_planes' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'gestionar_planes' %}bg-slate-800 text-white{% else %}text-slate-700 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
+            <i class="bi bi-sliders mr-2"></i><span class="label-text">Gestionar Planes</span>
+        </a>
         <a href="{% url 'historial_pagos' %}" class="nav-link px-3 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'historial_pagos' %}bg-slate-800 text-white{% else %}text-slate-700 hover:bg-slate-100{% endif %} flex items-center gap-2 font-semibold">
             <i class="bi bi-credit-card mr-2"></i><span class="label-text">Historial Pagos</span>
         </a>

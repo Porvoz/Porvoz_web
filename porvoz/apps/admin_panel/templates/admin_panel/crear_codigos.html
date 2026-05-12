@@ -24,148 +24,95 @@
         </div>
         {% endfor %}{% endif %}
 
-        <!-- Sección Editar Precios de Planes (Collapsible) -->
-        <details class="bg-blue-50 border border-blue-200 rounded-2xl shadow-sm mb-8" open>
-            <summary class="cursor-pointer p-5 font-semibold text-blue-900 flex items-center gap-2 hover:bg-blue-100 transition-colors">
-                <i class="bi bi-sliders"></i>
-                Editar Precios y Costos de Planes
-            </summary>
-            <div class="p-6 border-t border-blue-200 bg-white">
-                <form method="post" class="space-y-4">
+        <div class="space-y-6">
+                <form method="post" class="space-y-6">
                     {% csrf_token %}
-                    <input type="hidden" name="accion" value="actualizar_planes">
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-slate-200">
-                                    <th class="text-left py-3 px-4 font-semibold text-slate-900">Plan</th>
-                                    <th class="text-right py-3 px-4 font-semibold text-slate-900">Precio Mensual (COP)</th>
-                                    <th class="text-right py-3 px-4 font-semibold text-slate-900">Costo Estimado (COP)</th>
-                                    <th class="text-right py-3 px-4 font-semibold text-slate-900">Margen Neto</th>
-                                    <th class="text-right py-3 px-4 font-semibold text-slate-900">% Margen</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for config in configuraciones %}
-                                <tr class="border-b border-slate-100 hover:bg-slate-50">
-                                    <td class="py-3 px-4 font-medium text-slate-900">{{ config.nombre }}</td>
-                                    <td class="py-3 px-4">
-                                        <input type="number" name="precio_{{ config.plan }}" value="{{ config.precio_mensual }}"
-                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-right text-sm" step="100">
-                                    </td>
-                                    <td class="py-3 px-4">
-                                        <input type="number" name="costo_{{ config.plan }}" value="{{ config.costo_estimado }}"
-                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-right text-sm" step="100">
-                                    </td>
-                                    <td class="py-3 px-4 text-right">
-                                        <span class="inline-block px-3 py-1 bg-slate-100 text-slate-700 rounded text-xs font-semibold">
-                                            ${{ config.margen_neto|default:"0" }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3 px-4 text-right">
-                                        <span class="inline-block px-3 py-1 {% if config.porcentaje_margen > 40 %}bg-emerald-100 text-emerald-700{% elif config.porcentaje_margen > 20 %}bg-amber-100 text-amber-700{% else %}bg-red-100 text-red-700{% endif %} rounded text-xs font-semibold">
-                                            {{ config.porcentaje_margen }}%
-                                        </span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="flex justify-end pt-4">
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-xl transition-colors">
-                            <i class="bi bi-check-lg"></i> Guardar Cambios
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </details>
+                    <!-- 1. Elegir plan -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                        <h2 class="text-sm font-bold text-slate-900 mb-1">
+                            <i class="bi bi-tag"></i> 1 · Selecciona el Plan
+                        </h2>
+                        <p class="text-xs text-slate-500 mb-5">Cada plan tiene límites distintos. El código activa exactamente ese plan.</p>
 
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
-
-            <!-- 1. Elegir plan -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                <h2 class="text-sm font-bold text-slate-900 mb-1">1 · ¿Para qué plan es el código?</h2>
-                <p class="text-xs text-slate-500 mb-5">Cada plan tiene límites distintos. El código activa exactamente ese plan.</p>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-                    {% for plan in planes_info %}
-                    <label class="cursor-pointer">
-                        <input type="radio" name="plan" value="{{ plan.plan_key }}" class="sr-only peer" {% if forloop.first %}required{% endif %}>
-                        <div class="h-full p-4 rounded-xl border-2 border-slate-200 bg-white peer-checked:border-indigo-500 peer-checked:bg-indigo-50 transition-all relative">
-                            <!-- Check cuando está seleccionado -->
-                            <div class="absolute top-3 right-3 w-5 h-5 rounded-full border-2 border-slate-300 peer-checked:border-indigo-500 flex items-center justify-center opacity-0 peer-checked:opacity-100 transition-all">
-                                <i class="bi bi-check text-indigo-600 text-xs font-black"></i>
-                            </div>
-                            <div class="mb-1">
-                                <span class="text-sm font-bold text-slate-900">{{ plan.nombre }}</span>
-                            </div>
-                            <div class="text-xs font-semibold text-indigo-600 mb-3">{{ plan.precio }}</div>
-                            <ul class="text-[11px] text-slate-500 space-y-1">
-                                <li class="flex items-center gap-1.5"><i class="bi bi-check2 text-slate-400"></i> {{ plan.limite_pacientes }} paciente(s)</li>
-                                <li class="flex items-center gap-1.5"><i class="bi bi-check2 text-slate-400"></i> Hasta {{ plan.limite_medicamentos }} medicamentos</li>
-                                <li class="flex items-center gap-1.5"><i class="bi bi-check2 text-slate-400"></i> {{ plan.limite_llamadas }} llamadas/mes</li>
-                            </ul>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {% for plan in planes_info %}
+                            <label class="cursor-pointer">
+                                <input type="radio" name="plan" value="{{ plan.plan_key }}" class="sr-only peer" {% if forloop.first %}required{% endif %}>
+                                <div class="h-full p-4 rounded-xl border-2 border-slate-200 bg-white peer-checked:border-indigo-500 peer-checked:bg-indigo-50 transition-all relative">
+                                    <!-- Check cuando está seleccionado -->
+                                    <div class="absolute top-3 right-3 w-5 h-5 rounded-full border-2 border-slate-300 peer-checked:border-indigo-500 flex items-center justify-center opacity-0 peer-checked:opacity-100 transition-all">
+                                        <i class="bi bi-check text-indigo-600 text-xs font-black"></i>
+                                    </div>
+                                    <div class="mb-1">
+                                        <span class="text-sm font-bold text-slate-900">{{ plan.nombre }}</span>
+                                    </div>
+                                    <div class="text-xs font-semibold text-indigo-600 mb-3">{{ plan.precio }}</div>
+                                    <ul class="text-[11px] text-slate-500 space-y-1">
+                                        <li class="flex items-center gap-1.5"><i class="bi bi-check2 text-slate-400"></i> {{ plan.limite_pacientes }} paciente(s)</li>
+                                        <li class="flex items-center gap-1.5"><i class="bi bi-check2 text-slate-400"></i> Hasta {{ plan.limite_medicamentos }} medicamentos</li>
+                                        <li class="flex items-center gap-1.5"><i class="bi bi-check2 text-slate-400"></i> {{ plan.limite_llamadas }} llamadas/mes</li>
+                                    </ul>
+                                </div>
+                            </label>
+                            {% endfor %}
                         </div>
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- 2. Configurar código -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                <h2 class="text-sm font-bold text-slate-900 mb-1">2 · Configurar el código</h2>
-                <p class="text-xs text-slate-500 mb-5">Define cuánto tiempo dura el plan y cuándo expira la posibilidad de canjear el código.</p>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Cantidad de códigos</label>
-                        <input type="number" name="cantidad" min="1" max="100" value="1" required
-                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
-                        <p class="text-[10px] text-slate-400 mt-1">Máximo 100 por vez</p>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Duración del plan al canjear</label>
-                        <select name="duracion_meses" required class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
-                            <option value="1">1 mes</option>
-                            <option value="3">3 meses</option>
-                            <option value="6">6 meses</option>
-                            <option value="12">12 meses</option>
-                        </select>
+                    <!-- 2. Configurar código -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                        <h2 class="text-sm font-bold text-slate-900 mb-1">
+                            <i class="bi bi-gear"></i> 2 · Configura el Código
+                        </h2>
+                        <p class="text-xs text-slate-500 mb-5">Define duración, cantidad y cuándo expira la posibilidad de canjear.</p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Cantidad de códigos</label>
+                                <input type="number" name="cantidad" min="1" max="100" value="1" required
+                                    class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                                <p class="text-[10px] text-slate-400 mt-1">Máximo 100 por vez</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Duración del plan</label>
+                                <select name="duracion_meses" required class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                                    <option value="1">1 mes</option>
+                                    <option value="3">3 meses</option>
+                                    <option value="6">6 meses</option>
+                                    <option value="12">12 meses</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Válido para canjear por</label>
+                                <select name="dias_limite_canje" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                                    <option value="15">15 días</option>
+                                    <option value="30">30 días</option>
+                                    <option value="60" selected>60 días</option>
+                                    <option value="90">90 días</option>
+                                    <option value="180">6 meses</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mt-5">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Notas internas <span class="font-normal text-slate-400">(opcional)</span></label>
+                            <input type="text" name="notas" placeholder="Ej: Pago por Nequi 12/06 · Cliente: Juan Pérez"
+                                class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Válido para canjear por</label>
-                        <select name="dias_limite_canje" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
-                            <option value="15">15 días</option>
-                            <option value="30">30 días</option>
-                            <option value="60" selected>60 días</option>
-                            <option value="90">90 días</option>
-                            <option value="180">6 meses</option>
-                        </select>
-                        <p class="text-[10px] text-slate-400 mt-1">Después de esto el código expira</p>
-                    </div>
-                </div>
+                    <!-- Hidden action field -->
+                    <input type="hidden" name="accion" value="crear_codigos">
 
-                <div class="mt-5">
-                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Notas internas <span class="font-normal text-slate-400">(opcional)</span></label>
-                    <input type="text" name="notas" placeholder="Ej: Pago por Nequi 12/06 · Cliente: Juan Pérez"
-                        class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none">
-                </div>
-            </div>
-
-            <!-- Hidden action field -->
-            <input type="hidden" name="accion" value="crear_codigos">
-
-            <!-- Submit -->
-            <button type="submit"
-                class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
-                <i class="bi bi-plus-circle"></i> Generar códigos
-            </button>
-        </form>
+                    <!-- Submit -->
+                    <button type="submit"
+                        class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                        <i class="bi bi-plus-circle"></i> Generar Códigos
+                    </button>
+                </form>
+        </div>
     </main>
 
     {% include "footer.html" %}

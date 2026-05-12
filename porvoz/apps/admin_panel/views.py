@@ -102,27 +102,10 @@ def admin_dashboard(request):
 @login_required
 @user_passes_test(es_admin)
 def crear_codigos(request):
-    """Admin crea códigos de acceso y gestiona precios de planes"""
-
-    # Manejar actualización de precios de planes
-    if request.method == "POST" and request.POST.get("accion") == "actualizar_planes":
-        for plan_key in [Perfil.PLAN_FREEMIUM, Perfil.PLAN_GROWTH, Perfil.PLAN_MULTI_BUSINESS, Perfil.PLAN_PROFESIONAL]:
-            try:
-                config = ConfiguracionPlan.objects.get(plan=plan_key)
-                precio = request.POST.get(f"precio_{plan_key}")
-                costo = request.POST.get(f"costo_{plan_key}")
-                if precio:
-                    config.precio_mensual = int(precio)
-                if costo:
-                    config.costo_estimado = int(costo)
-                config.save()
-            except ConfiguracionPlan.DoesNotExist:
-                pass
-        messages.success(request, "Precios de planes actualizados")
-        return redirect("crear_codigos")
+    """Admin crea códigos de acceso"""
 
     # Manejar creación de códigos
-    if request.method == "POST" and request.POST.get("accion") == "crear_codigos":
+    if request.method == "POST":
         plan = request.POST.get("plan")
         cantidad = int(request.POST.get("cantidad", 1))
         duracion_meses = int(request.POST.get("duracion_meses", 1))
@@ -173,9 +156,38 @@ def crear_codigos(request):
     context = {
         "planes": Perfil.PLAN_CHOICES,
         "planes_info": planes_info,
-        "configuraciones": configuraciones,
     }
     return render(request, "admin_panel/crear_codigos.html", context)
+
+
+@login_required
+@user_passes_test(es_admin)
+def gestionar_planes(request):
+    """Admin gestiona precios y costos de planes"""
+
+    # Manejar actualización de precios de planes
+    if request.method == "POST":
+        for plan_key in [Perfil.PLAN_FREEMIUM, Perfil.PLAN_GROWTH, Perfil.PLAN_MULTI_BUSINESS, Perfil.PLAN_PROFESIONAL]:
+            try:
+                config = ConfiguracionPlan.objects.get(plan=plan_key)
+                precio = request.POST.get(f"precio_{plan_key}")
+                costo = request.POST.get(f"costo_{plan_key}")
+                if precio:
+                    config.precio_mensual = int(precio)
+                if costo:
+                    config.costo_estimado = int(costo)
+                config.save()
+            except ConfiguracionPlan.DoesNotExist:
+                pass
+        messages.success(request, "Precios de planes actualizados")
+        return redirect("gestionar_planes")
+
+    # GET: mostrar planes
+    configuraciones = ConfiguracionPlan.objects.all()
+    context = {
+        "configuraciones": configuraciones,
+    }
+    return render(request, "admin_panel/gestionar_planes.html", context)
 
 
 @login_required
