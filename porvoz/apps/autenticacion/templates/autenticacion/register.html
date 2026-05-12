@@ -334,20 +334,5 @@
     </div>
     {% include "footer.html" with guest_panel=True %}
 
-    <!-- Botones flotantes: WhatsApp + Soporte -->
-    <div class="fixed bottom-6 right-6 z-50 flex flex-row gap-3 items-center">
-        <a href="https://wa.me/573000000000?text=Hola+Porvoz,+necesito+ayuda" target="_blank"
-            class="group flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-full shadow-xl transition-all duration-200 overflow-hidden"
-            style="padding: 0.75rem 1rem;">
-            <i class="bi bi-whatsapp text-lg flex-shrink-0"></i>
-            <span class="text-sm font-semibold whitespace-nowrap max-w-0 group-hover:max-w-xs overflow-hidden transition-all duration-300 ease-in-out">WhatsApp</span>
-        </a>
-        <a href="{% url 'contactar_soporte' %}"
-            class="group flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white rounded-full shadow-xl transition-all duration-200 overflow-hidden"
-            style="padding: 0.75rem 1rem;">
-            <i class="bi bi-headset text-lg flex-shrink-0"></i>
-            <span class="text-sm font-semibold whitespace-nowrap max-w-0 group-hover:max-w-xs overflow-hidden transition-all duration-300 ease-in-out">¿Necesitas ayuda?</span>
-        </a>
-    </div>
 </div>
 {% endblock %}
