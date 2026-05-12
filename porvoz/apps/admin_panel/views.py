@@ -163,23 +163,39 @@ def crear_codigos(request):
 @login_required
 @user_passes_test(es_admin)
 def gestionar_planes(request):
-    """Admin gestiona precios y costos de planes"""
+    """Admin gestiona precios, costos y límites de planes"""
 
-    # Manejar actualización de precios de planes
+    # Manejar actualización de planes
     if request.method == "POST":
         for plan_key in [Perfil.PLAN_FREEMIUM, Perfil.PLAN_GROWTH, Perfil.PLAN_MULTI_BUSINESS, Perfil.PLAN_PROFESIONAL]:
             try:
                 config = ConfiguracionPlan.objects.get(plan=plan_key)
+
+                # Precios y costos
                 precio = request.POST.get(f"precio_{plan_key}")
                 costo = request.POST.get(f"costo_{plan_key}")
                 if precio:
                     config.precio_mensual = int(precio)
                 if costo:
                     config.costo_estimado = int(costo)
+
+                # Límites
+                pacientes = request.POST.get(f"pacientes_{plan_key}")
+                medicamentos = request.POST.get(f"medicamentos_{plan_key}")
+                llamadas = request.POST.get(f"llamadas_{plan_key}")
+
+                if pacientes:
+                    config.limite_pacientes = int(pacientes)
+                if medicamentos is not None:
+                    medicamentos_val = int(medicamentos)
+                    config.limite_medicamentos = medicamentos_val if medicamentos_val > 0 else None
+                if llamadas:
+                    config.limite_llamadas_mes = int(llamadas)
+
                 config.save()
             except ConfiguracionPlan.DoesNotExist:
                 pass
-        messages.success(request, "Precios de planes actualizados")
+        messages.success(request, "Configuración de planes actualizada")
         return redirect("gestionar_planes")
 
     # GET: mostrar planes

@@ -143,12 +143,19 @@ _ORDEN_PLANES = [
 
 
 def obtener_planes(plan_actual: str | None = None) -> list[dict]:
-    """Retorna la lista de planes desde DB con fallback a valores hardcodeados."""
+    """Retorna la lista de planes desde DB con límites actualizados de ConfiguracionPlan."""
     try:
         from apps.admin_panel.models import ConfiguracionPlan
         configuraciones = ConfiguracionPlan.objects.filter(activo=True).order_by("precio_mensual")
         planes = []
         for config in configuraciones:
+            # Construir límites desde ConfiguracionPlan
+            limites = {
+                "max_pacientes": config.limite_pacientes,
+                "max_medicamentos_por_paciente": config.limite_medicamentos,
+                "max_llamadas_mes": config.limite_llamadas_mes,
+            }
+
             plan_dict = {
                 "plan_key": config.plan,
                 "nombre": config.nombre,
@@ -159,7 +166,7 @@ def obtener_planes(plan_actual: str | None = None) -> list[dict]:
                 "destacado": PLANES_DATA.get(config.plan, {}).get("destacado", False),
                 "caracteristicas": PLANES_DATA.get(config.plan, {}).get("caracteristicas", []),
                 "no_incluye": PLANES_DATA.get(config.plan, {}).get("no_incluye", []),
-                "limites": PLAN_LIMITS.get(config.plan, {}),
+                "limites": limites,
                 "boton_texto": PLANES_DATA.get(config.plan, {}).get("boton_texto", "Contratar"),
                 "boton_estilo": PLANES_DATA.get(config.plan, {}).get("boton_estilo", ""),
                 "color_badge": PLANES_DATA.get(config.plan, {}).get("color_badge", ""),
@@ -225,7 +232,16 @@ class PlanService:
 
     @staticmethod
     def get_limites(plan: str) -> dict:
-        return PLAN_LIMITS.get(plan, PLAN_LIMITS[Perfil.PLAN_FREEMIUM])
+        try:
+            from apps.admin_panel.models import ConfiguracionPlan
+            config = ConfiguracionPlan.objects.get(plan=plan)
+            return {
+                "max_pacientes": config.limite_pacientes,
+                "max_medicamentos_por_paciente": config.limite_medicamentos,
+                "max_llamadas_mes": config.limite_llamadas_mes,
+            }
+        except Exception:
+            return PLAN_LIMITS.get(plan, PLAN_LIMITS[Perfil.PLAN_FREEMIUM])
 
     @staticmethod
     def puede_agregar_paciente(usuario) -> tuple[bool, str | None]:
