@@ -105,10 +105,41 @@
                         </div>
                     </div>
 
-                    <!-- Características -->
+                    <!-- Características y Límites -->
                     <div class="px-6 py-5 flex-1">
-                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Incluye</p>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Límites y características</p>
                         <ul class="space-y-2.5">
+                            <!-- Pacientes -->
+                            <li class="flex items-start gap-2.5 text-sm text-slate-700 leading-snug">
+                                <i class="bi bi-people mt-0.5 shrink-0 font-bold {% if plan.destacado %}text-indigo-600{% else %}text-slate-700{% endif %}"></i>
+                                <span>
+                                    {% if plan.limites.max_pacientes == 1 %}
+                                        1 paciente
+                                    {% else %}
+                                        Hasta {{ plan.limites.max_pacientes }} pacientes
+                                    {% endif %}
+                                </span>
+                            </li>
+
+                            <!-- Medicamentos -->
+                            <li class="flex items-start gap-2.5 text-sm text-slate-700 leading-snug">
+                                <i class="bi bi-capsule mt-0.5 shrink-0 font-bold {% if plan.destacado %}text-indigo-600{% else %}text-slate-700{% endif %}"></i>
+                                <span>
+                                    {% if plan.limites.max_medicamentos_por_paciente %}
+                                        Hasta {{ plan.limites.max_medicamentos_por_paciente }} medicamentos
+                                    {% else %}
+                                        Medicamentos ilimitados
+                                    {% endif %}
+                                </span>
+                            </li>
+
+                            <!-- Llamadas -->
+                            <li class="flex items-start gap-2.5 text-sm text-slate-700 leading-snug">
+                                <i class="bi bi-telephone mt-0.5 shrink-0 font-bold {% if plan.destacado %}text-indigo-600{% else %}text-slate-700{% endif %}"></i>
+                                <span>{{ plan.limites.max_llamadas_mes }} llamadas/mes</span>
+                            </li>
+
+                            <!-- Características adicionales -->
                             {% for c in plan.caracteristicas %}
                             <li class="flex items-start gap-2.5 text-sm text-slate-700 leading-snug">
                                 <i class="bi bi-check2 mt-0.5 shrink-0 font-bold {% if plan.destacado %}text-indigo-600{% else %}text-slate-700{% endif %}"></i>
