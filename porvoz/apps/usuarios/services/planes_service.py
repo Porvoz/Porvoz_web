@@ -142,6 +142,29 @@ _ORDEN_PLANES = [
 ]
 
 
+def _caracteristicas_desde_config(config, plan_key: str) -> list[str]:
+    """Genera la lista de características dinámicamente desde ConfiguracionPlan."""
+    pac = config.limite_pacientes
+    med = config.limite_medicamentos
+    llamadas = config.limite_llamadas_mes
+
+    caracteristicas = [
+        f"{pac} paciente" if pac == 1 else f"Hasta {pac} pacientes",
+        "Medicamentos ilimitados" if med is None else f"Hasta {med} medicamento{'s' if med != 1 else ''} por paciente",
+        f"{llamadas} llamada{'s' if llamadas != 1 else ''} automatizada{'s' if llamadas != 1 else ''}/mes",
+    ]
+
+    # Características fijas por nivel de plan (dashboard, historial, soporte)
+    extras_por_plan = {
+        Perfil.PLAN_FREEMIUM: ["Dashboard básico"],
+        Perfil.PLAN_GROWTH: ["Dashboard completo", "Historial 3 meses", "Alertas por correo"],
+        Perfil.PLAN_MULTI_BUSINESS: ["Dashboard completo", "Historial 6 meses", "Alertas de adherencia", "Soporte por correo"],
+        Perfil.PLAN_PROFESIONAL: ["Dashboard completo", "Historial completo", "Reportes de adherencia en PDF", "Alertas de adherencia", "Soporte prioritario"],
+    }
+    caracteristicas.extend(extras_por_plan.get(plan_key, []))
+    return caracteristicas
+
+
 def obtener_planes(plan_actual: str | None = None) -> list[dict]:
     """Retorna la lista de planes desde DB con límites actualizados de ConfiguracionPlan."""
     try:
@@ -149,7 +172,6 @@ def obtener_planes(plan_actual: str | None = None) -> list[dict]:
         configuraciones = ConfiguracionPlan.objects.filter(activo=True).order_by("precio_mensual")
         planes = []
         for config in configuraciones:
-            # Construir límites desde ConfiguracionPlan
             limites = {
                 "max_pacientes": config.limite_pacientes,
                 "max_medicamentos_por_paciente": config.limite_medicamentos,
@@ -164,7 +186,7 @@ def obtener_planes(plan_actual: str | None = None) -> list[dict]:
                 "precio_cop": str(int(config.precio_mensual)) if config.precio_mensual else None,
                 "precio_mensual": int(config.precio_mensual),
                 "destacado": PLANES_DATA.get(config.plan, {}).get("destacado", False),
-                "caracteristicas": PLANES_DATA.get(config.plan, {}).get("caracteristicas", []),
+                "caracteristicas": _caracteristicas_desde_config(config, config.plan),
                 "no_incluye": PLANES_DATA.get(config.plan, {}).get("no_incluye", []),
                 "limites": limites,
                 "boton_texto": PLANES_DATA.get(config.plan, {}).get("boton_texto", "Contratar"),
