@@ -37,42 +37,33 @@ if _is_production:
 if SECRET_KEY == "dev-secret-key-change-me":
     raise RuntimeError("DJANGO_SECRET_KEY must not use the development default in production")
 
-# Security
+# Security — Railway injects RAILWAY_PUBLIC_DOMAIN automatically
+_railway_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
 _allowed = os.getenv("ALLOWED_HOSTS", "")
 ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
+
+if _railway_domain and _railway_domain not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_railway_domain)
 
 if _is_production:
     if not ALLOWED_HOSTS or ALLOWED_HOSTS == ["*"]:
         raise RuntimeError("ALLOWED_HOSTS must be an explicit list of hostnames in production")
 else:
-    # Allow development locally
     if not ALLOWED_HOSTS:
-        ALLOWED_HOSTS = ["localhost", "127.0.0.1", "*.localhost"]
+        ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 # Trust X-Forwarded-Proto from Railway proxy (HTTPS on frontend, HTTP on backend)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = False  # Railway handles TLS termination
+SECURE_SSL_REDIRECT = False
 
-# Cookies must be secure when using HTTPS (detected via SECURE_PROXY_SSL_HEADER)
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # Must be False so Django can read CSRF token
 
-CSRF_TRUSTED_ORIGINS = [
-    f"http://{host}" for host in ALLOWED_HOSTS
-] + [
-    f"https://{host}" for host in ALLOWED_HOSTS
-]
-
-# Allow additional origins from env var if needed
-_csrf_custom = os.getenv("CSRF_TRUSTED_ORIGINS", "")
-if _csrf_custom:
-    CSRF_TRUSTED_ORIGINS.extend([
-        origin.strip()
-        for origin in _csrf_custom.split(",")
-        if origin.strip()
-    ])
+# Build CSRF_TRUSTED_ORIGINS from ALLOWED_HOSTS with https:// prefix
+CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS if host not in ("localhost", "127.0.0.1")]
+CSRF_TRUSTED_ORIGINS += ["http://localhost:8000", "http://127.0.0.1:8000"]
 # Database: PostgreSQL in production, SQLite fallback for local dev
 database_url = os.getenv("DATABASE_URL", "")
 
