@@ -36,14 +36,33 @@ echo "[Entrypoint] Database: $DATABASE_URL (host redacted)"
 # Ejecutar collectstatic si no existe o si está vacío el volumen
 if [ ! -d "/app/staticfiles" ] || [ -z "$(ls -A /app/staticfiles)" ]; then
     echo "[Entrypoint] Ejecutando collectstatic..."
-    python manage.py collectstatic --noinput --clear --settings=config.settings.production --verbosity 2
-    echo "[Entrypoint] ✓ Collectstatic completado"
+    if python manage.py collectstatic --noinput --clear --settings=config.settings.production --verbosity 2; then
+        echo "[Entrypoint] ✓ Collectstatic completado"
+    else
+        echo "[Entrypoint] ⚠ Collectstatic falló, continuando sin archivos estáticos"
+    fi
 fi
 
-# Ejecutar migraciones
+# Ejecutar migraciones con reintentos (Railway puede tardar en inicializar la BD)
 echo "[Entrypoint] Ejecutando migraciones..."
-python manage.py migrate --settings=config.settings.production
-echo "[Entrypoint] ✓ Migraciones completadas"
+MAX_RETRIES=10
+RETRY=0
+while [ $RETRY -lt $MAX_RETRIES ]; do
+  if python manage.py migrate --settings=config.settings.production 2>&1; then
+    echo "[Entrypoint] ✓ Migraciones completadas"
+    break
+  fi
+  RETRY=$((RETRY + 1))
+  if [ $RETRY -lt $MAX_RETRIES ]; then
+    echo "[Entrypoint] ⚠ Intento $RETRY/$MAX_RETRIES falló, reintentando en 2s..."
+    sleep 2
+  fi
+done
+
+if [ $RETRY -eq $MAX_RETRIES ]; then
+  echo "[Entrypoint] ✗ Migraciones fallaron después de $MAX_RETRIES intentos"
+  exit 1
+fi
 
 # Iniciar gunicorn
 echo "[Entrypoint] Iniciando gunicorn..."
