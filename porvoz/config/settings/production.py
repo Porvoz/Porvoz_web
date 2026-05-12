@@ -89,8 +89,15 @@ DATABASES = {
     }
 }
 
-# Cache: Redis (optional) or database
+# Cache: Redis (optional) or file-based for sessions
 redis_url = os.getenv("REDIS_URL", "")
+
+# Sessions use file-based cache (persists without DB migration)
+_sessions_cache = {
+    "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+    "LOCATION": "/tmp/django_cache_sessions",
+}
+
 if redis_url:
     CACHES = {
         "default": {
@@ -101,14 +108,16 @@ if redis_url:
                 "socket_timeout": 5,
                 "socket_keepalive": True,
             },
-        }
+        },
+        "sessions": _sessions_cache,
     }
 else:
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-            "LOCATION": "django_cache_table",
-        }
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-snowflake",
+        },
+        "sessions": _sessions_cache,
     }
 
 # Celery: Async task queue (optional, uses DB backend if no Redis)
@@ -154,9 +163,9 @@ CELERY_BEAT_SCHEDULE = {
 # Email: SMTP — credentials are already required by the fail-fast block.
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-# Sessions: use cache backend (faster, works without DB migration)
+# Sessions: use file-based cache (persists across restarts without DB migration)
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
+SESSION_CACHE_ALIAS = "sessions"
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
