@@ -483,17 +483,40 @@
 
                 <!-- Contacto -->
                 <section class="scroll-mt-24 pb-8">
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h2 class="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-                                <i class="bi bi-envelope text-slate-600"></i>¿Necesitas más ayuda?
-                            </h2>
-                            <p class="text-sm text-slate-600">Escríbenos y te responderemos a la brevedad.</p>
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:p-8">
+                        <h2 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-3">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                <i class="bi bi-telephone"></i>
+                            </div>
+                            Contáctanos
+                        </h2>
+                        <p class="text-sm text-slate-600 mb-6">¿Tienes una pregunta que no encontraste aquí? Puedes comunicarte con nosotros de varias formas:</p>
+
+                        <div class="grid sm:grid-cols-3 gap-4">
+                            <a href="https://wa.me/573104504990?text=Hola+Porvoz,+necesito+ayuda" target="_blank" class="bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-xl p-6 text-center transition-colors shadow-sm flex flex-col items-center justify-center gap-3">
+                                <i class="bi bi-whatsapp text-3xl"></i>
+                                <div>
+                                    <p class="font-semibold text-sm">WhatsApp</p>
+                                    <p class="text-xs opacity-90">+57 310 450 4990</p>
+                                </div>
+                            </a>
+
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center flex flex-col items-center justify-center gap-3">
+                                <i class="bi bi-envelope text-blue-600 text-3xl"></i>
+                                <div>
+                                    <p class="font-semibold text-sm text-slate-900">Correo</p>
+                                    <p class="text-xs text-slate-600">soporte@porvoz.com</p>
+                                </div>
+                            </div>
+
+                            <a href="{% url 'contact' %}" class="bg-slate-700 hover:bg-slate-800 text-white rounded-xl p-6 text-center transition-colors shadow-sm flex flex-col items-center justify-center gap-3">
+                                <i class="bi bi-chat-dots text-3xl"></i>
+                                <div>
+                                    <p class="font-semibold text-sm">Formulario</p>
+                                    <p class="text-xs opacity-90">Envía tu consulta aquí</p>
+                                </div>
+                            </a>
                         </div>
-                        <a href="{% url 'contact' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-700 text-white px-5 py-2.5 text-sm font-semibold hover:bg-slate-800 transition-colors shadow-sm self-start sm:self-center flex-shrink-0">
-                            <i class="bi bi-envelope"></i>
-                            Contactar soporte
-                        </a>
                     </div>
                 </section>
 
