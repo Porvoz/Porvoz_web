@@ -143,16 +143,48 @@ _ORDEN_PLANES = [
 
 
 def obtener_planes(plan_actual: str | None = None) -> list[dict]:
-    """Retorna la lista de planes con marca de plan actual."""
-    planes = [
-        {**PLANES_DATA[key], "plan_key": key}
-        for key in _ORDEN_PLANES
-    ]
-    for plan in planes:
-        plan["es_plan_actual"] = (
-            plan_actual == plan["plan_key"] if plan_actual else False
-        )
-    return planes
+    """Retorna la lista de planes desde DB con fallback a valores hardcodeados."""
+    try:
+        from apps.admin_panel.models import ConfiguracionPlan
+        configuraciones = ConfiguracionPlan.objects.filter(activo=True).order_by("precio_mensual")
+        planes = []
+        for config in configuraciones:
+            plan_dict = {
+                "plan_key": config.plan,
+                "nombre": config.nombre,
+                "tagline": config.descripcion or PLANES_DATA.get(config.plan, {}).get("tagline", ""),
+                "precio": f"${config.precio_mensual:,.0f}" if config.precio_mensual else "$0",
+                "precio_cop": str(int(config.precio_mensual)) if config.precio_mensual else None,
+                "precio_mensual": int(config.precio_mensual),
+                "destacado": PLANES_DATA.get(config.plan, {}).get("destacado", False),
+                "caracteristicas": PLANES_DATA.get(config.plan, {}).get("caracteristicas", []),
+                "no_incluye": PLANES_DATA.get(config.plan, {}).get("no_incluye", []),
+                "limites": PLAN_LIMITS.get(config.plan, {}),
+                "boton_texto": PLANES_DATA.get(config.plan, {}).get("boton_texto", "Contratar"),
+                "boton_estilo": PLANES_DATA.get(config.plan, {}).get("boton_estilo", ""),
+                "color_badge": PLANES_DATA.get(config.plan, {}).get("color_badge", ""),
+                "costo_estimado": int(config.costo_estimado),
+                "margen_neto": config.margen_neto(),
+                "porcentaje_margen": config.porcentaje_margen(),
+            }
+            planes.append(plan_dict)
+
+        for plan in planes:
+            plan["es_plan_actual"] = (
+                plan_actual == plan["plan_key"] if plan_actual else False
+            )
+        return planes
+    except Exception:
+        # Fallback a datos hardcodeados si hay error con DB
+        planes = [
+            {**PLANES_DATA[key], "plan_key": key}
+            for key in _ORDEN_PLANES
+        ]
+        for plan in planes:
+            plan["es_plan_actual"] = (
+                plan_actual == plan["plan_key"] if plan_actual else False
+            )
+        return planes
 
 
 # ------------------------------------------------------------------

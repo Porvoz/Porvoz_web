@@ -646,13 +646,21 @@ def crear_pago_manual(request):
 
     usuarios = User.objects.filter(is_staff=False, is_active=True).order_by("first_name", "username")
 
-    # Precios por plan (mensual en COP)
-    precios_planes = {
-        Perfil.PLAN_FREEMIUM: 0,
-        Perfil.PLAN_GROWTH: 24_900,
-        Perfil.PLAN_MULTI_BUSINESS: 59_900,
-        Perfil.PLAN_PROFESIONAL: 139_900,
-    }
+    # Precios por plan desde DB (fallback a hardcodeados)
+    precios_planes = {}
+    for plan_key, plan_display in Perfil.PLAN_CHOICES:
+        try:
+            config = ConfiguracionPlan.objects.get(plan=plan_key)
+            precios_planes[plan_key] = int(config.precio_mensual)
+        except ConfiguracionPlan.DoesNotExist:
+            # Fallback a valores por defecto
+            defaults = {
+                Perfil.PLAN_FREEMIUM: 0,
+                Perfil.PLAN_GROWTH: 24_900,
+                Perfil.PLAN_MULTI_BUSINESS: 59_900,
+                Perfil.PLAN_PROFESIONAL: 139_900,
+            }
+            precios_planes[plan_key] = defaults.get(plan_key, 0)
 
     context = {
         "usuarios": usuarios,

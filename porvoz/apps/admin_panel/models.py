@@ -242,7 +242,13 @@ class PagoHistorico(models.Model):
         ordering = ["-fecha_pago"]
 
     def save(self, *args, **kwargs):
-        costo_mes = COSTO_MENSUAL_PLAN.get(self.plan, 0)
+        # Leer costo de ConfiguracionPlan o usar fallback
+        try:
+            config = ConfiguracionPlan.objects.get(plan=self.plan)
+            costo_mes = int(config.costo_estimado)
+        except ConfiguracionPlan.DoesNotExist:
+            costo_mes = COSTO_MENSUAL_PLAN.get(self.plan, 0)
+
         self.costo_estimado = costo_mes * self.duracion_meses
         if self.monto:
             self.ganancia_neta = int(self.monto) - int(self.costo_estimado)
