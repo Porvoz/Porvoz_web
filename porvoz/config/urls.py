@@ -3,11 +3,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from config.health import health_check
+from config.health import health_check, debug_csrf
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/health/", health_check, name="health_check"),
+    path("api/debug-csrf/", debug_csrf, name="debug_csrf"),
     # Apps
     path("", include("apps.autenticacion.urls")),
     path("", include("apps.usuarios.urls")),
