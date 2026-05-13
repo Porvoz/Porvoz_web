@@ -17,7 +17,6 @@ _is_production = bool(os.getenv("DATABASE_URL"))
 if _is_production:
     _REQUIRED_ENV = (
         "DJANGO_SECRET_KEY",
-        "ALLOWED_HOSTS",
         "DATABASE_URL",
         "EMAIL_HOST_USER",
         "EMAIL_HOST_PASSWORD",
@@ -37,26 +36,13 @@ if _is_production:
 if SECRET_KEY == "dev-secret-key-change-me":
     raise RuntimeError("DJANGO_SECRET_KEY must not use the development default in production")
 
-# Security — Railway injects RAILWAY_PUBLIC_DOMAIN automatically
+# ALLOWED_HOSTS: Railway domain is primary, ALLOWED_HOSTS env var is optional extra
 _railway_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
-_allowed = os.getenv("ALLOWED_HOSTS", "")
-ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
+_extra_hosts = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()]
 
-# Always add Railway domain if available (primary source of truth in production)
-if _railway_domain:
-    if _railway_domain not in ALLOWED_HOSTS:
-        ALLOWED_HOSTS.append(_railway_domain)
-else:
-    # Fallback: if Railway domain not set, use env var
-    if not ALLOWED_HOSTS:
-        ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-
-if _is_production:
-    if not ALLOWED_HOSTS:
-        raise RuntimeError("ALLOWED_HOSTS must be set via RAILWAY_PUBLIC_DOMAIN or ALLOWED_HOSTS env var")
-else:
-    if not ALLOWED_HOSTS:
-        ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = list({*_extra_hosts, *([_railway_domain] if _railway_domain else [])})
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 # Trust X-Forwarded-Proto from Railway proxy (HTTPS on frontend, HTTP on backend)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
