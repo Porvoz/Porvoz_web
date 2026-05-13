@@ -18,7 +18,14 @@ fi
 # Set environment variables with fallbacks (only used if not already set)
 export DJANGO_SECRET_KEY="${DJANGO_SECRET_KEY:-dev-secret-key-docker-default}"
 export DJANGO_ENVIRONMENT="${DJANGO_ENVIRONMENT:-development}"
-export ALLOWED_HOSTS="${ALLOWED_HOSTS:-localhost,127.0.0.1,web}"
+
+# For ALLOWED_HOSTS: include Railway domain if present, else use docker-compose defaults
+if [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
+  export ALLOWED_HOSTS="${ALLOWED_HOSTS:+$ALLOWED_HOSTS,}$RAILWAY_PUBLIC_DOMAIN"
+else
+  export ALLOWED_HOSTS="${ALLOWED_HOSTS:-localhost,127.0.0.1,web}"
+fi
+
 export REDIS_URL="${REDIS_URL:-redis://redis:6379/0}"
 export CELERY_BROKER_URL="${CELERY_BROKER_URL:-redis://redis:6379/0}"
 export CELERY_RESULT_BACKEND="${CELERY_RESULT_BACKEND:-redis://redis:6379/0}"
