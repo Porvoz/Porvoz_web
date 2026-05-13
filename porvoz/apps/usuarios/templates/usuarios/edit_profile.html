@@ -1,0 +1,936 @@
+{% extends "base.html" %}
+{% load static %}
+
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-100 flex-col w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 bg-slate-100 flex flex-col">
+        <!-- Botón hamburguesa para móvil -->
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
+        </button>
+        
+        <div class="w-full flex-1 flex flex-col">
+            <!-- Header -->
+            <div class="mb-6 mt-12 lg:mt-0">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Mi Cuenta</h1>
+                        <p class="text-sm text-slate-500 mt-1">Perfil y plan</p>
+                    </div>
+                    <a href="{% url 'dashboard' %}" class="btn-dashboard-primary self-start sm:self-center">
+                        <i class="bi bi-house"></i>
+                        Panel principal
+                    </a>
+                </div>
+            </div>
+
+            {% if messages %}
+            <div class="mb-5 space-y-2">
+                {% for message in messages %}
+                    <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Tabs -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-1 mb-6 inline-flex gap-1 self-start w-full sm:w-auto">
+                <a href="{% url 'edit_profile' %}?tab=perfil" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-colors {% if tab_activo == 'perfil' %}bg-slate-700 text-white{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                    Perfil
+                </a>
+                <a href="{% url 'edit_profile' %}?tab=planes" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-colors {% if tab_activo == 'planes' %}bg-slate-700 text-white{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                    Plan
+                </a>
+            </div>
+
+            {% if tab_activo == 'perfil' %}
+            <!-- TAB PERFIL -->
+            {% if editando %}
+            <!-- Modo edición -->
+            <form method="post" enctype="multipart/form-data" class="space-y-4 flex-1">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="actualizar_perfil">
+
+                <!-- Foto de perfil -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex items-center gap-4">
+                        <div class="relative flex-shrink-0">
+                            {% if perfil.profile_image %}
+                            <img id="profile-image-preview" src="{{ perfil.profile_image.url }}" alt="Foto de perfil" class="h-14 w-14 rounded-xl object-cover border border-slate-200">
+                            {% else %}
+                            <div id="profile-image-placeholder" class="h-14 w-14 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-lg font-bold text-slate-700">
+                                {{ first_name|default:request.user.first_name|default:request.user.username|slice:":1"|upper }}
+                            </div>
+                            <img id="profile-image-preview" src="" alt="Foto de perfil" class="hidden h-14 w-14 rounded-xl object-cover border border-slate-200">
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-sm font-bold text-slate-900">Foto de perfil</h3>
+                            <p class="text-xs text-slate-500 mb-2">JPG o PNG, máximo 5MB</p>
+                            <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 cursor-pointer transition-colors">
+                                <span>Cambiar foto</span>
+                                <input id="profile_image" name="profile_image" type="file" accept="image/*" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información personal -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-4">Información personal</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Nombre <span class="text-red-500">*</span></label>
+                            <input name="first_name" type="text" value="{{ first_name }}" required class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Apellido <span class="text-red-500">*</span></label>
+                            <input name="last_name" type="text" value="{{ last_name }}" required class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Fecha de nacimiento</label>
+                            <input name="date_of_birth" type="date" {% if perfil.date_of_birth %}value="{{ perfil.date_of_birth|date:'Y-m-d' }}"{% endif %} class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Ciudad</label>
+                            <input name="city" type="text" value="{{ perfil.city }}" placeholder="Ciudad" class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de contacto -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-4">Contacto</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Teléfono</label>
+                            <div class="grid grid-cols-[80px_1fr] gap-2">
+                                <select name="phone_country" class="rounded-xl border border-slate-200 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-400 bg-white">
+                                    <option value="+57" {% if phone_country == '+57' %}selected{% endif %}>+57</option>
+                                    <option value="+1" {% if phone_country == '+1' %}selected{% endif %}>+1</option>
+                                    <option value="+34" {% if phone_country == '+34' %}selected{% endif %}>+34</option>
+                                    <option value="+52" {% if phone_country == '+52' %}selected{% endif %}>+52</option>
+                                </select>
+                                <input name="phone_number" type="text" value="{{ phone_number }}" placeholder="3001234567" class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Documento</label>
+                            <div class="grid grid-cols-[100px_1fr] gap-2">
+                                <select name="document_type" class="rounded-xl border border-slate-200 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-400 bg-white">
+                                    <option value="cc" {% if perfil.document_type == 'cc' %}selected{% endif %}>Cédula</option>
+                                    <option value="ce" {% if perfil.document_type == 'ce' %}selected{% endif %}>Cédula ext.</option>
+                                    <option value="ti" {% if perfil.document_type == 'ti' %}selected{% endif %}>Tarjeta ID</option>
+                                    <option value="pp" {% if perfil.document_type == 'pp' %}selected{% endif %}>Pasaporte</option>
+                                </select>
+                                <input name="document_number" type="text" value="{{ perfil.document_number }}" placeholder="Número" class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contacto de emergencia -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-base font-bold text-slate-900 mb-4">Contacto de emergencia</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Nombre</label>
+                            <input name="emergency_contact_name" type="text" value="{{ perfil.emergency_contact_name }}" placeholder="Nombre completo" class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-600 mb-1.5">Teléfono</label>
+                            <div class="grid grid-cols-[80px_1fr] gap-2">
+                                <select name="emergency_contact_phone_country" class="rounded-xl border border-slate-200 text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-400 bg-white">
+                                    <option value="+57" {% if emergency_phone_country == '+57' %}selected{% endif %}>+57</option>
+                                    <option value="+1" {% if emergency_phone_country == '+1' %}selected{% endif %}>+1</option>
+                                    <option value="+34" {% if emergency_phone_country == '+34' %}selected{% endif %}>+34</option>
+                                    <option value="+52" {% if emergency_phone_country == '+52' %}selected{% endif %}>+52</option>
+                                </select>
+                                <input name="emergency_contact_phone_number" type="text" value="{{ emergency_phone_number }}" placeholder="3001234567" class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferencias de notificación por email -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <div class="mb-5">
+                        <h2 class="text-base font-bold text-slate-900 mb-1">Notificaciones por correo</h2>
+                        <p class="text-sm text-slate-500">Elige qué eventos te avisamos por email</p>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-4 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors group">
+                            <input type="checkbox" name="email_toma_confirmada" {% if perfil.email_toma_confirmada %}checked{% endif %} class="mt-0.5 w-5 h-5 rounded border-2 border-slate-300 text-slate-600 focus:ring-2 focus:ring-offset-0 focus:ring-slate-400 transition-colors flex-shrink-0">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-900">Medicamento confirmado</p>
+                                <p class="text-xs text-slate-500 mt-0.5">El paciente confirmó que tomó el medicamento</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-4 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors group">
+                            <input type="checkbox" name="email_toma_no_confirmada" {% if perfil.email_toma_no_confirmada %}checked{% endif %} class="mt-0.5 w-5 h-5 rounded border-2 border-slate-300 text-slate-600 focus:ring-2 focus:ring-offset-0 focus:ring-slate-400 transition-colors flex-shrink-0">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-900">Medicamento no confirmado</p>
+                                <p class="text-xs text-slate-500 mt-0.5">El paciente indicó que no tomó el medicamento</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-4 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors group">
+                            <input type="checkbox" name="email_toma_aplazada" {% if perfil.email_toma_aplazada %}checked{% endif %} class="mt-0.5 w-5 h-5 rounded border-2 border-slate-300 text-slate-600 focus:ring-2 focus:ring-offset-0 focus:ring-slate-400 transition-colors flex-shrink-0">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-900">Medicamento aplazado</p>
+                                <p class="text-xs text-slate-500 mt-0.5">El paciente dijo que lo tomará después</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-4 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors group">
+                            <input type="checkbox" name="email_llamada_no_atendida" {% if perfil.email_llamada_no_atendida %}checked{% endif %} class="mt-0.5 w-5 h-5 rounded border-2 border-slate-300 text-slate-600 focus:ring-2 focus:ring-offset-0 focus:ring-slate-400 transition-colors flex-shrink-0">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-900">Llamada sin respuesta</p>
+                                <p class="text-xs text-slate-500 mt-0.5">El paciente no contestó la llamada de recordatorio</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-4 p-3 rounded-xl border border-amber-100 hover:border-amber-200 hover:bg-amber-50/50 cursor-pointer transition-colors group">
+                            <input type="checkbox" name="email_reintentos_agotados" {% if perfil.email_reintentos_agotados %}checked{% endif %} class="mt-0.5 w-5 h-5 rounded border-2 border-amber-300 text-amber-600 focus:ring-2 focus:ring-offset-0 focus:ring-amber-400 transition-colors flex-shrink-0">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-900">Sin respuesta tras todos los intentos</p>
+                                <p class="text-xs text-slate-500 mt-0.5">El paciente no respondió después de todos los reintentos automáticos — requiere atención</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="flex items-center justify-between gap-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <a href="{% url 'edit_profile' %}?tab=perfil" class="inline-flex items-center rounded-xl border border-slate-200 bg-white text-slate-600 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="inline-flex items-center rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-5 py-2.5 text-sm font-semibold transition-colors">
+                        Guardar cambios
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <!-- Modo visualización -->
+            <div class="space-y-5 flex-1">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <!-- Header -->
+                    <div class="bg-slate-700 px-6 py-5">
+                        <div class="flex items-center gap-4">
+                            {% if perfil.profile_image %}
+                            <img src="{{ perfil.profile_image.url }}" alt="" class="h-14 w-14 rounded-xl object-cover border border-white/20">
+                            {% else %}
+                            <div class="h-14 w-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-xl font-bold text-white">
+                                {{ first_name|default:request.user.first_name|default:request.user.username|slice:":1"|upper }}
+                            </div>
+                            {% endif %}
+                            <div class="min-w-0 flex-1">
+                                <h2 class="text-lg font-bold text-white truncate">{{ first_name|default:request.user.first_name }} {{ last_name|default:request.user.last_name }}</h2>
+                                <p class="text-sm text-slate-300 truncate">{{ request.user.email }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Datos en grid -->
+                    <div class="p-6 border-b border-slate-100">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Información personal</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            <div class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+                                <p class="text-xs text-slate-500 font-medium mb-0.5">Fecha de nacimiento</p>
+                                <p class="text-slate-900 font-semibold">{% if perfil.date_of_birth %}{{ perfil.date_of_birth|date:"d/m/Y" }}{% else %}—{% endif %}</p>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+                                <p class="text-xs text-slate-500 font-medium mb-0.5">Ciudad</p>
+                                <p class="text-slate-900 font-semibold truncate">{% if perfil.city %}{{ perfil.city }}{% else %}—{% endif %}</p>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+                                <p class="text-xs text-slate-500 font-medium mb-0.5">Teléfono</p>
+                                <p class="text-slate-900 font-semibold truncate">{% if perfil.phone %}{{ perfil.phone }}{% else %}—{% endif %}</p>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+                                <p class="text-xs text-slate-500 font-medium mb-0.5">Documento</p>
+                                <p class="text-slate-900 font-semibold truncate">{% if perfil.document_number %}{{ perfil.document_number }}{% else %}—{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% if perfil.emergency_contact_name or perfil.emergency_contact_phone %}
+                    <div class="px-6 py-4 border-b border-slate-100">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Contacto de emergencia</p>
+                        <p class="text-sm text-slate-900 font-semibold">{{ perfil.emergency_contact_name|default:"—" }}</p>
+                        {% if perfil.emergency_contact_phone %}<p class="text-xs text-slate-600 mt-0.5">{{ perfil.emergency_contact_phone }}</p>{% endif %}
+                    </div>
+                    {% endif %}
+                    {% if tab_activo == 'perfil' and not editando %}
+                    <div class="p-6">
+                        <a href="{% url 'edit_profile' %}?tab=perfil&edit=1" class="inline-flex w-full items-center justify-center rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 text-sm font-semibold transition-colors">
+                            Editar perfil
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
+                            <i class="bi bi-shield-lock text-base"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-base font-bold text-slate-900">Contraseña</p>
+                            <p class="text-sm text-slate-500">Cambiar de forma segura</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'change_password' %}" class="flex-shrink-0 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-700 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                        <i class="bi bi-key"></i>Cambiar
+                    </a>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-red-200 shadow-sm p-6 flex items-center justify-between gap-4">
+                    <div class="min-w-0">
+                        <p class="text-base font-bold text-red-700">Eliminar cuenta</p>
+                        <p class="text-sm text-slate-500">Elimina permanentemente tu cuenta y datos personales.</p>
+                    </div>
+                    <a href="{% url 'delete_account' %}" class="flex-shrink-0 inline-flex items-center rounded-xl border border-red-200 bg-white text-red-600 px-4 py-2.5 text-sm font-semibold hover:bg-red-50 transition-colors">
+                        Eliminar
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% if tab_activo == 'planes' %}
+            <!-- TAB PLANES -->
+            <div class="space-y-6 flex-1">
+                <!-- Banner plan actual -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-5 flex items-center gap-4">
+                        <div class="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center
+                            {% if perfil.plan_estado == 'pausado' %}bg-amber-50 border border-amber-100 text-amber-600
+                            {% elif perfil.plan_estado == 'cancelado' %}bg-red-50 border border-red-100 text-red-500
+                            {% else %}bg-emerald-50 border border-emerald-100 text-emerald-600{% endif %}">
+                            {% if perfil.plan_estado == 'pausado' %}<i class="bi bi-pause-circle text-lg"></i>
+                            {% elif perfil.plan_estado == 'cancelado' %}<i class="bi bi-x-circle text-lg"></i>
+                            {% else %}<i class="bi bi-check-circle text-lg"></i>{% endif %}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Tu plan actual</p>
+                                {% if perfil.plan_estado == 'pausado' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase tracking-wider">Pausado hasta {{ perfil.plan_pausa_hasta|date:"d/m/Y" }}</span>
+                                {% elif perfil.plan_estado == 'cancelado' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-red-100 text-red-700 text-[10px] font-semibold uppercase tracking-wider">Cancela el {{ perfil.plan_cancelacion_fecha|date:"d/m/Y" }}</span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[10px] font-semibold uppercase tracking-wider">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Activo
+                                </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-base font-bold text-slate-900 truncate mt-0.5">
+                                {% if perfil.plan == perfil.PLAN_FREEMIUM %}Gratuito · Gratis
+                                {% elif perfil.plan == perfil.PLAN_GROWTH %}Básico · $24.900 COP/mes
+                                {% elif perfil.plan == perfil.PLAN_MULTI_BUSINESS %}Familiar · $59.900 COP/mes
+                                {% elif perfil.plan == perfil.PLAN_PROFESIONAL %}Profesional · $139.900 COP/mes
+                                {% else %}{{ perfil.get_plan_display }}{% endif %}
+                            </p>
+                            {% if perfil.plan != perfil.PLAN_FREEMIUM and perfil.plan_expiration and perfil.plan_estado != 'cancelado' %}
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                Se renueva el {{ perfil.plan_expiration|date:"d/m/Y" }} · {{ dias_restantes_plan }} días restantes
+                            </p>
+                            {% endif %}
+                        </div>
+                        {% if uso_actual %}
+                        <div class="hidden sm:block flex-shrink-0 text-right pl-4 border-l border-slate-100">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Llamadas este mes</p>
+                            <p class="text-base font-bold text-slate-900 tabular-nums mt-0.5">{{ uso_actual.llamadas_mes }}<span class="text-sm text-slate-400 font-medium">/{{ uso_actual.max_llamadas_mes }}</span></p>
+                            {% with pct=uso_actual.llamadas_mes|floatformat:0 max=uso_actual.max_llamadas_mes %}
+                            <div class="w-24 bg-slate-100 rounded-full h-1.5 mt-2">
+                                <div class="h-1.5 rounded-full bg-emerald-500" style="width: {% widthratio uso_actual.llamadas_mes uso_actual.max_llamadas_mes 100 %}%"></div>
+                            </div>
+                            {% endwith %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Acciones del plan -->
+                    {% if perfil.plan != perfil.PLAN_FREEMIUM %}
+                    <div class="border-t border-slate-100 px-5 py-3 bg-slate-50 flex flex-wrap items-center gap-2">
+                        {% if perfil.plan_estado == 'pausado' %}
+                        <form method="post" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reactivar_plan">
+                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-semibold transition-colors">
+                                <i class="bi bi-play-circle"></i>Reactivar plan
+                            </button>
+                        </form>
+                        {% elif perfil.plan_estado == 'activo' %}
+                        <form method="post" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="pausar_plan">
+                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 px-3 py-1.5 text-xs font-semibold transition-colors">
+                                <i class="bi bi-pause-circle"></i>Pausar plan
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if perfil.plan_estado != 'cancelado' %}
+                        <button type="button" data-cancel-modal
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white text-red-600 hover:bg-red-50 px-3 py-1.5 text-xs font-semibold transition-colors">
+                            <i class="bi bi-x-circle"></i>Cancelar suscripción
+                        </button>
+                        {% endif %}
+
+                        <span class="text-xs text-slate-400 ml-auto hidden sm:block">Cambios efectivos de inmediato</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Ingresar código de acceso -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                            <i class="bi bi-key text-lg"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-slate-900">¿Tienes un código de acceso?</p>
+                            <p class="text-xs text-slate-500 mt-0.5">Ingresa el código que te enviamos para activar tu plan.</p>
+                        </div>
+                    </div>
+                    <form method="post" class="flex gap-3 mt-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="aplicar_codigo">
+                        <input type="text" name="codigo_acceso"
+                            placeholder="Ej: PROMO-ABC123-XYZ"
+                            class="flex-1 px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none uppercase placeholder:normal-case placeholder:font-sans"
+                            style="text-transform: uppercase;">
+                        <button type="submit"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors whitespace-nowrap flex items-center gap-2">
+                            <i class="bi bi-check-circle"></i> Activar
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Tarjetas de planes -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch pt-3">
+                    {% for plan in planes %}
+                    <article class="relative flex flex-col rounded-2xl bg-white border shadow-sm transition-all hover:shadow-md
+                        {% if plan.destacado %}border-indigo-600 ring-1 ring-indigo-600{% elif plan.es_plan_actual %}border-emerald-300{% else %}border-slate-200 hover:border-slate-300{% endif %}">
+
+                        {% if plan.destacado %}
+                        <div class="absolute -top-3 left-6">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-600 text-white text-[11px] font-semibold uppercase tracking-wider shadow-sm">
+                                <i class="bi bi-star-fill text-[9px]"></i>Recomendado
+                            </span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Encabezado -->
+                        <div class="px-6 pt-7 pb-5 border-b border-slate-100">
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center
+                                        {% if plan.destacado %}bg-indigo-50 border border-indigo-100 text-indigo-600{% else %}bg-slate-100 text-slate-600{% endif %}">
+                                        {% if forloop.counter0 == 0 %}
+                                        <i class="bi bi-person"></i>
+                                        {% elif forloop.counter0 == 1 %}
+                                        <i class="bi bi-people"></i>
+                                        {% else %}
+                                        <i class="bi bi-buildings"></i>
+                                        {% endif %}
+                                    </div>
+                                    <h2 class="text-base font-bold text-slate-900 truncate">{{ plan.nombre }}</h2>
+                                </div>
+                                {% if plan.es_plan_actual %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold uppercase tracking-wider">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Actual
+                                </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-sm text-slate-500 leading-relaxed min-h-[40px]">{{ plan.tagline }}</p>
+
+                            <div class="mt-5">
+                                <div class="flex items-baseline gap-1">
+                                    {% if plan.precio_cop %}
+                                    <span class="text-3xl font-black text-slate-900 tracking-tight tabular-nums">${{ plan.precio_cop }}</span>
+                                    <span class="text-sm text-slate-500 font-medium">COP</span>
+                                    {% else %}
+                                    <span class="text-3xl font-black text-slate-900 tracking-tight">Gratis</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-xs text-slate-500 mt-1">
+                                    {% if plan.precio_cop %}por mes · cancela cuando quieras{% else %}sin tarjeta de crédito{% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Límites y Características -->
+                        <div class="px-6 py-5 flex-1">
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Límites y características</p>
+                            <ul class="space-y-2.5">
+                                <!-- Pacientes -->
+                                <li class="flex items-start gap-2.5 text-sm text-slate-700 leading-snug">
+                                    <i class="bi bi-people mt-0.5 shrink-0 font-bold {% if plan.destacado %}text-indigo-600{% else %}text-slate-700{% endif %}"></i>
+                                    <span>
+                                        {% if plan.limites.max_pacientes == 1 %}
+                                            1 paciente
+                                        {% else %}
+                                            Hasta {{ plan.limites.max_pacientes }} pacientes
+                                        {% endif %}
+                                    </span>
+                                </li>
+
+                                <!-- Medicamentos -->
+                                <li class="flex items-start gap-2.5 text-sm text-slate-700 leading-snug">
+                                    <i class="bi bi-capsule mt-0.5 shrink-0 font-bold {% if plan.destacado %}text-indigo-600{% else %}text-slate-700{% endif %}"></i>
+                                    <span>
+                                        {% if plan.limites.max_medicamentos_por_paciente %}
+                                            Hasta {{ plan.limites.max_medicamentos_por_paciente }} medicamentos
+                                        {% else %}
+                                            Medicamentos ilimitados
+                                        {% endif %}
+                                    </span>
+                                </li>
+
+                                <!-- Llamadas -->
+                                <li class="flex items-start gap-2.5 text-sm text-slate-700 leading-snug">
+                                    <i class="bi bi-telephone mt-0.5 shrink-0 font-bold {% if plan.destacado %}text-indigo-600{% else %}text-slate-700{% endif %}"></i>
+                                    <span>{{ plan.limites.max_llamadas_mes }} llamadas/mes</span>
+                                </li>
+
+                                <!-- Características adicionales -->
+                                {% for caracteristica in plan.caracteristicas %}
+                                <li class="flex items-start gap-2.5 text-sm text-slate-700 leading-snug">
+                                    <i class="bi bi-check2 mt-0.5 shrink-0 font-bold {% if plan.destacado %}text-indigo-600{% else %}text-slate-700{% endif %}"></i>
+                                    <span>{{ caracteristica }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                        <!-- Botón CTA -->
+                        <div class="px-6 pb-6 pt-1">
+                            {% if plan.es_plan_actual %}
+                            <button type="button" disabled class="block w-full text-center rounded-xl py-2.5 text-sm font-semibold border border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed">
+                                <i class="bi bi-check2-circle mr-1"></i>Plan actual
+                            </button>
+                            {% else %}
+                            {# Formulario oculto — se envía desde el modal #}
+                            <form id="form-plan-{{ plan.plan_key }}" method="post" class="hidden">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="cambiar_plan">
+                                <input type="hidden" name="plan" value="{{ plan.plan_key }}">
+                            </form>
+                            {% if plan.destacado %}
+                            <button type="button"
+                                data-plan-modal
+                                data-plan-key="{{ plan.plan_key }}"
+                                data-plan-nombre="{{ plan.nombre }}"
+                                data-plan-precio="{% if plan.precio_cop %}${{ plan.precio_cop }} COP/mes{% else %}Gratis{% endif %}"
+                                class="block w-full text-center rounded-xl py-2.5 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors shadow-sm">
+                                {{ plan.boton_texto }}
+                            </button>
+                            {% else %}
+                            <button type="button"
+                                data-plan-modal
+                                data-plan-key="{{ plan.plan_key }}"
+                                data-plan-nombre="{{ plan.nombre }}"
+                                data-plan-precio="{% if plan.precio_cop %}${{ plan.precio_cop }} COP/mes{% else %}Gratis{% endif %}"
+                                class="block w-full text-center rounded-xl py-2.5 text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors">
+                                {{ plan.boton_texto }}
+                            </button>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+
+                <!-- Historial de facturación -->
+                {% if historial_facturacion %}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100">
+                        <h3 class="text-sm font-bold text-slate-900">Historial de facturación</h3>
+                    </div>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-100 bg-slate-50">
+                                <th class="text-left px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Fecha</th>
+                                <th class="text-left px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500 hidden sm:table-cell">Descripción</th>
+                                <th class="text-right px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Monto</th>
+                                <th class="text-right px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for fac in historial_facturacion %}
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-3 text-slate-700 tabular-nums">{{ fac.fecha|date:"d/m/Y" }}</td>
+                                <td class="px-6 py-3 text-slate-600 hidden sm:table-cell">{{ fac.descripcion }}</td>
+                                <td class="px-6 py-3 text-slate-900 font-semibold tabular-nums text-right">{{ fac.monto }}</td>
+                                <td class="px-6 py-3 text-right">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold uppercase tracking-wider">{{ fac.estado }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+                <!-- Información adicional -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3 flex items-center gap-3">
+                        <i class="bi bi-shield-check text-slate-400 text-lg flex-shrink-0"></i>
+                        <p class="text-xs text-slate-600 leading-snug"><span class="font-semibold text-slate-900">Sin permanencia</span> — cambia o cancela cuando quieras</p>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3 flex items-center gap-3">
+                        <i class="bi bi-headset text-slate-400 text-lg flex-shrink-0"></i>
+                        <p class="text-xs text-slate-600 leading-snug"><span class="font-semibold text-slate-900">Soporte</span> — equipo en Colombia por correo</p>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3 flex items-center gap-3">
+                        <i class="bi bi-lock text-slate-400 text-lg flex-shrink-0"></i>
+                        <p class="text-xs text-slate-600 leading-snug"><span class="font-semibold text-slate-900">Datos seguros</span> — cifrado y servidores protegidos</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+    <div class="mt-16 sm:mt-20 lg:mt-24">
+        {% include "footer.html" %}
+    </div>
+</div>
+
+{# ============================================================ #}
+{# MODAL DE CANCELACIÓN (2 pasos)                              #}
+{# ============================================================ #}
+<div id="cancel-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" id="cancel-overlay"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+
+        <!-- Paso 1: Aviso -->
+        <div id="cancel-step-1" class="p-7">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 rounded-xl bg-red-50 border border-red-100 text-red-500 flex items-center justify-center flex-shrink-0">
+                    <i class="bi bi-x-circle text-lg"></i>
+                </div>
+                <h2 class="text-base font-bold text-slate-900">¿Cancelar suscripción?</h2>
+            </div>
+            <div class="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-2 mb-6 text-sm text-slate-700">
+                <p class="flex items-start gap-2"><i class="bi bi-check2 text-slate-400 mt-0.5 shrink-0"></i>Tu plan sigue activo hasta el final del período pagado.</p>
+                <p class="flex items-start gap-2"><i class="bi bi-check2 text-slate-400 mt-0.5 shrink-0"></i>No se realizarán más cobros automáticos.</p>
+                <p class="flex items-start gap-2"><i class="bi bi-check2 text-slate-400 mt-0.5 shrink-0"></i>Tus datos e historial se conservan.</p>
+                <p class="flex items-start gap-2"><i class="bi bi-arrow-right text-slate-400 mt-0.5 shrink-0"></i>Al vencer, el plan bajará a Básico (gratis).</p>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" id="cancel-back-1" class="flex-1 rounded-xl border border-slate-200 bg-white text-slate-700 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                    Mantener plan
+                </button>
+                <button type="button" id="cancel-next" class="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white py-2.5 text-sm font-semibold transition-colors">
+                    Continuar
+                </button>
+            </div>
+        </div>
+
+        <!-- Paso 2: Confirmación final -->
+        <div id="cancel-step-2" class="hidden p-7">
+            <h2 class="text-base font-bold text-slate-900 mb-2">Confirma la cancelación</h2>
+            <p class="text-sm text-slate-600 mb-5">Escribe <strong class="text-slate-900">CANCELAR</strong> para confirmar.</p>
+            <input id="cancel-confirm-input" type="text" placeholder="CANCELAR" autocomplete="off"
+                class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-colors mb-4">
+            <p id="cancel-error" class="hidden text-xs text-red-600 font-medium mb-3"></p>
+            <div class="flex gap-3">
+                <button type="button" id="cancel-back-2" class="flex-1 rounded-xl border border-slate-200 bg-white text-slate-700 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                    Volver
+                </button>
+                <form id="cancel-form" method="post" class="flex-1">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="cancelar_plan">
+                    <button type="submit" id="cancel-submit" class="block w-full rounded-xl bg-red-600 hover:bg-red-700 text-white py-2.5 text-sm font-semibold transition-colors">
+                        Cancelar suscripción
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal   = document.getElementById('cancel-modal');
+    const overlay = document.getElementById('cancel-overlay');
+    const step1   = document.getElementById('cancel-step-1');
+    const step2   = document.getElementById('cancel-step-2');
+    const input   = document.getElementById('cancel-confirm-input');
+    const errEl   = document.getElementById('cancel-error');
+    const form    = document.getElementById('cancel-form');
+
+    function openCancel() {
+        step1.classList.remove('hidden');
+        step2.classList.add('hidden');
+        if (input) input.value = '';
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeCancel() {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('[data-cancel-modal]').forEach(function (btn) {
+        btn.addEventListener('click', openCancel);
+    });
+    overlay.addEventListener('click', closeCancel);
+    document.getElementById('cancel-back-1').addEventListener('click', closeCancel);
+    document.getElementById('cancel-next').addEventListener('click', function () {
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
+        input.focus();
+    });
+    document.getElementById('cancel-back-2').addEventListener('click', function () {
+        step2.classList.add('hidden');
+        step1.classList.remove('hidden');
+    });
+    document.getElementById('cancel-submit').addEventListener('click', function (e) {
+        if (input.value.trim() !== 'CANCELAR') {
+            e.preventDefault();
+            errEl.textContent = 'Debes escribir exactamente: CANCELAR';
+            errEl.classList.remove('hidden');
+        } else {
+            errEl.classList.add('hidden');
+        }
+    });
+})();
+</script>
+
+{# ============================================================ #}
+{# MODAL DE PAGO SIMULADO                                       #}
+{# ============================================================ #}
+<div id="payment-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <!-- Overlay -->
+    <div id="payment-overlay" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+
+    <!-- Card -->
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+
+        <!-- Header -->
+        <div class="bg-slate-800 px-6 py-5 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pago seguro</p>
+                <p id="modal-plan-nombre" class="text-base font-bold text-white mt-0.5">Plan Familiar</p>
+            </div>
+            <div class="text-right">
+                <p class="text-xs text-slate-400">Total mensual</p>
+                <p id="modal-plan-precio" class="text-lg font-black text-white tabular-nums mt-0.5">$59.900 COP</p>
+            </div>
+        </div>
+
+        <!-- Estado: formulario -->
+        <div id="modal-form-state" class="p-6 space-y-4">
+            <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                <i class="bi bi-lock-fill text-slate-400"></i>
+                Conexión cifrada · Datos no se almacenan
+            </div>
+
+            <!-- Nombre del titular -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Nombre del titular</label>
+                <input id="cc-name" type="text" placeholder="Como aparece en la tarjeta" autocomplete="cc-name"
+                    class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-colors">
+            </div>
+
+            <!-- Número de tarjeta -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Número de tarjeta</label>
+                <div class="relative">
+                    <input id="cc-number" type="text" placeholder="0000 0000 0000 0000" maxlength="19" autocomplete="cc-number"
+                        class="block w-full px-4 py-2.5 pr-12 rounded-xl border border-slate-200 bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-colors">
+                    <span id="cc-brand" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 text-xl">
+                        <i class="bi bi-credit-card"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Expiry + CVV -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Vencimiento</label>
+                    <input id="cc-expiry" type="text" placeholder="MM / AA" maxlength="7" autocomplete="cc-exp"
+                        class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">CVV</label>
+                    <input id="cc-cvv" type="password" placeholder="•••" maxlength="4" autocomplete="cc-csc"
+                        class="block w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-colors">
+                </div>
+            </div>
+
+            <p id="modal-error" class="hidden text-xs text-red-600 font-medium pt-1"></p>
+
+            <!-- Botones -->
+            <div class="flex items-center gap-3 pt-2">
+                <button id="modal-cancel" type="button"
+                    class="flex-1 rounded-xl border border-slate-200 bg-white text-slate-700 py-2.5 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                    Cancelar
+                </button>
+                <button id="modal-pay" type="button"
+                    class="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 text-sm font-semibold transition-colors">
+                    Confirmar pago
+                </button>
+            </div>
+        </div>
+
+        <!-- Estado: procesando -->
+        <div id="modal-processing-state" class="hidden p-10 flex flex-col items-center gap-4">
+            <div class="w-14 h-14 rounded-full border-4 border-slate-200 border-t-indigo-600 animate-spin"></div>
+            <div class="text-center">
+                <p class="text-base font-bold text-slate-900">Procesando pago…</p>
+                <p class="text-sm text-slate-500 mt-1">No cierres esta ventana</p>
+            </div>
+        </div>
+
+        <!-- Estado: éxito -->
+        <div id="modal-success-state" class="hidden p-10 flex flex-col items-center gap-4 text-center">
+            <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+                <i class="bi bi-check-lg text-3xl text-emerald-600"></i>
+            </div>
+            <div>
+                <p class="text-base font-bold text-slate-900">¡Pago confirmado!</p>
+                <p class="text-sm text-slate-500 mt-1">Activando tu nuevo plan…</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal        = document.getElementById('payment-modal');
+    const overlay      = document.getElementById('payment-overlay');
+    const formState    = document.getElementById('modal-form-state');
+    const procState    = document.getElementById('modal-processing-state');
+    const successState = document.getElementById('modal-success-state');
+    const errorEl      = document.getElementById('modal-error');
+    const btnCancel    = document.getElementById('modal-cancel');
+    const btnPay       = document.getElementById('modal-pay');
+    const labelNombre  = document.getElementById('modal-plan-nombre');
+    const labelPrecio  = document.getElementById('modal-plan-precio');
+
+    let activePlanKey  = null;
+
+    // Abrir modal
+    document.querySelectorAll('[data-plan-modal]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            activePlanKey = btn.dataset.planKey;
+            labelNombre.textContent = btn.dataset.planNombre;
+            labelPrecio.textContent = btn.dataset.planPrecio;
+            resetModal();
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    // Cerrar modal
+    function closeModal() {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        activePlanKey = null;
+    }
+    btnCancel.addEventListener('click', closeModal);
+    overlay.addEventListener('click', closeModal);
+
+    // Resetear a estado inicial
+    function resetModal() {
+        formState.classList.remove('hidden');
+        procState.classList.add('hidden');
+        successState.classList.add('hidden');
+        errorEl.classList.add('hidden');
+        errorEl.textContent = '';
+        document.getElementById('cc-name').value    = '';
+        document.getElementById('cc-number').value  = '';
+        document.getElementById('cc-expiry').value  = '';
+        document.getElementById('cc-cvv').value     = '';
+    }
+
+    // Formato automático número de tarjeta
+    document.getElementById('cc-number').addEventListener('input', function () {
+        let v = this.value.replace(/\D/g, '').slice(0, 16);
+        this.value = v.match(/.{1,4}/g)?.join(' ') || v;
+        const brand = document.getElementById('cc-brand');
+        if (v.startsWith('4'))       brand.innerHTML = '<i class="bi bi-credit-card-fill text-blue-500"></i>';
+        else if (v.startsWith('5')) brand.innerHTML = '<i class="bi bi-credit-card-fill text-red-500"></i>';
+        else                         brand.innerHTML = '<i class="bi bi-credit-card"></i>';
+    });
+
+    // Formato automático vencimiento
+    document.getElementById('cc-expiry').addEventListener('input', function () {
+        let v = this.value.replace(/\D/g, '').slice(0, 4);
+        if (v.length >= 3) v = v.slice(0, 2) + ' / ' + v.slice(2);
+        this.value = v;
+    });
+
+    // Confirmar pago
+    btnPay.addEventListener('click', function () {
+        const name   = document.getElementById('cc-name').value.trim();
+        const number = document.getElementById('cc-number').value.replace(/\s/g, '');
+        const expiry = document.getElementById('cc-expiry').value.trim();
+        const cvv    = document.getElementById('cc-cvv').value.trim();
+
+        if (!name || number.length < 16 || expiry.length < 7 || cvv.length < 3) {
+            errorEl.textContent = 'Por favor completa todos los campos correctamente.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+
+        // Mostrar estado procesando (1.8s) → éxito (1s) → enviar form real
+        errorEl.classList.add('hidden');
+        formState.classList.add('hidden');
+        procState.classList.remove('hidden');
+
+        setTimeout(function () {
+            procState.classList.add('hidden');
+            successState.classList.remove('hidden');
+
+            setTimeout(function () {
+                const form = document.getElementById('form-plan-' + activePlanKey);
+                if (form) form.submit();
+            }, 1000);
+        }, 1800);
+    });
+})();
+</script>
+
+{% if editando %}
+<script>
+    (function () {
+        const input = document.getElementById("profile_image");
+        const preview = document.getElementById("profile-image-preview");
+        const placeholder = document.getElementById("profile-image-placeholder");
+        
+        if (!input) return;
+        
+        input.addEventListener("change", function () {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith("image/")) {
+                alert("Por favor selecciona una imagen válida");
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                alert("La imagen debe ser menor a 5MB");
+                return;
+            }
+            
+            const url = URL.createObjectURL(file);
+            if (preview) {
+                preview.src = url;
+                preview.classList.remove("hidden");
+            }
+            if (placeholder) {
+                placeholder.classList.add("hidden");
+            }
+        });
+    })();
+</script>
+{% endif %}
+{% endblock %}

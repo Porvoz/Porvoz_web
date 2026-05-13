@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% load static %}
+
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-white w-full max-w-full overflow-x-hidden">
+    <div class="grid lg:grid-cols-2 flex-1 min-w-0 w-full">
+        <!-- Sección izquierda - Información (solo desktop) -->
+        <section class="hidden lg:flex flex-col justify-center px-8 xl:px-12 py-12 bg-white border-r border-slate-200">
+            <div class="max-w-lg mx-auto">
+                <!-- Logo -->
+                <div class="mb-8">
+                    <img
+                        src="{% static 'images/LogoPorvoz.png' %}"
+                        data-logo="1"
+                        data-fallback-src="{% static 'LogoPorvoz.png' %}"
+                        alt="Logo de la marca Porvoz"
+                        class="h-20 w-auto object-contain"
+                    >
+                </div>
+
+                <!-- Contenido principal -->
+                <div class="space-y-6 mb-8">
+                    <h1 class="text-4xl xl:text-5xl font-black leading-tight text-slate-900">
+                        Medicación bajo control
+                    </h1>
+                    <p class="text-base text-slate-600 leading-relaxed">
+                        <span class="font-bold text-slate-900">Porvoz</span> es tu aliado inteligente para el cuidado de la salud. 
+                        Nuestro sistema realiza <span class="text-slate-800 font-semibold">llamadas automatizadas</span> que recuerdan 
+                        a tus seres queridos cuándo y cómo tomar sus medicamentos.
+                    </p>
+                    
+                    <div class="flex items-center gap-4 text-sm text-slate-600">
+                        <div class="flex items-center gap-2">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-200 text-slate-700">
+                            <i class="bi bi-capsule"></i>
+                            </div>
+                        <span class="font-semibold text-slate-900">Ellos reciben el aviso</span>
+                        </div>
+                        <span class="text-slate-300">•</span>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-200 text-slate-700">
+                            <i class="bi bi-shield-check"></i>
+                            </div>
+                            <span class="font-semibold text-slate-900">Tú la tranquilidad</span>
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="flex flex-wrap gap-3 pt-2">
+                        <a href="https://www.youtube.com/watch?v=DaOQr-f9_S8" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-xl bg-slate-600 hover:bg-slate-700 px-5 py-2.5 text-sm font-semibold text-white transition-all shadow-sm">
+                            <i class="bi bi-play-circle"></i>
+                            Ver cómo funciona
+                        </a>
+                        <a href="{% url 'plans' %}" class="inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 text-sm font-semibold transition-all shadow-sm">
+                            <i class="bi bi-star"></i>
+                            Ver planes y precios
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Características -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100 transition-all">
+                        <div class="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-200 text-slate-700">
+                            <i class="bi bi-telephone-outbound"></i>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">Llamadas Automatizadas</h3>
+                        <p class="text-xs text-slate-600 leading-tight">Llamadas automáticas y amables en los horarios que definas.</p>
+                    </div>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100 transition-all">
+                        <div class="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-200 text-slate-700">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">Seguimiento en Tiempo Real</h3>
+                        <p class="text-xs text-slate-600 leading-tight">Visualiza recordatorios atendidos y no atendidos al instante.</p>
+                    </div>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100 transition-all">
+                        <div class="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-200 text-slate-700">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1 text-slate-900">Tranquilidad Garantizada</h3>
+                        <p class="text-xs text-slate-600 leading-tight">Sistema confiable que te da la paz mental que necesitas.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección derecha - Formulario -->
+        <section class="flex items-center justify-center px-4 sm:px-6 py-10 lg:py-12 min-w-0 overflow-x-hidden">
+            <div class="relative w-full max-w-md min-w-0">
+                <!-- Efectos de fondo decorativos -->
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-slate-200/30 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-slate-200/30 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="relative bg-white rounded-3xl border border-slate-200 shadow-2xl p-8">
+                    <!-- Header del formulario -->
+                    <div class="mb-6 text-center">
+                        <div class="flex justify-center mb-4 lg:hidden">
+                            <img
+                                src="{% static 'images/LogoPorvoz.png' %}"
+                                data-logo="1"
+                                data-fallback-src="{% static 'LogoPorvoz.png' %}"
+                                alt="Logo de la marca Porvoz"
+                                class="h-20 w-auto object-contain"
+                            >
+                        </div>
+                        <h2 class="text-3xl font-black tracking-tight text-slate-900">Bienvenido</h2>
+                        <p class="mt-1.5 text-sm text-slate-500">Ingresa con tu usuario y contraseña para continuar.</p>
+                    </div>
+
+                {% if messages %}
+                <div class="mb-5 space-y-2">
+                    {% for message in messages %}
+                        <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Formulario -->
+                <form method="post" class="space-y-5">
+                    {% csrf_token %}
+                    
+                    <!-- Campo Usuario -->
+                    <div class="space-y-1.5">
+                        <label for="username" class="block text-sm font-semibold text-slate-700">
+                            Usuario
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="bi bi-person text-slate-400"></i>
+                            </div>
+                            <input 
+                                id="username" 
+                                name="username" 
+                                type="text" 
+                                required 
+                                placeholder="Ingresa tu usuario"
+                                class="block w-full pl-10 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all shadow-sm hover:border-slate-400"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Campo Contraseña -->
+                    <div class="space-y-1.5">
+                        <label for="password" class="block text-sm font-semibold text-slate-700">
+                            Contraseña
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="bi bi-lock text-slate-400"></i>
+                            </div>
+                            <input 
+                                id="password" 
+                                name="password" 
+                                type="password" 
+                                required 
+                                placeholder="Ingresa tu contraseña"
+                                class="block w-full pl-10 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition-all shadow-sm hover:border-slate-400"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Botón Iniciar Sesión -->
+                    <button 
+                        type="submit" 
+                        class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 px-4 py-3.5 text-sm font-semibold text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-all"
+                    >
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Iniciar sesión
+                    </button>
+                </form>
+
+                <!-- Enlaces de ayuda -->
+                <div class="mt-6 pt-6 border-t border-slate-200 space-y-3">
+                    <p class="text-center text-sm text-slate-600">
+                        ¿Olvidaste tu contraseña?
+                        <a href="{% url 'reset_password' %}" class="ml-1 font-semibold text-slate-800 hover:text-slate-900 underline underline-offset-2 transition-colors">
+                            Recupérala aquí
+                        </a>
+                    </p>
+                    <p class="text-center text-sm text-slate-600">
+                        ¿No tienes cuenta?
+                        <a href="{% url 'register' %}" class="ml-1 font-semibold text-slate-800 hover:text-slate-900 underline underline-offset-2 transition-colors">
+                            Crea una cuenta
+                        </a>
+                    </p>
+                </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <footer class="mt-auto w-full border-t border-slate-200 bg-white">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-3">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-700">Porvoz</span>
+                    <span class="text-slate-300">·</span>
+                    <span class="text-xs text-slate-500">© 2026</span>
+                </div>
+                <nav class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                    <a href="{% url 'terms' %}" class="hover:text-slate-800 transition-colors">Términos y Condiciones</a>
+                    <a href="{% url 'privacy' %}" class="hover:text-slate-800 transition-colors">Política de Privacidad</a>
+                    <a href="{% url 'contact' %}" class="hover:text-slate-800 transition-colors">Contacto</a>
+                    <span class="text-slate-300">·</span>
+                    <a href="{% url 'contactar_soporte' %}" class="hover:text-slate-800 transition-colors">Soporte</a>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+</div>
+{% endblock %}

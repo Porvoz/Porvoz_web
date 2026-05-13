@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+{% load static %}
+
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20 flex flex-col">
+        <button type="button" class="btn-mobile-menu" data-mobile-menu-toggle aria-label="Abrir menú">
+            <i class="bi bi-list"></i>
+        </button>
+
+        <!-- Header -->
+        <header class="mb-4 mt-12 lg:mt-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center justify-center w-12 h-12 rounded-2xl bg-slate-200 text-slate-700 flex-shrink-0">
+                        <i class="bi bi-bell"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Notificaciones</h1>
+                        <p class="text-slate-600 mt-0.5 text-xs">
+                            {{ total_notificaciones }} total • {{ no_leidas }} sin leer
+                        </p>
+                    </div>
+                </div>
+                <div class="flex gap-2 self-start sm:self-center">
+                    <a href="{% url 'dashboard' %}" class="btn-dashboard-primary self-start sm:self-center">
+                        <i class="bi bi-house"></i>
+                        Panel principal
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        {% if messages %}
+        <div class="mb-3 space-y-2">
+            {% for message in messages %}
+            <div class="rounded-lg border px-3 py-2 text-xs font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-green-200 bg-green-50 text-green-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Filtros compactos -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6">
+            {% if medicamento_seleccionado and medicamento_nombre %}
+            <div class="flex items-center gap-2 mb-3">
+                <span class="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 text-xs font-semibold">
+                    <i class="bi bi-capsule-fill"></i>{{ medicamento_nombre }}
+                    <a href="{% url 'notifications' %}{% if paciente_seleccionado %}?paciente={{ paciente_seleccionado }}{% endif %}" class="ml-1 text-slate-500 hover:text-slate-800 transition-colors" title="Quitar filtro de medicamento"><i class="bi bi-x"></i></a>
+                </span>
+                {% if paciente_seleccionado %}
+                {% for p in pacientes %}{% if p.id|stringformat:'s' == paciente_seleccionado %}
+                <a href="{% url 'detalle_paciente' p.id %}" class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors">
+                    <i class="bi bi-arrow-left"></i>Volver a {{ p.get_display_nombre }}
+                </a>
+                {% endif %}{% endfor %}
+                {% endif %}
+            </div>
+            {% endif %}
+            <form method="get" class="space-y-3">
+                {% if medicamento_seleccionado %}<input type="hidden" name="medicamento" value="{{ medicamento_seleccionado }}">{% endif %}
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                    <!-- Búsqueda -->
+                    <div class="sm:col-span-5 relative">
+                        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" name="buscar" value="{{ buscar }}" placeholder="Buscar notificación..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-400 transition-all">
+                    </div>
+
+                    <!-- Tipo -->
+                    <div class="sm:col-span-3">
+                        <select name="tipo" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer hover:border-slate-400 transition-all">
+                            <option value="">Todos los tipos</option>
+                            <option value="alerta" {% if tipo_seleccionado == 'alerta' %}selected{% endif %}>Alertas</option>
+                            <option value="recordatorio" {% if tipo_seleccionado == 'recordatorio' %}selected{% endif %}>Recordatorios</option>
+                            <option value="llamada" {% if tipo_seleccionado == 'llamada' %}selected{% endif %}>Llamadas</option>
+                            <option value="sistema" {% if tipo_seleccionado == 'sistema' %}selected{% endif %}>Sistema</option>
+                        </select>
+                    </div>
+
+                    <!-- Paciente -->
+                    {% if pacientes %}
+                    <div class="sm:col-span-2">
+                        <select name="paciente" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer hover:border-slate-400 transition-all">
+                            <option value="">Todos los pacientes</option>
+                            {% for p in pacientes %}
+                            <option value="{{ p.id }}" {% if paciente_seleccionado == p.id|stringformat:'s' %}selected{% endif %}>{{ p.get_display_nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <!-- Sin leer toggle -->
+                    <div class="sm:col-span-2">
+                        <label class="w-full h-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all border cursor-pointer {% if solo_no_leidas %}bg-slate-900 text-white border-slate-900 shadow-sm{% else %}bg-white text-slate-700 border-slate-300 hover:border-slate-400{% endif %}">
+                            <input type="checkbox" name="solo_no_leidas" value="1" onchange="this.form.submit()" {% if solo_no_leidas %}checked{% endif %} class="sr-only">
+                            <i class="bi bi-circle-fill text-xs"></i>
+                            Sin leer{% if no_leidas %} ({{ no_leidas }}){% endif %}
+                        </label>
+                    </div>
+                </div>
+
+                {% if tipo_seleccionado or paciente_seleccionado or solo_no_leidas or buscar or medicamento_seleccionado %}
+                <div class="pt-3 border-t border-slate-200">
+                    <a href="{% url 'notifications' %}" class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors">
+                        <i class="bi bi-x-circle"></i>Limpiar filtros
+                    </a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Panel de lista de notificaciones y acciones -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <!-- Barra de acciones -->
+            {% if no_leidas and notificaciones %}
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-end">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_all_read">
+                    <input type="hidden" name="redirect_tipo" value="{{ tipo_seleccionado|default:'' }}">
+                    <input type="hidden" name="redirect_paciente" value="{{ paciente_seleccionado|default:'' }}">
+                    <input type="hidden" name="redirect_solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
+                    <input type="hidden" name="redirect_buscar" value="{{ buscar }}">
+                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white px-4 py-2.5 text-sm font-semibold transition-colors">
+                        <i class="bi bi-check-all"></i>Marcar todas leídas
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Lista de notificaciones -->
+            {% if notificaciones %}
+            <div class="divide-y divide-slate-100">
+                {% for notificacion in notificaciones %}
+                <div class="px-6 py-4 flex gap-4 hover:bg-slate-50 transition-colors group {% if not notificacion.leida %}bg-slate-50{% endif %}">
+                    <!-- Icono de tipo -->
+                    <div class="flex-shrink-0 mt-0.5">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold
+                            {% if notificacion.tipo == 'recordatorio' %}bg-amber-100 text-amber-600
+                            {% elif notificacion.tipo == 'alerta' %}bg-red-100 text-red-600
+                            {% elif notificacion.tipo == 'llamada' %}bg-slate-200 text-slate-700
+                            {% else %}bg-slate-200 text-slate-700{% endif %}">
+                            {% if notificacion.tipo == 'llamada' %}
+                            <i class="bi bi-telephone"></i>
+                            {% elif notificacion.tipo == 'recordatorio' %}
+                            <i class="bi bi-clock"></i>
+                            {% elif notificacion.tipo == 'alerta' %}
+                            <i class="bi bi-exclamation-triangle"></i>
+                            {% else %}
+                            <i class="bi bi-gear"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Contenido -->
+                    <div class="flex-1 min-w-0">
+                        <!-- Título + indicador no leída -->
+                        <div class="flex items-center gap-2 mb-1">
+                            <p class="text-sm {% if not notificacion.leida %}font-bold text-slate-900{% else %}font-medium text-slate-700{% endif %}">
+                                {{ notificacion.titulo }}
+                            </p>
+                            {% if not notificacion.leida %}
+                            <span class="w-2 h-2 rounded-full bg-slate-500 flex-shrink-0"></span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Mensaje (si existe) -->
+                        {% if notificacion.mensaje %}
+                        <p class="text-sm text-slate-500 mb-2 leading-snug">{{ notificacion.mensaje }}</p>
+                        {% endif %}
+
+                        <!-- Badges de tipo y prioridad -->
+                        <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                            <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold
+                                {% if notificacion.tipo == 'recordatorio' %}bg-amber-100 text-amber-700
+                                {% elif notificacion.tipo == 'alerta' %}bg-red-100 text-red-700
+                                {% elif notificacion.tipo == 'llamada' %}bg-slate-100 text-slate-600
+                                {% else %}bg-slate-100 text-slate-600{% endif %}">
+                                {% if notificacion.tipo == 'llamada' %}<i class="bi bi-telephone text-xs"></i> Llamada
+                                {% elif notificacion.tipo == 'recordatorio' %}<i class="bi bi-clock text-xs"></i> Recordatorio
+                                {% elif notificacion.tipo == 'alerta' %}<i class="bi bi-exclamation-triangle text-xs"></i> Alerta
+                                {% else %}<i class="bi bi-gear text-xs"></i> Sistema
+                                {% endif %}
+                            </span>
+                            {% if notificacion.prioridad %}
+                            <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold
+                                {% if notificacion.prioridad == 'critica' %}bg-red-100 text-red-800 border border-red-300
+                                {% elif notificacion.prioridad == 'urgente' %}bg-orange-100 text-orange-800 border border-orange-300
+                                {% elif notificacion.prioridad == 'normal' %}bg-slate-100 text-slate-700 border border-slate-300
+                                {% else %}bg-emerald-100 text-emerald-700 border border-emerald-200{% endif %}">
+                                {% if notificacion.prioridad == 'critica' %}<i class="bi bi-exclamation-circle-fill"></i> CRÍTICA
+                                {% elif notificacion.prioridad == 'urgente' %}<i class="bi bi-exclamation-circle"></i> URGENTE
+                                {% elif notificacion.prioridad == 'normal' %}<i class="bi bi-info-circle"></i> Normal
+                                {% else %}<i class="bi bi-check-circle"></i> Baja
+                                {% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Metadata -->
+                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                            {% if notificacion.paciente %}
+                            <span class="inline-flex items-center gap-1">
+                                <i class="bi bi-person"></i>{{ notificacion.paciente.get_display_nombre }}
+                            </span>
+                            {% endif %}
+                            {% if notificacion.medicamento %}
+                                {% if notificacion.paciente %}<span class="text-slate-300">&middot;</span>{% endif %}
+                            <span class="inline-flex items-center gap-1">
+                                <i class="bi bi-capsule"></i>{{ notificacion.medicamento.nombre }}
+                            </span>
+                            {% endif %}
+                            {% if notificacion.paciente or notificacion.medicamento %}<span class="text-slate-300">&middot;</span>{% endif %}
+                            <span>{{ notificacion.creado_en|date:"d/m/Y H:i" }}</span>
+                            <span class="text-slate-300">&middot;</span>
+                            <span>{{ notificacion.creado_en|timesince }} atrás</span>
+                        </div>
+                    </div>
+
+                    <!-- Acciones (Derecha) -->
+                    <div class="flex-shrink-0 flex gap-0.5">
+                        {% if not notificacion.leida %}
+                        <form method="post" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="mark_read_single">
+                            <input type="hidden" name="notificacion_id" value="{{ notificacion.id }}">
+                            <input type="hidden" name="redirect_tipo" value="{{ tipo_seleccionado|default:'' }}">
+                            <input type="hidden" name="redirect_paciente" value="{{ paciente_seleccionado|default:'' }}">
+                            <input type="hidden" name="redirect_solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
+                            <input type="hidden" name="redirect_buscar" value="{{ buscar }}">
+                            <button type="submit" class="p-2 text-emerald-300 bg-emerald-50/40 border border-emerald-100/40 group-hover:text-emerald-700 group-hover:bg-emerald-200 group-hover:border-emerald-300 rounded-lg transition-colors" title="Marcar como leída">
+                                <i class="bi bi-check-circle text-sm"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                        <form method="post" class="inline delete-notif-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_single">
+                            <input type="hidden" name="notificacion_id" value="{{ notificacion.id }}">
+                            <input type="hidden" name="redirect_tipo" value="{{ tipo_seleccionado|default:'' }}">
+                            <input type="hidden" name="redirect_paciente" value="{{ paciente_seleccionado|default:'' }}">
+                            <input type="hidden" name="redirect_solo_no_leidas" value="{% if solo_no_leidas %}1{% endif %}">
+                            <input type="hidden" name="redirect_buscar" value="{{ buscar }}">
+                            <button type="button" class="p-2 text-red-300 bg-red-50/40 border border-red-100/40 group-hover:text-red-700 group-hover:bg-red-200 group-hover:border-red-300 rounded-lg transition-colors btn-delete-notif" title="Eliminar">
+                                <i class="bi bi-trash2 text-sm"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="px-6 py-14 text-center">
+                <div class="mx-auto mb-4 flex items-center justify-center w-20 h-20 rounded-full bg-slate-100">
+                    <i class="bi bi-bell text-4xl text-slate-400"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 mb-1">{% if buscar %}Sin resultados{% else %}No hay notificaciones{% endif %}</h3>
+                <p class="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+                    {% if buscar %}
+                    No se encontraron notificaciones para "{{ buscar }}". Intenta con otros términos.
+                    {% else %}
+                    Las notificaciones aparecerán aquí cuando haya actividad en tus pacientes.
+                    {% endif %}
+                </p>
+                {% if buscar %}
+                <a href="{% url 'notifications' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-6 py-3 text-sm font-semibold shadow-sm transition-colors">
+                    <i class="bi bi-x-lg"></i>Limpiar búsqueda
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+<!-- Modal confirmar eliminar -->
+<div id="modal-delete-notif" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+    <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" data-modal-backdrop></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="w-full max-w-sm rounded-2xl bg-white shadow-xl border border-slate-200 transform transition-all" role="dialog" aria-modal="true" aria-labelledby="modal-delete-title">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <i class="bi bi-exclamation-circle text-red-600 text-lg"></i>
+                    </div>
+                    <h3 id="modal-delete-title" class="text-lg font-bold text-slate-900">Eliminar notificación</h3>
+                </div>
+                <p class="text-slate-600 text-sm mb-6">
+                    ¿Estás seguro de que quieres eliminar esta notificación? Esta acción no se puede deshacer.
+                </p>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" class="btn-modal-cancel px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn-modal-confirm px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors">
+                        <i class="bi bi-trash2 mr-1"></i>Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const modal = document.getElementById("modal-delete-notif");
+    const backdrop = modal && modal.querySelector("[data-modal-backdrop]");
+    let formToSubmit = null;
+
+    function openModal(form) {
+        formToSubmit = form;
+        if (modal) {
+            modal.classList.remove("hidden");
+            document.body.style.overflow = "hidden";
+        }
+    }
+
+    function closeModal() {
+        formToSubmit = null;
+        if (modal) {
+            modal.classList.add("hidden");
+            document.body.style.overflow = "";
+        }
+    }
+
+    function confirmDelete() {
+        if (formToSubmit) {
+            formToSubmit.submit();
+        }
+        closeModal();
+    }
+
+    document.addEventListener("click", function(e) {
+        const btn = e.target.closest(".btn-delete-notif");
+        if (btn) {
+            e.preventDefault();
+            const form = btn.closest(".delete-notif-form");
+            if (form) openModal(form);
+        }
+        if (e.target === backdrop || e.target.closest(".btn-modal-cancel")) {
+            closeModal();
+        }
+        if (e.target.closest(".btn-modal-confirm")) {
+            confirmDelete();
+        }
+    });
+
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) {
+            closeModal();
+        }
+    });
+})();
+</script>
+{% endblock %}

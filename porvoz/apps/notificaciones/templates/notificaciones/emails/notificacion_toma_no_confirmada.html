@@ -1,0 +1,34 @@
+{% extends "notificaciones/emails/base_email.html" %}
+
+{% block content %}
+<h2>⚠️ Medicamento No Confirmado</h2>
+
+<div class="alert urgente">
+    <strong style="color: #f59e0b;">❌ Dosis No Tomada</strong>
+    <p style="margin-top: 10px;">{{ mensaje|linebreaks }}</p>
+</div>
+
+{% if paciente %}
+<div class="info-block">
+    <strong>Paciente:</strong>
+    {{ paciente.nombre }}
+</div>
+{% endif %}
+
+{% if medicamento %}
+<div class="info-block">
+    <strong>Medicamento:</strong>
+    {{ medicamento.nombre }}
+    {% if medicamento.dosis %}<br><em>Dosis: {{ medicamento.dosis }}</em>{% endif %}
+    {% if medicamento.frecuencia %}<br><em>Frecuencia: {{ medicamento.frecuencia }}</em>{% endif %}
+</div>
+{% endif %}
+
+<p>No se registró confirmación de que este medicamento fue tomado. Considera comunicarte con el paciente para recordarle la importancia de tomar su medicación según lo prescrito.</p>
+
+{% if url_detalle %}
+<a href="{{ url_detalle }}" class="cta-button">Ver Historial de Medicamentos</a>
+{% else %}
+<a href="{{ url_app }}" class="cta-button">Ir a Porvoz</a>
+{% endif %}
+{% endblock %}

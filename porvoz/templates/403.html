@@ -1,0 +1,21 @@
+{% extends "errors/error_base.html" %}
+
+{% block error_icon %}bi-shield-lock{% endblock %}
+{% block error_icon_bg %}bg-amber-50{% endblock %}
+{% block error_icon_color %}text-amber-600{% endblock %}
+{% block error_code %}Error 403{% endblock %}
+{% block error_title %}No tienes permiso para entrar aquí{% endblock %}
+{% block error_message %}Esta sección está reservada. Si crees que deberías tener acceso, inicia sesión nuevamente o contacta a soporte.{% endblock %}
+
+{% block error_actions %}
+<a href="{% url 'login' %}"
+   class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium px-5 py-2.5 transition-colors">
+    <i class="bi bi-box-arrow-in-right"></i>
+    Iniciar sesión
+</a>
+<a href="{% url 'dashboard_router' %}"
+   class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-5 py-2.5 transition-colors">
+    <i class="bi bi-house"></i>
+    Volver al inicio
+</a>
+{% endblock %}

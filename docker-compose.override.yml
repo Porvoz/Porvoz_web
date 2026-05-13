@@ -1,0 +1,31 @@
+# =============================================================================
+# docker-compose.override.yml — Local Development Override
+#
+# This file is ONLY used locally during development.
+# It allows docker-compose to read environment variables from .env
+# without exposing them in version control.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
+#
+# Or simply:
+#   docker compose up -d
+#   (docker-compose automatically loads any *.override.yml files)
+# =============================================================================
+
+services:
+  web:
+    # Read all environment variables from .env (not in Git, only on your machine)
+    env_file: .env
+    # Ensure production settings are still used but with vars from .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+
+  celery-worker:
+    env_file: .env
+
+  celery-beat:
+    env_file: .env
+
+  flower:
+    env_file: .env

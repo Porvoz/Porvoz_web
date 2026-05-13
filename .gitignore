@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+porvoz/staticfiles/
+
+# Media files (uploaded by users - fotos de perfil y pacientes)
+porvoz/media/
+!porvoz/media/.gitkeep
+
+# Environment variables
+.env
+.env.local
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific leftovers
+runserver*
+fotos wiki/
+"fotos wiki"/
+backend/
+frontend/
+/LogoPorvoz.jpeg
+
+# Local configuration (no versionear)
+.claude/
+porvoz/.claude/
+
+# Local-only ngrok binary (~32 MB, OS-specific)
+ngrok.exe
+ngrok
+
+# Generated documentation (local work)
+ESTADO_IMPLEMENTACIONES.md
+RESUMEN_IMPLEMENTACIONES_FINALES.md
+CLAUDE.md

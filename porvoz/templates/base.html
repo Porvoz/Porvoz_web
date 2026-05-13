@@ -1,0 +1,425 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porvoz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="preload" href="{% static 'images/LogoPorvoz_sidebar.png' %}" as="image">
+    <style>
+        /* ===== VARIABLES CSS GLOBALES ===== */
+        :root {
+            --breakpoint-lg: 1024px;
+            --color-primary: #0d9488; /* emerald-600 */
+            --color-danger: #dc2626;   /* red-600 */
+            --color-warning: #f59e0b;  /* amber-500 */
+            --color-info: #0ea5e9;     /* sky-500 */
+        }
+
+        /* Evitar scroll horizontal en móvil y desktop */
+        html, body { overflow-x: hidden; max-width: 100vw; }
+        body { min-height: 100vh; }
+
+        /* Desktop sidebar styles */
+        .sidebar {
+            transition: width .2s ease, transform .3s ease;
+        }
+        .sidebar.collapsed {
+            width: 88px !important;
+        }
+        .sidebar.collapsed .label-text {
+            display: none;
+        }
+        .sidebar.collapsed .brand-text {
+            display: none;
+        }
+        .sidebar.collapsed .sidebar-logo {
+            display: none !important;
+        }
+        .sidebar.collapsed .sidebar-logo-expanded,
+        .sidebar.collapsed .sidebar-logo-collapsed {
+            display: none !important;
+        }
+        .sidebar.collapsed .sidebar-header {
+            justify-content: center;
+        }
+        .sidebar.collapsed .user-meta {
+            display: none;
+        }
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+        }
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0 !important;
+        }
+        .sidebar.collapsed .logout-btn {
+            justify-content: center;
+        }
+        .sidebar.collapsed .logout-btn span {
+            display: none;
+        }
+        .sidebar.collapsed .sidebar-toggle i::before {
+            content: "\f284";
+        }
+        .sidebar-toggle i {
+            transition: transform 0.3s ease;
+        }
+
+        .btn-dashboard-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-dashboard-primary:hover {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #94a3b8;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+
+        /* Badge notificaciones: colapsado = bolita esquina (como antes) */
+        .sidebar.collapsed .nav-notif-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 18px;
+            height: 18px;
+            font-size: 10px;
+            padding: 0 4px;
+        }
+        /* Expandido = más a la derecha, bola y número bien dimensionados */
+        .sidebar:not(.collapsed) .nav-notif-badge {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            min-width: 22px;
+            height: 22px;
+            font-size: 11px;
+            padding: 0 6px;
+        }
+        .sidebar.collapsed .sidebar-toggle i {
+            transform: rotate(180deg);
+        }
+
+        /* Contenido principal: redimensiona con el sidebar en desktop (lg: 1024px) */
+        @media (min-width: 1024px) {
+            .main-content-responsive {
+                margin-left: 16rem;
+                transition: margin-left .2s ease;
+            }
+            body.sidebar-is-collapsed .main-content-responsive {
+                margin-left: 5.5rem; /* 88px, mismo ancho que sidebar colapsado */
+            }
+            /* Contenedores de contenido: se expanden cuando el sidebar está colapsado */
+            .main-content-responsive .content-max {
+                max-width: 56rem;
+                transition: max-width .2s ease;
+            }
+            body.sidebar-is-collapsed .main-content-responsive .content-max {
+                max-width: 72rem;
+            }
+            /* Variante más ancha (ej: editar paciente) */
+            .main-content-responsive .content-max-wide {
+                max-width: 72rem;
+                transition: max-width .2s ease;
+            }
+            body.sidebar-is-collapsed .main-content-responsive .content-max-wide {
+                max-width: 88rem;
+            }
+        }
+
+        /* En mobile, el header del sidebar ya tiene el botón hamburguesa.
+           Ocultar los botones duplicados que están dentro del contenido de páginas. */
+        @media (max-width: 1023px) {
+            .btn-mobile-menu { display: none !important; }
+            main [data-mobile-menu-toggle] { display: none !important; }
+        }
+
+        /* Sidebar overlay en móvil y tablet (< 1024px) - mismo breakpoint que lg */
+        @media (max-width: 1023px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px !important;
+                transition: transform 0.25s ease;
+            }
+            .sidebar.collapsed {
+                width: 280px !important;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+                box-shadow: 0.5rem 0 2rem rgba(0,0,0,0.15);
+            }
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(15, 23, 42, 0.5);
+                z-index: 18;
+                opacity: 0;
+                transition: opacity 0.25s ease;
+            }
+            .sidebar-overlay.active {
+                display: block;
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    {% block body %}{% endblock %}
+
+    {% block messages %}
+        {% include "partials/messages.html" %}
+    {% endblock %}
+
+    {% if user.is_authenticated and not user.is_staff %}
+    <!-- Banner de vencimiento de plan (solo usuarios normales) -->
+    {% if dias_plan_restantes is not None and dias_plan_restantes <= 7 %}
+    <div class="fixed top-0 lg:left-64 left-0 right-0 z-30 {% if dias_plan_restantes <= 1 %}bg-red-600{% elif dias_plan_restantes <= 3 %}bg-amber-500{% else %}bg-blue-600{% endif %} text-white text-sm font-semibold px-4 py-2 flex items-center justify-between gap-4 shadow-lg">
+        <span class="flex items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            {% if dias_plan_restantes <= 0 %}Tu plan venció — renueva ahora para seguir usando Porvoz
+            {% elif dias_plan_restantes == 1 %}Tu plan vence mañana — contáctanos para renovar
+            {% else %}Tu plan vence en {{ dias_plan_restantes }} días — contáctanos para renovar{% endif %}
+        </span>
+        <a href="{% url 'crear_pago_manual' %}" class="flex-shrink-0 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors">
+            Renovar ahora →
+        </a>
+    </div>
+    <div class="h-10"></div>
+    {% endif %}
+    {% endif %}
+
+    {% if not user.is_authenticated %}
+    <!-- Botones flotantes — Solo en login/registro (no autenticado) -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-end">
+        <!-- WhatsApp -->
+        <a href="https://wa.me/573104504990?text=Hola+Porvoz,+necesito+ayuda" target="_blank"
+            title="Contáctanos por WhatsApp"
+            class="flex items-center justify-center w-14 h-14 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-full shadow-xl transition-colors duration-200">
+            <i class="bi bi-whatsapp text-2xl"></i>
+        </a>
+    </div>
+    {% endif %}
+
+    <script>
+        (function () {
+            const STORAGE_KEY = "porvoz-sidebar-collapsed";
+            const MOBILE_BREAKPOINT = 1024; /* mismo que lg en Tailwind */
+
+            function isMobile() {
+                return window.innerWidth <= MOBILE_BREAKPOINT;
+            }
+
+            function applyInitialState() {
+                if (isMobile()) {
+                    return;
+                }
+                const shouldCollapse = window.localStorage.getItem(STORAGE_KEY) === "1";
+                document.querySelectorAll(".sidebar").forEach(function (sidebar) {
+                    if (shouldCollapse) sidebar.classList.add("collapsed");
+                });
+                if (shouldCollapse) document.body.classList.add("sidebar-is-collapsed");
+            }
+
+            function syncBodySidebarState() {
+                if (isMobile()) return;
+                const sidebar = document.querySelector(".sidebar");
+                if (!sidebar) return;
+                if (sidebar.classList.contains("collapsed")) {
+                    document.body.classList.add("sidebar-is-collapsed");
+                } else {
+                    document.body.classList.remove("sidebar-is-collapsed");
+                }
+            }
+
+            function setupDesktopToggle() {
+                document.addEventListener("click", function (event) {
+                    const button = event.target.closest("[data-sidebar-toggle]");
+                    if (!button) return;
+                    event.preventDefault();
+                    const sidebar = button.closest(".sidebar");
+                    if (!sidebar) return;
+                    if (isMobile()) return;
+                    
+                    const collapsed = sidebar.classList.toggle("collapsed");
+                    if (collapsed) document.body.classList.add("sidebar-is-collapsed");
+                    else document.body.classList.remove("sidebar-is-collapsed");
+                    try {
+                        window.localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
+                    } catch (e) {}
+                });
+            }
+
+            function setupMobileToggle() {
+                // Toggle del botón hamburguesa
+                document.addEventListener("click", function (event) {
+                    const button = event.target.closest("[data-mobile-menu-toggle]");
+                    if (!button) return;
+                    event.preventDefault();
+                    toggleMobileSidebar();
+                });
+
+                // Cerrar al hacer click en overlay
+                document.addEventListener("click", function (event) {
+                    if (event.target.classList.contains("sidebar-overlay")) {
+                        closeMobileSidebar();
+                    }
+                });
+
+                // Cerrar al hacer click en un link del sidebar en móvil
+                document.addEventListener("click", function (event) {
+                    if (!isMobile()) return;
+                    const navLink = event.target.closest(".sidebar .nav-link");
+                    if (navLink) {
+                        // Pequeño delay para que se vea la transición
+                        setTimeout(function() {
+                            closeMobileSidebar();
+                        }, 150);
+                    }
+                });
+            }
+
+            function toggleMobileSidebar() {
+                const sidebar = document.querySelector(".sidebar");
+                const overlay = document.querySelector(".sidebar-overlay");
+                if (!sidebar) return;
+
+                const isOpen = sidebar.classList.contains("mobile-open");
+                if (isOpen) {
+                    closeMobileSidebar();
+                } else {
+                    openMobileSidebar();
+                }
+            }
+
+            function openMobileSidebar() {
+                const sidebar = document.querySelector(".sidebar");
+                const overlay = document.querySelector(".sidebar-overlay");
+                if (sidebar) {
+                    sidebar.classList.add("mobile-open");
+                }
+                if (overlay) {
+                    overlay.classList.add("active");
+                    document.body.style.overflow = "hidden";
+                }
+            }
+
+            function closeMobileSidebar() {
+                const sidebar = document.querySelector(".sidebar");
+                const overlay = document.querySelector(".sidebar-overlay");
+                if (sidebar) {
+                    sidebar.classList.remove("mobile-open");
+                }
+                if (overlay) {
+                    overlay.classList.remove("active");
+                    document.body.style.overflow = "";
+                }
+            }
+
+            function handleResize() {
+                if (isMobile()) {
+                    closeMobileSidebar();
+                    document.querySelectorAll(".sidebar").forEach(function(s) {
+                        s.classList.remove("collapsed");
+                    });
+                    document.body.classList.remove("sidebar-is-collapsed");
+                } else {
+                    closeMobileSidebar();
+                    applyInitialState();
+                }
+            }
+
+            window.addEventListener("resize", function() {
+                handleResize();
+            });
+
+            document.addEventListener("DOMContentLoaded", function () {
+                applyInitialState();
+                syncBodySidebarState();
+                setupDesktopToggle();
+                setupMobileToggle();
+            });
+
+            // Logo fallback: if static/images path fails, try static root path.
+            document.addEventListener(
+                "error",
+                function (event) {
+                    const img = event.target;
+                    if (!(img instanceof HTMLImageElement)) return;
+                    if (!img.hasAttribute("data-logo")) return;
+                    if (img.dataset.fallbackTried === "1") {
+                        const fallbackBlock = img.nextElementSibling;
+                        if (fallbackBlock) fallbackBlock.style.display = "flex";
+                        return;
+                    }
+                    const fallbackSrc = img.getAttribute("data-fallback-src");
+                    if (!fallbackSrc) return;
+                    img.dataset.fallbackTried = "1";
+                    img.src = fallbackSrc;
+                },
+                true
+            );
+        })();
+    </script>
+    <script src="{% static 'js/utils.js' %}"></script>
+    <script src="{% static 'js/autocomplete.js' %}"></script>
+    <script src="{% static 'js/charts.js' %}"></script>
+
+    {% if user.is_authenticated %}
+    {% url 'dashboard' as url_dashboard %}
+    {% url 'listar_pacientes' as url_pacientes %}
+    {% url 'notifications' as url_notif %}
+    {% url 'edit_profile' as url_perfil %}
+    <!-- Navegación inferior móvil -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-lg">
+        <div class="grid grid-cols-4 h-16">
+            <a href="{{ url_dashboard }}" class="relative flex flex-col items-center justify-center gap-1 transition-colors {% if request.path == url_dashboard %}text-slate-900{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                {% if request.path == url_dashboard %}<span class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-slate-900 rounded-full"></span>{% endif %}
+                <i class="bi {% if request.path == url_dashboard %}bi-house-fill{% else %}bi-house{% endif %} text-xl leading-none"></i>
+                <span class="text-xs font-medium">Inicio</span>
+            </a>
+            <a href="{{ url_pacientes }}" class="relative flex flex-col items-center justify-center gap-1 transition-colors {% if url_pacientes in request.path %}text-slate-900{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                {% if url_pacientes in request.path %}<span class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-slate-900 rounded-full"></span>{% endif %}
+                <i class="bi {% if url_pacientes in request.path %}bi-people-fill{% else %}bi-people{% endif %} text-xl leading-none"></i>
+                <span class="text-xs font-medium">Pacientes</span>
+            </a>
+            <a href="{{ url_notif }}" class="relative flex flex-col items-center justify-center gap-1 transition-colors {% if url_notif in request.path %}text-slate-900{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                {% if url_notif in request.path %}<span class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-slate-900 rounded-full"></span>{% endif %}
+                <i class="bi {% if url_notif in request.path %}bi-bell-fill{% else %}bi-bell{% endif %} text-xl leading-none"></i>
+                {% if no_leidas > 0 %}
+                <span class="absolute top-1.5 right-5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-red-600 text-white text-[10px] font-bold px-1">{{ no_leidas }}</span>
+                {% endif %}
+                <span class="text-xs font-medium">Alertas</span>
+            </a>
+            <a href="{{ url_perfil }}" class="relative flex flex-col items-center justify-center gap-1 transition-colors {% if url_perfil in request.path %}text-slate-900{% else %}text-slate-500 hover:text-slate-900{% endif %}">
+                {% if url_perfil in request.path %}<span class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-slate-900 rounded-full"></span>{% endif %}
+                <i class="bi {% if url_perfil in request.path %}bi-person-fill{% else %}bi-person{% endif %} text-xl leading-none"></i>
+                <span class="text-xs font-medium">Mi cuenta</span>
+            </a>
+        </div>
+    </nav>
+    <!-- Espaciador para que el contenido no quede detrás del nav inferior en móvil -->
+    <div class="lg:hidden h-16"></div>
+    {% endif %}
+</body>
+</html>
+
+

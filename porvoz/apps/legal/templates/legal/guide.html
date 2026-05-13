@@ -1,0 +1,530 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-100 flex-col w-full max-w-full overflow-x-hidden">
+    {% if user.is_authenticated %}
+        {% include "sidebar.html" %}
+    {% endif %}
+
+    <main class="{% if user.is_authenticated %}main-content-responsive lg:ml-64 {% endif %}flex-1 min-w-0 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 bg-slate-100 flex flex-col">
+        {% if user.is_authenticated %}
+        <button type="button" class="btn-mobile-menu" data-mobile-menu-toggle>
+            <i class="bi bi-list"></i>
+        </button>
+        {% endif %}
+
+        <div class="w-full min-w-0 flex-1">
+            <!-- Header -->
+            <header class="mb-8 {% if user.is_authenticated %}mt-12 lg:mt-0{% endif %}">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-700 text-white shadow-lg">
+                            <i class="bi bi-question-circle text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Centro de Ayuda</h1>
+                            <p class="text-sm text-slate-500 mt-0.5">Todo lo que necesitas saber para usar Porvoz</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 flex-wrap self-start sm:self-center">
+                        <a href="{% url 'contactar_soporte' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-sm">
+                            <i class="bi bi-exclamation-circle"></i>
+                            Reportar problema
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="btn-dashboard-primary">
+                            <i class="bi bi-house"></i>
+                            Panel principal
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </header>
+
+            <!-- Navegación horizontal (anclas) -->
+            <nav class="sticky top-0 z-10 -mx-4 px-4 py-3 mb-8 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+                <div class="flex flex-wrap gap-2">
+                    <a href="#inicio" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-rocket-takeoff"></i>Inicio rápido
+                    </a>
+                    <a href="#pacientes" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-people"></i>Pacientes
+                    </a>
+                    <a href="#medicamentos" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-capsule"></i>Medicamentos
+                    </a>
+                    <a href="#llamadas" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-telephone"></i>Llamadas
+                    </a>
+                    <a href="#notificaciones" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-bell"></i>Notificaciones
+                    </a>
+                    <a href="#planes" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-gem"></i>Planes
+                    </a>
+                    <a href="#preguntas" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <i class="bi bi-chat-square-dots"></i>FAQ
+                    </a>
+                </div>
+            </nav>
+
+            <div class="space-y-8">
+
+                <!-- Inicio Rápido -->
+                <section id="inicio" class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:p-8">
+                        <h2 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-3">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                <i class="bi bi-rocket-takeoff"></i>
+                            </div>
+                            Empieza en 4 pasos
+                        </h2>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-5">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-9 h-9 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">1</div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-900 mb-1">Crea tu cuenta</h3>
+                                        <p class="text-sm text-slate-600">Regístrate con correo y contraseña. Completa tu perfil: nombre y teléfono son necesarios para que el sistema pueda llamarte si eres también paciente.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-5">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-9 h-9 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">2</div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-900 mb-1">Agrega pacientes</h3>
+                                        <p class="text-sm text-slate-600">Ve a <strong>Pacientes → Nuevo paciente</strong>. Si el recordatorio es para ti, usa <strong>"Agregarme a mí"</strong>. El teléfono es obligatorio: es el número al que llamará el sistema.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-5">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-9 h-9 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">3</div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-900 mb-1">Configura medicamentos</h3>
+                                        <p class="text-sm text-slate-600">Desde la ficha del paciente, agrega cada medicamento con nombre, dosis y horario. Puedes agregar instrucciones para la llamada (máx. 200 caracteres).</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-5">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-9 h-9 rounded-full bg-slate-700 text-white text-sm font-bold flex items-center justify-center">4</div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-900 mb-1">Monitorea desde el panel</h3>
+                                        <p class="text-sm text-slate-600">Las llamadas se realizan automáticamente. Desde el <strong>Panel principal</strong> y <strong>Notificaciones</strong> puedes ver el estado de cada recordatorio y la adherencia.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Pacientes -->
+                <section id="pacientes" class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-6 py-5 lg:px-8 border-b border-slate-200 bg-slate-50">
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-3">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+                                Gestión de Pacientes
+                            </h2>
+                        </div>
+                        <div class="px-6 py-6 lg:px-8 space-y-4">
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-1.5">
+                                    <i class="bi bi-plus-circle text-slate-700"></i>Agregar paciente
+                                </h3>
+                                <p class="text-sm text-slate-600"><strong>Pacientes → Nuevo paciente</strong>. El teléfono debe estar en formato colombiano (+57) o internacional. Es el número al que Porvoz llamará para el recordatorio.</p>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-1.5">
+                                    <i class="bi bi-person-fill-check text-slate-700"></i>Agregarme a mí mismo
+                                </h3>
+                                <p class="text-sm text-slate-600">El botón <strong>"Agregarme a mí"</strong> pre-llena el formulario con tu nombre y teléfono de perfil. Útil cuando el cuidador y el paciente son la misma persona.</p>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-1.5">
+                                    <i class="bi bi-heart-pulse text-slate-700"></i>Condiciones médicas
+                                </h3>
+                                <p class="text-sm text-slate-600">Desde la ficha del paciente usa <strong>"Agregar condición"</strong> para registrar enfermedades (hipertensión, diabetes, asma, etc.). Esto no afecta las llamadas pero es útil como referencia.</p>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-1.5">
+                                    <i class="bi bi-toggle-off text-slate-700"></i>Desactivar vs. eliminar
+                                </h3>
+                                <p class="text-sm text-slate-600">Puedes desactivar un paciente para pausar todos sus recordatorios sin perder el historial. Para eliminarlo de forma permanente, usa el botón rojo en su ficha.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Medicamentos -->
+                <section id="medicamentos" class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-6 py-5 lg:px-8 border-b border-slate-200 bg-slate-50">
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-3">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                    <i class="bi bi-capsule-pill"></i>
+                                </div>
+                                Configurar Medicamentos
+                            </h2>
+                        </div>
+                        <div class="px-6 py-6 lg:px-8 space-y-5">
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div class="p-5 rounded-xl bg-slate-50 border border-slate-200">
+                                    <h4 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                        <i class="bi bi-clock-fill text-slate-700"></i>Horario fijo
+                                    </h4>
+                                    <p class="text-sm text-slate-600 mb-2">Misma hora cada día. Puedes agregar múltiples horarios: 8:00, 14:00, 20:00.</p>
+                                    <p class="text-xs text-slate-500 bg-slate-100 rounded px-2 py-1 inline-block">Ej: Toma cada día a las 8:00 y a las 20:00</p>
+                                </div>
+                                <div class="p-5 rounded-xl bg-slate-50 border border-slate-200">
+                                    <h4 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                        <i class="bi bi-arrow-repeat text-slate-700"></i>Cada X horas
+                                    </h4>
+                                    <p class="text-sm text-slate-600 mb-2">Intervalos regulares desde una hora de inicio. Define cada cuántas horas y a qué hora empezar.</p>
+                                    <p class="text-xs text-slate-500 bg-slate-100 rounded px-2 py-1 inline-block">Ej: Cada 8 horas desde las 7:00 → 7:00, 15:00, 23:00</p>
+                                </div>
+                            </div>
+
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                    <i class="bi bi-chat-left-text text-slate-700"></i>Instrucciones para la llamada
+                                </h3>
+                                <p class="text-sm text-slate-600">Texto libre (máx. 200 caracteres) que la IA usará durante la conversación. Úsalo para dar contexto: <em>"Tómalo con un vaso de agua lleno"</em>, <em>"Es el pastillero azul"</em>, <em>"Antes del desayuno"</em>.</p>
+                                <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-2 flex items-start gap-1.5">
+                                    <i class="bi bi-exclamation-triangle-fill mt-0.5 flex-shrink-0"></i>
+                                    No incluyas datos médicos sensibles ni instrucciones de dosificación complejas en este campo.
+                                </p>
+                            </div>
+
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                    <i class="bi bi-calendar-range text-slate-700"></i>Duración del tratamiento
+                                </h3>
+                                <p class="text-sm text-slate-600"><strong>Indefinido:</strong> Las llamadas continúan hasta que desactives el medicamento manualmente.<br>
+                                <strong>Días específicos:</strong> El sistema programa llamadas solo durante ese número de días desde la fecha de inicio.</p>
+                            </div>
+
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                    <i class="bi bi-telephone-outbound text-slate-700"></i>Reintentos automáticos
+                                </h3>
+                                <p class="text-sm text-slate-600">Si la llamada no es atendida, el sistema puede intentarlo de nuevo. Configura cuántos reintentos (máx. 3) y el tiempo entre ellos.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Llamadas -->
+                <section id="llamadas" class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-6 py-5 lg:px-8 border-b border-slate-200 bg-slate-50">
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-3">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                    <i class="bi bi-telephone-fill"></i>
+                                </div>
+                                Llamadas Automáticas
+                            </h2>
+                        </div>
+                        <div class="px-6 py-6 lg:px-8 space-y-5">
+
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 mb-2">¿Cómo funciona la llamada?</h3>
+                                <ol class="text-sm text-slate-600 space-y-2 list-none">
+                                    <li class="flex items-start gap-2"><span class="flex-shrink-0 w-5 h-5 rounded-full bg-slate-700 text-white text-xs font-bold flex items-center justify-center mt-0.5">1</span>El sistema llama al teléfono del paciente en el horario programado.</li>
+                                    <li class="flex items-start gap-2"><span class="flex-shrink-0 w-5 h-5 rounded-full bg-slate-700 text-white text-xs font-bold flex items-center justify-center mt-0.5">2</span>Una voz lee el nombre del medicamento, la dosis y las instrucciones.</li>
+                                    <li class="flex items-start gap-2"><span class="flex-shrink-0 w-5 h-5 rounded-full bg-slate-700 text-white text-xs font-bold flex items-center justify-center mt-0.5">3</span>La IA escucha la respuesta: el paciente puede confirmar, pedir más tiempo o hacer preguntas.</li>
+                                    <li class="flex items-start gap-2"><span class="flex-shrink-0 w-5 h-5 rounded-full bg-slate-700 text-white text-xs font-bold flex items-center justify-center mt-0.5">4</span>El resultado se registra y se genera una notificación automática.</li>
+                                </ol>
+                            </div>
+
+                            <div class="grid sm:grid-cols-3 gap-3">
+                                <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="bi bi-check-circle-fill text-emerald-600 text-lg"></i>
+                                        <p class="font-semibold text-sm text-slate-900">Toma confirmada</p>
+                                    </div>
+                                    <p class="text-xs text-slate-600">El paciente confirmó que tomó el medicamento durante la llamada.</p>
+                                </div>
+                                <div class="rounded-xl bg-amber-50 border border-amber-200 p-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="bi bi-clock-fill text-amber-600 text-lg"></i>
+                                        <p class="font-semibold text-sm text-slate-900">Toma aplazada</p>
+                                    </div>
+                                    <p class="text-xs text-slate-600">El paciente indicó que lo tomará más tarde. Se registra como pendiente.</p>
+                                </div>
+                                <div class="rounded-xl bg-red-50 border border-red-200 p-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="bi bi-telephone-x-fill text-red-600 text-lg"></i>
+                                        <p class="font-semibold text-sm text-slate-900">No atendida</p>
+                                    </div>
+                                    <p class="text-xs text-slate-600">Nadie contestó o fue al buzón. Se genera una alerta urgente.</p>
+                                </div>
+                            </div>
+
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                    <i class="bi bi-graph-up text-slate-700"></i>Historial de llamadas
+                                </h3>
+                                <p class="text-sm text-slate-600">En el menú lateral <strong>Historial de llamadas</strong> puedes ver todas las llamadas realizadas, filtrar por paciente, medicamento, estado y fecha. También puedes descargar reportes en PDF desde la ficha del paciente.</p>
+                            </div>
+
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                    <i class="bi bi-x-circle text-slate-700"></i>Cancelar una llamada programada
+                                </h3>
+                                <p class="text-sm text-slate-600">En el historial, las llamadas con estado <strong>Programada</strong> muestran un botón de cancelar. Solo puedes cancelar antes de que el sistema ejecute la llamada.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Notificaciones -->
+                <section id="notificaciones" class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-6 py-5 lg:px-8 border-b border-slate-200 bg-slate-50">
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-3">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                    <i class="bi bi-bell-fill"></i>
+                                </div>
+                                Centro de Notificaciones
+                            </h2>
+                        </div>
+                        <div class="px-6 py-6 lg:px-8 space-y-4">
+
+                            <p class="text-sm text-slate-600 bg-slate-50 rounded-lg border border-slate-200 p-4">
+                                Todas las actividades del sistema (llamadas, cambios de medicamentos, alertas) generan una notificación. Puedes filtrarlas por tipo, paciente, medicamento, fecha o solo ver las no leídas.
+                            </p>
+
+                            <div class="grid sm:grid-cols-2 gap-3">
+                                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                    <h4 class="font-semibold text-slate-900 text-sm mb-2 flex items-center gap-1.5">
+                                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-slate-400"></span>Normal
+                                    </h4>
+                                    <p class="text-xs text-slate-600">Eventos de sistema: medicamento agregado, paciente actualizado.</p>
+                                </div>
+                                <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
+                                    <h4 class="font-semibold text-slate-900 text-sm mb-2 flex items-center gap-1.5">
+                                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Baja (verde)
+                                    </h4>
+                                    <p class="text-xs text-slate-600">Confirmaciones de toma. Todo en orden.</p>
+                                </div>
+                                <div class="rounded-xl bg-amber-50 border border-amber-200 p-4">
+                                    <h4 class="font-semibold text-slate-900 text-sm mb-2 flex items-center gap-1.5">
+                                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500"></span>Urgente (naranja)
+                                    </h4>
+                                    <p class="text-xs text-slate-600">Llamada no atendida, toma no confirmada. Requiere seguimiento.</p>
+                                </div>
+                                <div class="rounded-xl bg-red-50 border border-red-200 p-4">
+                                    <h4 class="font-semibold text-slate-900 text-sm mb-2 flex items-center gap-1.5">
+                                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500"></span>Crítica (roja)
+                                    </h4>
+                                    <p class="text-xs text-slate-600">Límite de plan alcanzado, error del sistema. Acción requerida.</p>
+                                </div>
+                            </div>
+
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                    <i class="bi bi-envelope-at text-slate-700"></i>Notificaciones por correo
+                                </h3>
+                                <p class="text-sm text-slate-600">En <strong>Mi cuenta → Perfil → Editar perfil</strong> puedes activar o desactivar los correos para cada tipo de evento. Por defecto solo se envían correos por alertas críticas y urgentes.</p>
+                            </div>
+
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-2">
+                                    <i class="bi bi-download text-slate-700"></i>Exportar notificaciones
+                                </h3>
+                                <p class="text-sm text-slate-600">Desde el centro de notificaciones puedes descargar un CSV con los filtros activos. Útil para llevar un registro externo o compartir con un médico.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Planes -->
+                <section id="planes" class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-6 py-5 lg:px-8 border-b border-slate-200 bg-slate-50">
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-3">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                    <i class="bi bi-gem"></i>
+                                </div>
+                                Planes y Cuotas
+                            </h2>
+                        </div>
+                        <div class="px-6 py-6 lg:px-8 space-y-4">
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm border border-slate-200 rounded-xl overflow-hidden">
+                                    <thead>
+                                        <tr class="bg-slate-50 border-b border-slate-200">
+                                            <th class="px-4 py-3 text-left font-semibold text-slate-700">Plan</th>
+                                            <th class="px-4 py-3 text-left font-semibold text-slate-700">Pacientes</th>
+                                            <th class="px-4 py-3 text-left font-semibold text-slate-700">Medicamentos</th>
+                                            <th class="px-4 py-3 text-left font-semibold text-slate-700">Llamadas/mes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="px-4 py-3 font-semibold text-slate-900">Básico <span class="text-xs font-normal text-slate-500">(gratis)</span></td>
+                                            <td class="px-4 py-3 text-slate-600">1</td>
+                                            <td class="px-4 py-3 text-slate-600">5 por paciente</td>
+                                            <td class="px-4 py-3 text-slate-600">150</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="px-4 py-3 font-semibold text-slate-900">Familiar <span class="text-xs font-normal text-slate-500">($59.900/mes)</span></td>
+                                            <td class="px-4 py-3 text-slate-600">3</td>
+                                            <td class="px-4 py-3 text-slate-600">Sin límite</td>
+                                            <td class="px-4 py-3 text-slate-600">500</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="px-4 py-3 font-semibold text-slate-900">Profesional <span class="text-xs font-normal text-slate-500">($299.900/mes)</span></td>
+                                            <td class="px-4 py-3 text-slate-600">20</td>
+                                            <td class="px-4 py-3 text-slate-600">Sin límite</td>
+                                            <td class="px-4 py-3 text-slate-600">3.000</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="rounded-xl bg-amber-50 border border-amber-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-1.5">
+                                    <i class="bi bi-exclamation-triangle-fill text-amber-600"></i>Cuota de llamadas
+                                </h3>
+                                <p class="text-sm text-slate-600">El contador de llamadas se reinicia el 1 de cada mes. Si alcanzas el límite, el sistema dejará de hacer llamadas hasta el siguiente período. Verás una alerta crítica en notificaciones y una barra de uso en el panel.</p>
+                            </div>
+
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <h3 class="font-semibold text-slate-900 flex items-center gap-2 mb-1.5">
+                                    <i class="bi bi-calendar-x text-slate-700"></i>Vencimiento del plan
+                                </h3>
+                                <p class="text-sm text-slate-600">Los planes de pago tienen fecha de vencimiento mensual. Si tu plan vence, el sistema se detiene automáticamente. Contacta a soporte para renovarlo.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FAQ -->
+                <section id="preguntas" class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-6 py-5 lg:px-8 border-b border-slate-200 bg-slate-50">
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-3">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                    <i class="bi bi-chat-square-dots-fill"></i>
+                                </div>
+                                Preguntas Frecuentes
+                            </h2>
+                        </div>
+                        <div class="px-6 py-6 lg:px-8 space-y-2">
+                            <details class="rounded-xl border border-slate-200 overflow-hidden group">
+                                <summary class="px-5 py-4 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 flex items-center justify-between group-open:bg-slate-50 transition-colors">
+                                    <span class="flex items-center gap-2 text-sm"><i class="bi bi-telephone-x text-slate-600"></i>¿Qué pasa si la llamada no es atendida?</span>
+                                    <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-400 flex-shrink-0"></i>
+                                </summary>
+                                <p class="px-5 py-4 text-sm text-slate-600 border-t border-slate-200 bg-white">Se genera una alerta urgente en Notificaciones. Si configuraste reintentos, el sistema intentará nuevamente después del tiempo que especificaste. Cada intento cuenta contra tu cuota mensual de llamadas.</p>
+                            </details>
+
+                            <details class="rounded-xl border border-slate-200 overflow-hidden group">
+                                <summary class="px-5 py-4 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 flex items-center justify-between group-open:bg-slate-50 transition-colors">
+                                    <span class="flex items-center gap-2 text-sm"><i class="bi bi-clock text-slate-600"></i>¿Puedo cambiar horarios de un medicamento activo?</span>
+                                    <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-400 flex-shrink-0"></i>
+                                </summary>
+                                <p class="px-5 py-4 text-sm text-slate-600 border-t border-slate-200 bg-white">Sí. Edita el medicamento desde la ficha del paciente. Al guardar, las llamadas pendientes anteriores se cancelan y se reprograman con el nuevo horario.</p>
+                            </details>
+
+                            <details class="rounded-xl border border-slate-200 overflow-hidden group">
+                                <summary class="px-5 py-4 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 flex items-center justify-between group-open:bg-slate-50 transition-colors">
+                                    <span class="flex items-center gap-2 text-sm"><i class="bi bi-toggle-off text-slate-600"></i>¿Cómo pauso temporalmente un medicamento?</span>
+                                    <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-400 flex-shrink-0"></i>
+                                </summary>
+                                <p class="px-5 py-4 text-sm text-slate-600 border-t border-slate-200 bg-white">Usa el botón de activar/desactivar (icono de toggle) en la tarjeta del medicamento dentro de la ficha del paciente. Las llamadas programadas pendientes se cancelan al desactivar.</p>
+                            </details>
+
+                            <details class="rounded-xl border border-slate-200 overflow-hidden group">
+                                <summary class="px-5 py-4 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 flex items-center justify-between group-open:bg-slate-50 transition-colors">
+                                    <span class="flex items-center gap-2 text-sm"><i class="bi bi-telephone-inbound text-slate-600"></i>¿De qué número llama el sistema?</span>
+                                    <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-400 flex-shrink-0"></i>
+                                </summary>
+                                <p class="px-5 py-4 text-sm text-slate-600 border-t border-slate-200 bg-white">Las llamadas provienen de un número de Twilio asignado a Porvoz. Recomendamos agregar este número a los contactos del paciente como "Porvoz Recordatorio" para que no rechacen la llamada.</p>
+                            </details>
+
+                            <details class="rounded-xl border border-slate-200 overflow-hidden group">
+                                <summary class="px-5 py-4 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 flex items-center justify-between group-open:bg-slate-50 transition-colors">
+                                    <span class="flex items-center gap-2 text-sm"><i class="bi bi-bar-chart text-slate-600"></i>¿Dónde veo la adherencia al tratamiento?</span>
+                                    <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-400 flex-shrink-0"></i>
+                                </summary>
+                                <p class="px-5 py-4 text-sm text-slate-600 border-t border-slate-200 bg-white">En el <strong>Panel principal</strong> ves estadísticas de los últimos 7 días. Para un análisis detallado, descarga el <strong>Reporte de Adherencia</strong> desde la ficha del paciente (botón "Descargar reporte").</p>
+                            </details>
+
+                            <details class="rounded-xl border border-slate-200 overflow-hidden group">
+                                <summary class="px-5 py-4 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 flex items-center justify-between group-open:bg-slate-50 transition-colors">
+                                    <span class="flex items-center gap-2 text-sm"><i class="bi bi-person-gear text-slate-600"></i>¿Cómo cambio mi contraseña o datos de perfil?</span>
+                                    <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-400 flex-shrink-0"></i>
+                                </summary>
+                                <p class="px-5 py-4 text-sm text-slate-600 border-t border-slate-200 bg-white">Menú lateral → <strong>Mi cuenta</strong>. Desde allí puedes editar nombre, teléfono, foto, cambiar contraseña y ajustar preferencias de correo electrónico.</p>
+                            </details>
+
+                            <details class="rounded-xl border border-slate-200 overflow-hidden group">
+                                <summary class="px-5 py-4 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 flex items-center justify-between group-open:bg-slate-50 transition-colors">
+                                    <span class="flex items-center gap-2 text-sm"><i class="bi bi-shield-check text-slate-600"></i>¿Es seguro ingresar datos de salud en Porvoz?</span>
+                                    <i class="bi bi-chevron-down group-open:rotate-180 transition-transform text-slate-400 flex-shrink-0"></i>
+                                </summary>
+                                <p class="px-5 py-4 text-sm text-slate-600 border-t border-slate-200 bg-white">Porvoz almacena solo los datos necesarios: nombre, teléfono, nombre de medicamento y dosis. No almacena grabaciones de llamadas. La conversación con la IA es efímera y no se conserva después de la llamada.</p>
+                            </details>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Contacto -->
+                <section class="scroll-mt-24 pb-8">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:p-8">
+                        <h2 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-3">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-700 text-white">
+                                <i class="bi bi-telephone"></i>
+                            </div>
+                            Contáctanos
+                        </h2>
+                        <p class="text-sm text-slate-600 mb-6">¿Tienes una pregunta que no encontraste aquí? Puedes comunicarte con nosotros de varias formas:</p>
+
+                        <div class="grid sm:grid-cols-3 gap-4">
+                            <a href="https://wa.me/573104504990?text=Hola+Porvoz,+necesito+ayuda" target="_blank" class="bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-xl p-6 text-center transition-colors shadow-sm flex flex-col items-center justify-center gap-3">
+                                <i class="bi bi-whatsapp text-3xl"></i>
+                                <div>
+                                    <p class="font-semibold text-sm">WhatsApp</p>
+                                    <p class="text-xs opacity-90">+57 310 450 4990</p>
+                                </div>
+                            </a>
+
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center flex flex-col items-center justify-center gap-3">
+                                <i class="bi bi-envelope text-blue-600 text-3xl"></i>
+                                <div>
+                                    <p class="font-semibold text-sm text-slate-900">Correo</p>
+                                    <p class="text-xs text-slate-600">soporte@porvoz.com</p>
+                                </div>
+                            </div>
+
+                            <a href="{% url 'contact' %}" class="bg-slate-700 hover:bg-slate-800 text-white rounded-xl p-6 text-center transition-colors shadow-sm flex flex-col items-center justify-center gap-3">
+                                <i class="bi bi-chat-dots text-3xl"></i>
+                                <div>
+                                    <p class="font-semibold text-sm">Formulario</p>
+                                    <p class="text-xs opacity-90">Envía tu consulta aquí</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+    <div class="mt-16 sm:mt-20 lg:mt-24">
+        {% include "footer.html" %}
+    </div>
+</div>
+{% endblock %}

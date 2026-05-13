@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+{% load static %}
+
+{# Suprime el toast global porque renderizamos los mensajes en panel inline #}
+{% block messages %}{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex bg-slate-100 flex-col">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 lg:ml-64 px-4 py-5 sm:px-5 sm:py-7 lg:px-10 flex flex-col">
+        <button type="button" class="lg:hidden fixed top-4 left-4 z-30 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-lg hover:bg-slate-50 text-slate-700" data-mobile-menu-toggle>
+            <i class="bi bi-list text-xl"></i>
+        </button>
+
+        <!-- Navegación -->
+        <div class="mt-12 lg:mt-0 mb-4">
+            <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                <i class="bi bi-arrow-left"></i>
+                Volver a pacientes
+            </a>
+        </div>
+
+        {% if messages %}
+        <div class="mb-5 space-y-2">
+            {% for message in messages %}
+            <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- HERO compacto: paciente + stats inline + acciones, todo en una sola tarjeta -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm mb-5 px-5 sm:px-6 py-5">
+            <div class="flex flex-col lg:flex-row lg:items-center gap-5">
+                <!-- Foto + identidad -->
+                <div class="flex items-center gap-4 min-w-0 flex-1">
+                    <div class="relative flex-shrink-0">
+                        {% if paciente.get_display_foto %}
+                        <img src="{{ paciente.get_display_foto.url }}" alt="" class="h-16 w-16 rounded-xl object-cover">
+                        {% else %}
+                        <div class="h-16 w-16 rounded-xl bg-slate-700 flex items-center justify-center text-2xl font-bold text-white">
+                            {{ paciente.get_display_nombre|slice:":1"|upper }}
+                        </div>
+                        {% endif %}
+                        {% if paciente.es_usuario_mismo %}
+                        <span class="absolute -bottom-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-slate-700 ring-2 ring-white text-[9px] font-bold text-white uppercase">Tú</span>
+                        {% endif %}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 leading-tight break-words">{{ paciente.get_display_nombre }}</h1>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            {% if paciente.get_sexo_display %}{{ paciente.get_sexo_display }}{% endif %}{% if paciente.get_edad_display %}{% if paciente.get_sexo_display %} · {% endif %}{{ paciente.get_edad_display }} años{% endif %}{% if paciente.parentesco %}{% if paciente.get_sexo_display or paciente.get_edad_display %} · {% endif %}{{ paciente.parentesco }}{% endif %}
+                        </p>
+                        <p class="text-sm text-slate-700 font-medium tabular-nums mt-1 inline-flex items-center gap-1.5">
+                            <i class="bi bi-telephone text-slate-400 text-xs"></i>{{ paciente.get_display_telefono }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Stats inline (3 números compactos) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 border border-slate-200 rounded-xl overflow-hidden flex-shrink-0 self-stretch lg:self-auto bg-slate-50/50">
+                    <div class="px-4 py-2.5 flex flex-col justify-center">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Adherencia</span>
+                        {% if stats_globales.adherencia is not None %}
+                        <span class="text-lg font-bold tabular-nums
+                            {% if stats_globales.adherencia >= 80 %}text-emerald-600
+                            {% elif stats_globales.adherencia >= 50 %}text-amber-600
+                            {% else %}text-rose-600{% endif %}">{{ stats_globales.adherencia }}%</span>
+                        {% else %}
+                        <span class="text-lg font-bold text-slate-300">—</span>
+                        {% endif %}
+                    </div>
+                    <div class="px-4 py-2.5 flex flex-col justify-center border-t sm:border-t-0 sm:border-l border-slate-200">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Recordatorios</span>
+                        <span class="text-lg font-bold text-slate-900 tabular-nums">{{ stats_globales.medicamentos_activos }}</span>
+                    </div>
+                    <div class="px-4 py-2.5 flex flex-col justify-center border-t sm:border-t-0 sm:border-l border-slate-200">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Confirmadas</span>
+                        <span class="text-lg font-bold text-slate-900 tabular-nums">{{ stats_globales.confirmadas_30d }}<span class="text-slate-400 font-medium text-base">/{{ stats_globales.llamadas_30d }}</span></span>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
+                    <a href="{% url 'editar_paciente' paciente.id %}" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 transition-colors" title="Editar paciente">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{% url 'historial_llamadas' %}?paciente={{ paciente.id }}" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 transition-colors" title="Historial de llamadas">
+                        <i class="bi bi-telephone-outbound"></i>
+                    </a>
+                    <button type="button" data-modal-toggle="modal-descargar-reporte" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 transition-colors" title="Descargar reporte">
+                        <i class="bi bi-download"></i>
+                    </button>
+                    <a href="{% url 'eliminar_paciente' paciente.id %}" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors" title="Eliminar paciente">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Condiciones (chips) — solo si hay, en línea sutil -->
+            {% with conds=paciente.get_condiciones_activas %}
+            {% if conds %}
+            <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 flex-wrap">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mr-1">Condiciones</span>
+                {% for c in conds %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-medium">{{ c }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+        </section>
+
+        <!-- Recordatorios / medicamentos -->
+        <section class="flex-1">
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-5">
+                <div>
+                    <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+                        <i class="bi bi-capsule text-slate-400"></i>
+                        Recordatorios <span class="text-slate-400 font-bold">· {{ paciente.medicamentos.count }}</span>
+                    </h2>
+                    <p class="text-sm text-slate-600 mt-0.5">Medicamentos asignados y configuración de llamadas para {{ paciente.get_display_nombre }}</p>
+                </div>
+                <a href="{% url 'agregar_medicamento' paciente.id %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 text-sm font-bold transition-colors shadow-sm shadow-emerald-200 self-start sm:self-auto ring-1 ring-emerald-500/30">
+                    <i class="bi bi-plus-circle-fill"></i>
+                    Nuevo recordatorio
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
+                {% for entry in meds_stats %}
+                {% with med=entry.med adh=entry.adherencia ultima=entry.ultima %}
+                <article class="rounded-2xl border shadow-sm overflow-hidden flex flex-col {% if med.activo %}bg-white border-slate-200{% else %}bg-slate-50/70 border-slate-200{% endif %}">
+                    <div class="p-4 flex-1 flex flex-col">
+                        <!-- Header con nombre + toggle -->
+                        <div class="flex items-start justify-between gap-2 mb-3">
+                            <div class="min-w-0 flex-1">
+                                <p class="text-[11px] font-bold uppercase tracking-wider {% if med.activo %}text-emerald-600{% else %}text-slate-400{% endif %} mb-0.5">
+                                    <span class="inline-flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full {% if med.activo %}bg-emerald-500{% else %}bg-slate-300{% endif %}"></span>
+                                        {% if med.activo %}Activo{% else %}Inactivo{% endif %}
+                                    </span>
+                                </p>
+                                <h3 class="font-bold text-slate-900 leading-tight">{{ med.nombre }}{% if med.dosis %} <span class="text-slate-500 font-medium">· {{ med.dosis }}</span>{% endif %}</h3>
+                            </div>
+                            <form method="post" action="{% url 'toggle_medicamento' paciente.id med.id %}" class="flex-shrink-0">
+                                {% csrf_token %}
+                                <button type="submit" class="relative inline-flex h-6 w-11 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 {% if med.activo %}bg-emerald-500{% else %}bg-slate-300{% endif %}" aria-label="{% if med.activo %}Desactivar{% else %}Activar{% endif %}">
+                                    <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition {% if med.activo %}translate-x-5{% else %}translate-x-1{% endif %}"></span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Frecuencia -->
+                        <p class="text-xs text-slate-500 mb-2 flex items-center gap-1.5">
+                            <i class="bi bi-arrow-repeat text-slate-400"></i>
+                            {% if med.frecuencia_tipo == 'cada_x_horas' %}Cada {{ med.cada_x_horas }} horas{% else %}Todos los días{% endif %}
+                            {% if med.duracion_dias %} · por {{ med.duracion_dias }} día{{ med.duracion_dias|pluralize }}{% endif %}
+                        </p>
+
+                        <!-- Horarios -->
+                        <div class="flex flex-wrap gap-1.5 mb-3">
+                            {% if med.frecuencia_tipo == 'horario' %}
+                                {% for h in med.get_horarios_ordenados %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold tabular-nums {% if med.activo %}bg-slate-900 text-white{% else %}bg-slate-200 text-slate-600{% endif %}">
+                                    <i class="bi bi-clock text-[9px] {% if med.activo %}text-slate-300{% else %}text-slate-500{% endif %}"></i>{{ h.hora|time:"g:i A" }}
+                                </span>
+                                {% empty %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium text-slate-500 italic">Sin horarios definidos</span>
+                                {% endfor %}
+                            {% elif med.frecuencia_tipo == 'cada_x_horas' and med.hora_inicio %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold tabular-nums {% if med.activo %}bg-slate-900 text-white{% else %}bg-slate-200 text-slate-600{% endif %}">
+                                    <i class="bi bi-clock text-[9px] {% if med.activo %}text-slate-300{% else %}text-slate-500{% endif %}"></i>Inicio {{ med.hora_inicio|time:"g:i A" }}
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium text-slate-500 italic">Sin horarios definidos</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Llamada configurada -->
+                        {% if med.instrucciones_llamada %}
+                        <div class="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 mb-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                                    <i class="bi bi-telephone-fill text-slate-400"></i>Llamada
+                                </span>
+                                {% if med.minutos_antes_llamada %}
+                                <span class="text-[11px] text-slate-500 tabular-nums">{{ med.minutos_antes_llamada }} min antes</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-slate-600 italic line-clamp-2" title="{{ med.instrucciones_llamada }}">"{{ med.instrucciones_llamada }}"</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Adherencia + Última llamada -->
+                        <div class="mt-auto space-y-2">
+                            {% if adh is not None %}
+                            <div>
+                                <div class="flex items-center justify-between text-[11px] mb-1">
+                                    <span class="font-semibold text-slate-500 uppercase tracking-wider">Adherencia 30d</span>
+                                    <span class="font-bold tabular-nums
+                                        {% if adh >= 80 %}text-emerald-600
+                                        {% elif adh >= 50 %}text-amber-600
+                                        {% else %}text-rose-600{% endif %}">{{ adh }}%</span>
+                                </div>
+                                <div class="h-1 w-full rounded-full bg-slate-100 overflow-hidden">
+                                    <div class="h-full rounded-full
+                                        {% if adh >= 80 %}bg-emerald-500
+                                        {% elif adh >= 50 %}bg-amber-500
+                                        {% else %}bg-rose-500{% endif %}"
+                                        style="width: {{ adh }}%"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if ultima %}
+                            <div class="flex items-center gap-1.5 text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                                <i class="bi bi-clock-history text-slate-400"></i>
+                                <span class="tabular-nums">{{ ultima.fecha_programada|date:"d M, g:i A" }}</span>
+                                <span class="ml-auto">
+                                {% if ultima.respuesta %}
+                                    {% if ultima.respuesta.resultado == 'confirmada' %}
+                                    <span class="inline-flex items-center gap-0.5 font-semibold text-emerald-700"><i class="bi bi-check-circle-fill"></i> Confirmó</span>
+                                    {% elif ultima.respuesta.resultado == 'negativa' %}
+                                    <span class="inline-flex items-center gap-0.5 font-semibold text-rose-700"><i class="bi bi-x-circle-fill"></i> No tomó</span>
+                                    {% elif ultima.respuesta.resultado == 'despues' %}
+                                    <span class="inline-flex items-center gap-0.5 font-semibold text-amber-700"><i class="bi bi-clock-fill"></i> Pospuso</span>
+                                    {% elif ultima.respuesta.resultado == 'emergencia' %}
+                                    <span class="inline-flex items-center gap-0.5 font-semibold text-red-700"><i class="bi bi-exclamation-triangle"></i> Emergencia</span>
+                                    {% elif ultima.respuesta.resultado == 'rechazo' %}
+                                    <span class="inline-flex items-center gap-0.5 font-semibold text-red-700"><i class="bi bi-slash-circle"></i> Rechazó</span>
+                                    {% elif ultima.respuesta.como_respondio == 'no_atendida' or ultima.respuesta.como_respondio == 'buzon' %}
+                                    <span class="inline-flex items-center gap-0.5 font-semibold text-slate-500"><i class="bi bi-telephone-x"></i> No atendió</span>
+                                    {% else %}
+                                    <span class="inline-flex items-center gap-0.5 font-semibold text-slate-500"><i class="bi bi-dash-circle"></i> Sin confirmar</span>
+                                    {% endif %}
+                                {% else %}
+                                <span class="inline-flex items-center gap-0.5 font-semibold text-slate-500"><i class="bi bi-exclamation-circle"></i> Fallida</span>
+                                {% endif %}
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Footer botones -->
+                    <div class="px-4 pb-4 flex gap-1.5">
+                        <a href="{% url 'editar_medicamento' paciente.id med.id %}" class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 px-3 py-2 text-xs font-bold hover:bg-slate-50 transition-colors">
+                            <i class="bi bi-pencil"></i>Editar
+                        </a>
+                        <a href="{% url 'notifications' %}?paciente={{ paciente.id }}&medicamento={{ med.id }}" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 px-3 py-2 text-xs font-bold hover:bg-slate-50 transition-colors" title="Notificaciones">
+                            <i class="bi bi-bell"></i>
+                        </a>
+                        <a href="{% url 'historial_llamadas' %}?paciente={{ paciente.id }}&medicamento={{ med.id }}" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 px-3 py-2 text-xs font-bold hover:bg-slate-50 transition-colors" title="Historial de llamadas">
+                            <i class="bi bi-telephone-outbound"></i>
+                        </a>
+                        <a href="{% url 'eliminar_medicamento' paciente.id med.id %}" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200 px-3 py-2 text-xs font-bold transition-colors" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </article>
+                {% endwith %}
+                {% empty %}
+                <div class="sm:col-span-2 xl:col-span-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-14 px-6 text-center">
+                    <div class="mx-auto mb-4 flex items-center justify-center w-20 h-20 rounded-full bg-slate-100">
+                        <i class="bi bi-capsule text-4xl text-slate-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-1">No hay recordatorios aún</h3>
+                    <p class="text-sm text-slate-500 mb-6 max-w-sm mx-auto">Agrega un recordatorio para que este paciente reciba llamadas de voz a sus horarios.</p>
+                    <a href="{% url 'agregar_medicamento' paciente.id %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-6 py-3 text-sm font-semibold transition-colors shadow-sm">
+                        <i class="bi bi-plus-lg"></i> Agregar nuevo recordatorio
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- Modal Descargar Reporte -->
+<div id="modal-descargar-reporte" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+    <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" data-modal-backdrop></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200 transform transition-all" role="dialog" aria-modal="true" aria-labelledby="modal-reporte-title">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <i class="bi bi-download text-emerald-600 text-lg"></i>
+                    </div>
+                    <h3 id="modal-reporte-title" class="text-lg font-bold text-slate-900">Reporte de llamadas</h3>
+                </div>
+                <p class="text-slate-600 text-sm mb-6">Descarga el historial de llamadas de recordatorio de <strong>{{ paciente.get_display_nombre }}</strong>. Los datos reflejan lo que respondió en cada llamada, no el registro de medicamentos.</p>
+
+                <form method="post" action="{% url 'descargar_reporte_paciente' paciente.id %}">
+                    {% csrf_token %}
+
+                    <!-- Tipo de reporte -->
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold text-slate-600 mb-3">Tipo de reporte</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="radio" name="tipo_reporte" value="adherencia" checked class="w-4 h-4">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-900">Adherencia por medicamento</p>
+                                    <p class="text-xs text-slate-500">Cuántas veces confirmó cada medicamento en las llamadas (% de adherencia)</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="radio" name="tipo_reporte" value="incumplimientos" class="w-4 h-4">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-900">Incumplimientos</p>
+                                    <p class="text-xs text-slate-500">Llamadas donde no confirmó, negó la toma o no atendió</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="radio" name="tipo_reporte" value="auditoria" class="w-4 h-4">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-900">Auditoría completa</p>
+                                    <p class="text-xs text-slate-500">Todas las llamadas: estado, respuesta, transcripción y duración</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Fechas -->
+                    <div class="mb-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Desde</label>
+                            <input type="date" name="fecha_desde" id="fecha-desde" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Hasta</label>
+                            <input type="date" name="fecha_hasta" id="fecha-hasta" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                        </div>
+                    </div>
+
+                    <!-- Medicamentos -->
+                    {% if paciente.medicamentos.all %}
+                    <div class="mb-5">
+                        <label class="block text-xs font-semibold text-slate-600 mb-2">Medicamentos</label>
+                        <div class="space-y-1.5 max-h-32 overflow-y-auto">
+                            {% for med in paciente.medicamentos.all %}
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="medicamentos" value="{{ med.id }}" checked class="w-4 h-4 rounded border-slate-300">
+                                <span class="text-sm text-slate-700">{{ med.nombre }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Formato -->
+                    <div class="mb-6">
+                        <label class="block text-xs font-semibold text-slate-600 mb-2">Formato</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="formato" value="csv" checked class="w-4 h-4">
+                                <span class="text-sm text-slate-700">CSV (Excel)</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="formato" value="pdf" class="w-4 h-4">
+                                <span class="text-sm text-slate-700">PDF</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="flex gap-3 justify-end">
+                        <button type="button" class="btn-modal-cancel px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors flex items-center gap-2">
+                            <i class="bi bi-download"></i><span id="btn-descargar-texto">Descargar CSV</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const modal = document.getElementById("modal-descargar-reporte");
+    const backdrop = modal && modal.querySelector("[data-modal-backdrop]");
+    const cancelBtn = modal && modal.querySelector(".btn-modal-cancel");
+    const toggleBtn = document.querySelector('[data-modal-toggle="modal-descargar-reporte"]');
+    const formatoRadios = modal && modal.querySelectorAll('input[name="formato"]');
+    const btnTexto = document.getElementById("btn-descargar-texto");
+
+    function openModal() {
+        if (modal) {
+            modal.classList.remove("hidden");
+            document.body.style.overflow = "hidden";
+
+            // Establecer fecha "hasta" a hoy
+            const hoy = new Date().toISOString().split('T')[0];
+            const fechaHasta = document.getElementById('fecha-hasta');
+            if (fechaHasta && !fechaHasta.value) {
+                fechaHasta.value = hoy;
+            }
+        }
+    }
+
+    function closeModal() {
+        if (modal) {
+            modal.classList.add("hidden");
+            document.body.style.overflow = "";
+        }
+    }
+
+    function actualizarBoton() {
+        const formatoSeleccionado = modal && modal.querySelector('input[name="formato"]:checked')?.value;
+        if (btnTexto) {
+            if (formatoSeleccionado === 'pdf') {
+                btnTexto.textContent = 'Descargar PDF';
+            } else {
+                btnTexto.textContent = 'Descargar CSV';
+            }
+        }
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener("click", openModal);
+    }
+    if (backdrop) {
+        backdrop.addEventListener("click", closeModal);
+    }
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", closeModal);
+    }
+
+    formatoRadios && formatoRadios.forEach(radio => {
+        radio.addEventListener("change", actualizarBoton);
+    });
+
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) {
+            closeModal();
+        }
+    });
+})();
+</script>
+
+{% endblock %}

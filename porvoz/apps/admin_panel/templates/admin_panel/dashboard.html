@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20">
+        <!-- Header -->
+        <div class="mb-8 mt-12 lg:mt-0">
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Panel de Admin</h1>
+                <p class="text-sm text-slate-500 mt-1">Gestiona usuarios, pagos y códigos</p>
+            </div>
+        </div>
+
+        <!-- Estadísticas principales -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <!-- Total Usuarios -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                        <i class="bi bi-people text-lg"></i>
+                    </div>
+                    <a href="{% url 'admin_usuarios' %}" class="text-xs font-semibold text-slate-600 hover:text-slate-900">Ver →</a>
+                </div>
+                <p class="text-sm text-slate-600 font-medium">Total Usuarios</p>
+                <p class="text-2xl font-bold text-slate-900 mt-2">{{ total_usuarios }}</p>
+                <p class="text-xs text-slate-500 mt-1">{{ usuarios_activos }} activos</p>
+            </div>
+
+            <!-- Ingresos Este Mes -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
+                        <i class="bi bi-cash-coin text-lg"></i>
+                    </div>
+                    <a href="{% url 'historial_pagos' %}" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">Ver →</a>
+                </div>
+                <p class="text-sm text-slate-600 font-medium">Ingresos Este Mes</p>
+                <p class="text-2xl font-bold text-slate-900 mt-2">
+                    {% if ingresos_mes > 0 %}
+                        ${{ ingresos_mes|floatformat:0 }}
+                    {% else %}
+                        $0
+                    {% endif %}
+                </p>
+                <p class="text-xs text-slate-500 mt-1">COP</p>
+            </div>
+
+            <!-- Códigos Disponibles -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700">
+                        <i class="bi bi-key text-lg"></i>
+                    </div>
+                    <a href="{% url 'crear_codigos' %}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700">+ Crear</a>
+                </div>
+                <p class="text-sm text-slate-600 font-medium">Códigos Disponibles</p>
+                <p class="text-2xl font-bold text-slate-900 mt-2">{{ codigos_disponibles }}</p>
+                <p class="text-xs text-slate-500 mt-1"><a href="{% url 'ver_codigos' %}" class="hover:underline">Ver todos</a></p>
+            </div>
+
+            <!-- Tickets Abiertos -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 rounded-lg {% if tickets_abiertos > 0 %}bg-orange-100{% else %}bg-emerald-100{% endif %} flex items-center justify-center {% if tickets_abiertos > 0 %}text-orange-700{% else %}text-emerald-700{% endif %}">
+                        <i class="bi bi-chat-dots text-lg"></i>
+                    </div>
+                    {% if tickets_abiertos > 0 %}
+                        <span class="text-xs font-semibold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full">{{ tickets_abiertos }}</span>
+                    {% else %}
+                        <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">OK</span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-slate-600 font-medium">Tickets de Soporte</p>
+                <p class="text-2xl font-bold text-slate-900 mt-2">{{ tickets_abiertos }}</p>
+                <p class="text-xs text-slate-500 mt-1"><a href="{% url 'tickets_soporte' %}" class="hover:underline">{% if tickets_abiertos > 0 %}Ver abiertos{% else %}Sin tickets{% endif %}</a></p>
+            </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <a href="{% url 'crear_codigos' %}" class="bg-slate-900 hover:bg-slate-800 text-white rounded-2xl p-4 text-center font-semibold transition-colors border border-slate-800 flex items-center justify-center gap-2">
+                <i class="bi bi-plus-circle"></i> Crear Códigos
+            </a>
+            <a href="{% url 'admin_usuarios' %}" class="bg-slate-900 hover:bg-slate-800 text-white rounded-2xl p-4 text-center font-semibold transition-colors border border-slate-800 flex items-center justify-center gap-2">
+                <i class="bi bi-people"></i> Gestionar Usuarios
+            </a>
+            <a href="{% url 'historial_pagos' %}" class="bg-slate-900 hover:bg-slate-800 text-white rounded-2xl p-4 text-center font-semibold transition-colors border border-slate-800 flex items-center justify-center gap-2">
+                <i class="bi bi-credit-card"></i> Historial Pagos
+            </a>
+        </div>
+
+        <!-- Últimos pagos -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">Últimos Pagos</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Cambios de plan más recientes</p>
+                </div>
+                <a href="{% url 'historial_pagos' %}" class="text-slate-600 hover:text-slate-900 text-sm font-medium">Ver todos →</a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700">Usuario</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700">Plan</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700">Tipo</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700">Monto</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pago in ultimos_pagos %}
+                        <tr class="border-t border-slate-100 hover:bg-slate-50">
+                            <td class="px-6 py-4 text-sm text-slate-900 font-medium">{{ pago.usuario.get_full_name|default:pago.usuario.username }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-700">
+                                <span class="inline-block px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
+                                    {{ pago.get_plan_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600">{{ pago.get_tipo_pago_display }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-900 font-medium">
+                                {% if pago.monto %}${{ pago.monto|floatformat:0 }}{% else %}—{% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-500">{{ pago.fecha_pago|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-sm text-slate-500">
+                                No hay pagos registrados aún
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    {% include "footer.html" %}
+</div>
+{% endblock %}

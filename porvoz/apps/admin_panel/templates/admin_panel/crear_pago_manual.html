@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% load admin_filters %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20">
+        <div class="mb-8 mt-12 lg:mt-0">
+            <a href="{% url 'historial_pagos' %}" class="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 mb-2 w-fit">
+                <i class="bi bi-arrow-left"></i> Volver a pagos
+            </a>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Registrar Pago Manual</h1>
+            <p class="text-sm text-slate-500 mt-1">Activa o renueva el plan de un usuario con comprobante opcional</p>
+        </div>
+
+        {% if messages %}{% for msg in messages %}
+        <div class="mb-6 px-4 py-3 rounded-xl text-sm font-semibold {% if msg.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200{% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">{{ msg }}</div>
+        {% endfor %}{% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+                <form method="post" enctype="multipart/form-data" class="space-y-0">
+                    {% csrf_token %}
+
+                    <!-- PASO 1: SELECCIONAR USUARIO -->
+                    <div class="bg-white rounded-t-2xl border border-slate-200 border-b-0 shadow-sm p-6 space-y-4">
+                        <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+                            <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold">1</div>
+                            <h2 class="text-sm font-bold text-slate-900">Selecciona el cuidador</h2>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Usuario *</label>
+                            <div class="relative">
+                                <div class="flex items-center border border-slate-300 rounded-lg focus-within:ring-2 focus-within:ring-slate-800 bg-white overflow-hidden">
+                                    <i class="bi bi-search text-slate-400 text-sm ml-3"></i>
+                                    <input type="text" id="usuario-search" placeholder="Busca por nombre, usuario o email..."
+                                        class="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent">
+                                    <span id="usuario-badge" class="hidden mr-2 px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded">
+                                        <i class="bi bi-check"></i> Seleccionado
+                                    </span>
+                                </div>
+
+                                <div id="usuario-dropdown" class="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-300 rounded-lg shadow-lg z-50 hidden max-h-64 overflow-y-auto">
+                                    {% for u in usuarios %}
+                                    <div class="usuario-option px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0 transition"
+                                        data-id="{{ u.id }}"
+                                        data-search="{{ u.get_full_name|lower }} {{ u.username|lower }} {{ u.email|lower }}"
+                                        data-display="{{ u.get_full_name|default:u.username }}">
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600">
+                                                {{ u.get_full_name|first|upper|default:u.username|first|upper }}
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="text-sm font-medium text-slate-900">{{ u.get_full_name|default:u.username }}</p>
+                                                <p class="text-xs text-slate-500">@{{ u.username }} · {{ u.email }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                <input type="hidden" name="usuario_id" id="usuario-id-hidden" required>
+                            </div>
+
+                            <script>
+                            const searchInput = document.getElementById('usuario-search');
+                            const dropdown = document.getElementById('usuario-dropdown');
+                            const hiddenInput = document.getElementById('usuario-id-hidden');
+                            const badge = document.getElementById('usuario-badge');
+                            const options = document.querySelectorAll('.usuario-option');
+
+                            searchInput.addEventListener('focus', () => {
+                                dropdown.classList.remove('hidden');
+                            });
+
+                            searchInput.addEventListener('input', function() {
+                                const q = this.value.toLowerCase();
+                                let hasVisible = false;
+                                options.forEach(opt => {
+                                    const matches = q === '' || opt.dataset.search.includes(q);
+                                    opt.style.display = matches ? '' : 'none';
+                                    if (matches) hasVisible = true;
+                                });
+                                dropdown.classList.toggle('hidden', !hasVisible && q !== '');
+                            });
+
+                            options.forEach(opt => {
+                                opt.addEventListener('click', function() {
+                                    hiddenInput.value = this.dataset.id;
+                                    searchInput.value = this.dataset.display;
+                                    dropdown.classList.add('hidden');
+                                    badge.classList.remove('hidden');
+                                    searchInput.focus();
+                                });
+                            });
+
+                            document.addEventListener('click', function(e) {
+                                if (!e.target.closest('[id^="usuario"]')) {
+                                    dropdown.classList.add('hidden');
+                                }
+                            });
+                            </script>
+                        </div>
+
+                    </div>
+
+                    <!-- PASO 2: ELEGIR PLAN Y DURACIÓN -->
+                    <div class="bg-white border border-slate-200 border-b-0 border-t-0 shadow-sm p-6 space-y-4">
+                        <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+                            <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold">2</div>
+                            <h2 class="text-sm font-bold text-slate-900">Elige plan y duración</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2.5">Plan *</label>
+                                <select id="plan-select" name="plan" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none bg-white font-medium">
+                                    <option value="">— Selecciona plan —</option>
+                                    {% for val, label in planes %}
+                                    <option value="{{ val }}" data-precio="{{ precios_planes|get_item:val }}">
+                                        {{ label }} · ${{ precios_planes|get_item:val|default:"0"|floatformat:0 }}/mes
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2.5">Duración *</label>
+                                <select id="duracion-select" name="duracion_meses" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none bg-white font-medium">
+                                    <option value="">— Selecciona duración —</option>
+                                    <option value="1">1 mes</option>
+                                    <option value="3">3 meses</option>
+                                    <option value="6">6 meses</option>
+                                    <option value="12">1 año (12 meses)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PASO 3: DESCUENTO Y CÁLCULO -->
+                    <div class="bg-white border border-slate-200 border-b-0 border-t-0 shadow-sm p-6 space-y-4">
+                        <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+                            <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold">3</div>
+                            <h2 class="text-sm font-bold text-slate-900">Descuento (opcional)</h2>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2.5">Descuento %</label>
+                                <input type="number" id="descuento-porcentaje" name="descuento_porcentaje" min="0" max="100" value="0" step="5"
+                                    class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2.5">O descuento fijo (COP)</label>
+                                <input type="number" id="descuento-fijo" name="descuento_fijo" min="0" step="1000"
+                                    class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                            </div>
+                        </div>
+
+                        <!-- RESUMEN DE PRECIO -->
+                        <div id="precio-summary" class="hidden mt-6 bg-gradient-to-r from-slate-50 to-emerald-50 rounded-xl border border-emerald-200 p-5 space-y-3">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-slate-700">Precio base:</span>
+                                <span id="precio-base" class="font-semibold text-slate-900">$0</span>
+                            </div>
+                            <div id="descuento-summary" class="hidden flex justify-between items-center text-sm">
+                                <span class="text-slate-700">Descuento:</span>
+                                <span id="descuento-amount" class="font-semibold text-red-600">-$0</span>
+                            </div>
+                            <div class="border-t border-emerald-200 pt-3 flex justify-between items-center">
+                                <span class="font-bold text-slate-900">Total a pagar:</span>
+                                <span id="precio-total" class="text-2xl font-black text-emerald-700">$0</span>
+                            </div>
+                            <input type="hidden" id="monto-hidden" name="monto">
+                        </div>
+                    </div>
+
+                    <!-- PASO 4: REGISTRAR PAGO -->
+                    <div class="bg-white rounded-b-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                        <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+                            <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold">4</div>
+                            <h2 class="text-sm font-bold text-slate-900">Cómo se pagó</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2.5">Tipo de pago *</label>
+                                <select name="tipo_pago" required id="tipo_pago_select" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none bg-white font-medium">
+                                    <option value="">— Selecciona —</option>
+                                    {% for val, label in tipos_pago %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div id="metodo_row" class="hidden">
+                                <label class="block text-xs font-semibold text-slate-700 mb-2.5">Método de transferencia</label>
+                                <select name="metodo_transferencia" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none bg-white font-medium">
+                                    <option value="">— Seleccionar —</option>
+                                    {% for val, label in metodos %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2.5">Referencia o # Comprobante</label>
+                            <input type="text" name="referencia_pago" placeholder="Ej: 2024-TR-00198 o código Nequi"
+                                class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2.5">
+                                Adjuntar comprobante
+                                <span class="font-normal text-slate-400">(JPG, PNG o PDF)</span>
+                            </label>
+                            <input type="file" name="comprobante" accept=".jpg,.jpeg,.png,.pdf"
+                                class="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2.5">Notas internas (opcional)</label>
+                            <textarea name="notas" rows="2" placeholder="Ej: Cliente solicitó plan Profesional por 6 meses..."
+                                class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none resize-none"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 pt-4">
+                        <button type="submit" id="btn-submit" disabled class="flex-1 bg-slate-400 text-white font-semibold py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2 cursor-not-allowed">
+                            <i class="bi bi-check-circle"></i> Registrar pago y activar plan
+                        </button>
+                        <a href="{% url 'historial_pagos' %}" class="px-6 py-3 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 text-sm font-semibold transition-colors">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+
+                <script>
+                const planSelect = document.getElementById('plan-select');
+                const duracionSelect = document.getElementById('duracion-select');
+                const descuentoPorcentajeInput = document.getElementById('descuento-porcentaje');
+                const descuentoFijoInput = document.getElementById('descuento-fijo');
+                const precioBase = document.getElementById('precio-base');
+                const precioTotal = document.getElementById('precio-total');
+                const descuentoAmount = document.getElementById('descuento-amount');
+                const descuentoSummary = document.getElementById('descuento-summary');
+                const precioSummary = document.getElementById('precio-summary');
+                const montoHidden = document.getElementById('monto-hidden');
+                const btnSubmit = document.getElementById('btn-submit');
+                const tipoPagoSelect = document.getElementById('tipo_pago_select');
+                const metodoRow = document.getElementById('metodo_row');
+
+                const precios = {
+                    {% for plan_code, precio in precios_planes.items %}
+                    '{{ plan_code }}': {{ precio }},
+                    {% endfor %}
+                };
+
+                function calcularPrecio() {
+                    const plan = planSelect.value;
+                    const duracion = parseInt(duracionSelect.value) || 0;
+
+                    if (!plan || !duracion) {
+                        precioSummary.classList.add('hidden');
+                        btnSubmit.disabled = true;
+                        btnSubmit.classList.add('bg-slate-400', 'cursor-not-allowed');
+                        btnSubmit.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                        return;
+                    }
+
+                    const precioPorMes = precios[plan] || 0;
+                    const precioBaseTotal = precioPorMes * duracion;
+
+                    const descPorcentaje = parseFloat(descuentoPorcentajeInput.value) || 0;
+                    const descFijo = parseFloat(descuentoFijoInput.value) || 0;
+
+                    const descPorcentajeAmount = (precioBaseTotal * descPorcentaje) / 100;
+                    const descuentoTotal = descPorcentajeAmount + descFijo;
+                    const totalFinal = Math.max(0, precioBaseTotal - descuentoTotal);
+
+                    precioBase.textContent = '$' + precioBaseTotal.toLocaleString('es-CO');
+
+                    if (descuentoTotal > 0) {
+                        descuentoSummary.classList.remove('hidden');
+                        descuentoAmount.textContent = '-$' + descuentoTotal.toLocaleString('es-CO');
+                    } else {
+                        descuentoSummary.classList.add('hidden');
+                    }
+
+                    precioTotal.textContent = '$' + totalFinal.toLocaleString('es-CO');
+                    montoHidden.value = totalFinal;
+
+                    precioSummary.classList.remove('hidden');
+                    btnSubmit.disabled = false;
+                    btnSubmit.classList.remove('bg-slate-400', 'cursor-not-allowed');
+                    btnSubmit.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                }
+
+                planSelect.addEventListener('change', calcularPrecio);
+                duracionSelect.addEventListener('change', calcularPrecio);
+                descuentoPorcentajeInput.addEventListener('input', calcularPrecio);
+                descuentoFijoInput.addEventListener('input', calcularPrecio);
+
+                tipoPagoSelect.addEventListener('change', function() {
+                    metodoRow.classList.toggle('hidden', this.value !== 'transferencia');
+                });
+                </script>
+            </div>
+
+            <div class="space-y-4 h-fit sticky top-24">
+                <div class="bg-emerald-50 rounded-2xl border border-emerald-200 p-5">
+                    <h3 class="text-xs font-bold text-emerald-900 mb-3 flex items-center gap-2">
+                        <i class="bi bi-lightning-fill"></i> Cómo funciona
+                    </h3>
+                    <ol class="text-xs text-emerald-800 space-y-2">
+                        <li class="flex gap-2"><span class="font-bold">1.</span> <span>Selecciona al cuidador</span></li>
+                        <li class="flex gap-2"><span class="font-bold">2.</span> <span>Elige plan y duración</span></li>
+                        <li class="flex gap-2"><span class="font-bold">3.</span> <span>Aplica descuento (si aplica)</span></li>
+                        <li class="flex gap-2"><span class="font-bold">4.</span> <span>Registra cómo pagó</span></li>
+                    </ol>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl border border-slate-200 p-5">
+                    <h3 class="text-xs font-bold text-slate-900 mb-3">Tarifas mensuales</h3>
+                    <div class="space-y-2 text-xs text-slate-700">
+                        <div class="flex justify-between">
+                            <span>Gratuito</span>
+                            <span class="font-semibold text-slate-900">${{ precios_planes|get_item:"freemium"|floatformat:0 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Básico</span>
+                            <span class="font-semibold text-slate-900">${{ precios_planes|get_item:"growth"|floatformat:0 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Familiar</span>
+                            <span class="font-semibold text-slate-900">${{ precios_planes|get_item:"multi_business"|floatformat:0 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Profesional</span>
+                            <span class="font-semibold text-slate-900">${{ precios_planes|get_item:"profesional"|floatformat:0 }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 rounded-2xl border border-indigo-200 p-5">
+                    <h3 class="text-xs font-bold text-indigo-900 mb-2 flex items-center gap-2">
+                        <i class="bi bi-percent"></i> Descuentos
+                    </h3>
+                    <p class="text-xs text-indigo-800">
+                        Puedes aplicar un descuento por porcentaje o monto fijo. El sistema calcula automáticamente el total a pagar.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20">
+        <button type="button" class="btn-mobile-menu" data-mobile-menu-toggle>
+            <i class="bi bi-list"></i>
+        </button>
+
+        <!-- Banner: alertas activas de llamadas -->
+        {% if alertas_activas %}
+        <div class="mt-12 lg:mt-0 mb-4 rounded-2xl border border-red-200 bg-red-50 overflow-hidden">
+            <div class="px-5 py-3 bg-red-100 border-b border-red-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="bi bi-bell-fill text-red-500 text-sm animate-pulse"></i>
+                    <span class="text-sm font-bold text-red-800">
+                        {{ alertas_activas|length }} alerta{% if alertas_activas|length != 1 %}s{% endif %} sin atender
+                    </span>
+                </div>
+                <a href="{% url 'notifications' %}?tipo=alerta&solo_no_leidas=1" class="text-xs font-semibold text-red-700 hover:text-red-900 underline underline-offset-2">Ver todas</a>
+            </div>
+            <div class="divide-y divide-red-100">
+                {% for alerta in alertas_activas %}
+                <div class="px-5 py-3 flex items-start gap-3">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
+                        <i class="bi bi-telephone-x text-red-500 text-sm"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-red-900 leading-snug">{{ alerta.titulo }}</p>
+                        {% if alerta.mensaje %}
+                        <p class="text-xs text-red-700 mt-0.5 leading-relaxed">{{ alerta.mensaje }}</p>
+                        {% endif %}
+                        <div class="flex items-center gap-3 mt-1">
+                            {% if alerta.paciente %}<span class="text-xs text-red-400"><i class="bi bi-person"></i> {{ alerta.paciente.get_display_nombre }}</span>{% endif %}
+                            <span class="text-xs text-red-400">{{ alerta.creado_en|timesince }} atrás</span>
+                        </div>
+                    </div>
+                    <form method="post" action="{% url 'marcar_notif_leida' alerta.id %}" class="flex-shrink-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'dashboard' %}">
+                        <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 border border-red-200 bg-white hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                            Descartar
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Alerta: pacientes sin medicamentos -->
+        {% if pacientes_sin_medicamentos %}
+        <div class="{% if not alertas_activas %}mt-12 lg:mt-0{% endif %} mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-start gap-3">
+            <i class="bi bi-exclamation-triangle-fill text-amber-500 text-lg flex-shrink-0 mt-0.5"></i>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-amber-800">
+                    {% if pacientes_sin_medicamentos|length == 1 %}
+                        1 paciente sin medicamentos registrados
+                    {% else %}
+                        {{ pacientes_sin_medicamentos|length }} pacientes sin medicamentos registrados
+                    {% endif %}
+                </p>
+                <p class="text-xs text-amber-700 mt-0.5">
+                    {% for p in pacientes_sin_medicamentos %}{{ p.get_display_nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    — no recibirán llamadas de recordatorio hasta agregar un medicamento.
+                </p>
+            </div>
+            <a href="{% url 'listar_pacientes' %}" class="flex-shrink-0 text-xs font-semibold text-amber-800 hover:text-amber-900 underline underline-offset-2">Ver pacientes</a>
+        </div>
+        {% endif %}
+
+        {% if mostrar_onboarding %}
+        <!-- Onboarding: usuario nuevo sin pacientes -->
+        <div class="{% if not alertas_activas %}mt-12 lg:mt-0{% endif %} mb-6 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-slate-800 px-6 py-7 text-center">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Bienvenido a Porvoz</p>
+                <h2 class="text-xl font-black text-white">Empieza en 3 pasos</h2>
+                <p class="text-sm text-slate-400 mt-1">Configura tu primer recordatorio de medicación en menos de 2 minutos</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+                <div class="p-6 text-center">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center mx-auto mb-3">
+                        <span class="text-sm font-black">1</span>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-900 mb-1">Agrega un paciente</h3>
+                    <p class="text-xs text-slate-500 mb-4">Puede ser un familiar o tú mismo</p>
+                    <a href="{% url 'agregar_paciente' %}" class="inline-flex items-center rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 text-xs font-semibold transition-colors">
+                        Agregar paciente
+                    </a>
+                </div>
+                <div class="p-6 text-center opacity-50">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center mx-auto mb-3">
+                        <span class="text-sm font-black">2</span>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-900 mb-1">Agrega un medicamento</h3>
+                    <p class="text-xs text-slate-500">Nombre, dosis y horario de toma</p>
+                </div>
+                <div class="p-6 text-center opacity-50">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center mx-auto mb-3">
+                        <span class="text-sm font-black">3</span>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-900 mb-1">Espera la llamada</h3>
+                    <p class="text-xs text-slate-500">El sistema llama automáticamente a la hora configurada</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Métricas superiores -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 {% if not pacientes_sin_medicamentos and not alertas_activas and not mostrar_onboarding %}mt-12 lg:mt-0{% endif %} min-w-0">
+            <a href="{% url 'listar_pacientes' %}" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex items-center gap-4 hover:shadow-md hover:border-slate-300 transition-all group">
+                <div class="flex-shrink-0 w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                    <i class="bi bi-person-walking text-2xl text-amber-600"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Cantidad de personas a cargo</p>
+                    <p class="text-2xl font-black text-slate-900">{{ pacientes|length }} {% if pacientes|length == 1 %}adulto{% else %}adultos{% endif %}</p>
+                </div>
+            </a>
+            <a href="{% url 'edit_profile' %}?tab=planes" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex items-center gap-4 hover:shadow-md hover:border-slate-300 transition-all group">
+                <div class="flex-shrink-0 w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                    <i class="bi bi-star text-2xl text-slate-600"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Plan actual</p>
+                    <p class="text-lg font-black text-slate-900 truncate">{{ nombre_plan }}</p>
+                    <p class="text-xs text-slate-500 mt-0.5">{{ dias_restantes_plan }} días restantes</p>
+                    {% if uso_plan %}
+                    {% with usadas=uso_plan.llamadas_mes max=uso_plan.max_llamadas_mes %}
+                    {% widthratio usadas max 100 as pct %}
+                    <div class="mt-2">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs text-slate-500">Llamadas este mes</span>
+                            <span class="text-xs font-bold {% if pct >= 90 %}text-red-600{% elif pct >= 70 %}text-amber-600{% else %}text-slate-700{% endif %}">{{ usadas }}/{{ max }}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5">
+                            <div class="h-1.5 rounded-full transition-all {% if pct >= 90 %}bg-red-500{% elif pct >= 70 %}bg-amber-500{% else %}bg-emerald-500{% endif %}" style="width: {{ pct }}%"></div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endif %}
+                </div>
+            </a>
+            <a href="{% url 'agregar_paciente' %}" class="bg-slate-700 hover:bg-slate-800 rounded-2xl border border-slate-700 shadow-sm p-6 flex items-center gap-4 transition-colors group">
+                <div class="flex-shrink-0 w-14 h-14 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                    <i class="bi bi-person-plus text-2xl text-white"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-300">Acción rápida</p>
+                    <p class="text-lg font-bold text-white">Agregar nuevo paciente</p>
+                </div>
+                <i class="bi bi-arrow-right text-white text-lg group-hover:translate-x-1 transition-transform"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch min-w-0">
+            <!-- Resumen de pacientes (tabla) -->
+            <div class="md:col-span-2 flex flex-col min-h-0">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+                    <div class="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <h2 class="text-xl font-bold text-slate-900">Pacientes</h2>
+                        <div class="flex items-center gap-3">
+                            <details class="relative">
+                                <summary class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                                    <i class="bi bi-sort-down-alt"></i>
+                                    {% for k, v in opciones_ordenar %}{% if k == ordenar_actual %}{{ v }}{% endif %}{% endfor %}
+                                    <i class="bi bi-chevron-down text-xs transition-transform details-chevron"></i>
+                                </summary>
+                                <div class="absolute right-0 mt-1 w-52 rounded-xl border border-slate-200 bg-white shadow-xl py-1 z-20">
+                                    {% for k, v in opciones_ordenar %}
+                                    <a href="{% url 'dashboard' %}?ordenar={{ k }}" class="block px-4 py-2.5 text-sm {% if k == ordenar_actual %}bg-slate-100 text-slate-800 font-semibold{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                                        {{ v }}
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                            </details>
+                            <a href="{% url 'listar_pacientes' %}" class="text-sm font-semibold text-slate-700 hover:text-slate-900">Ver todos</a>
+                        </div>
+                    </div>
+                    {% if pacientes %}
+                    <div class="overflow-x-auto -mx-0">
+                    <table class="table-responsive-stack">
+                        <thead>
+                            <tr>
+                                <th class="text-left font-semibold text-slate-600">Nombre</th>
+                                <th class="text-left font-semibold text-slate-600"># Medicamentos</th>
+                                <th class="text-left font-semibold text-slate-600">Condición</th>
+                                <th class="text-left font-semibold text-slate-600">Inicio tratamiento</th>
+                                <th class="text-left font-semibold text-slate-600">Fin tratamiento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for paciente in pacientes|slice:":5" %}
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td data-label="Nombre">
+                                    <a href="{% url 'editar_paciente' paciente.id %}" class="flex items-center gap-3 group">
+                                        {% if paciente.get_display_foto %}
+                                        <img src="{{ paciente.get_display_foto.url }}" alt="" class="h-10 w-10 rounded-full object-cover border-2 border-slate-200">
+                                        {% else %}
+                                        <div class="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-600">
+                                            {{ paciente.get_display_nombre|slice:":1"|upper }}
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <p class="font-semibold text-slate-900 group-hover:text-slate-700">{{ paciente.get_display_nombre }}</p>
+                                            <p class="text-xs text-slate-500">
+                                                {% if paciente.es_usuario_mismo %}Yo{% elif paciente.fecha_nacimiento %}Nac. {{ paciente.fecha_nacimiento|date:"d/m/Y" }}{% else %}—{% endif %}
+                                            </p>
+                                        </div>
+                                    </a>
+                                </td>
+                                <td data-label="# Medicamentos">
+                                    {% with cnt=paciente.medicamentos.count %}
+                                    {% if cnt == 0 %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-700 text-sm sm:text-xs font-semibold">
+                                        <i class="bi bi-exclamation-circle text-xs"></i>
+                                        Sin medicamentos
+                                    </span>
+                                    {% else %}
+                                    <span class="font-medium text-slate-900">{{ cnt }}</span>
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td data-label="Condición">
+                                    {% with conds=paciente.get_condiciones_activas %}
+                                    {% if conds %}
+                                    <div class="flex flex-wrap gap-1">
+                                        {% for c in conds %}
+                                        <span class="inline-flex px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-sm sm:text-xs font-semibold">{{ c }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <span class="text-slate-500 text-sm sm:text-xs">No especificada</span>
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td data-label="Inicio tratamiento" class="text-slate-600">{% if paciente.get_inicio_tratamiento %}{{ paciente.get_inicio_tratamiento|date:"M j, Y" }}{% else %}—{% endif %}</td>
+                                <td data-label="Fin tratamiento" class="text-slate-500">{% if paciente.get_fin_tratamiento %}{{ paciente.get_fin_tratamiento|date:"M j, Y" }}{% else %}—{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                    {% else %}
+                    <div class="px-6 py-14 text-center">
+                        <div class="mx-auto mb-4 flex items-center justify-center w-20 h-20 rounded-full bg-slate-100">
+                            <i class="bi bi-people text-4xl text-slate-400"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-1">Empieza agregando a un paciente</h3>
+                        <p class="text-sm text-slate-500 mb-6 max-w-sm mx-auto">Registra a la persona que cuidas para programar recordatorios por voz de sus medicamentos.</p>
+                        <a href="{% url 'agregar_paciente' %}" class="inline-flex items-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white px-6 py-3 text-sm font-semibold shadow-sm transition-colors">
+                            <i class="bi bi-plus-lg"></i>
+                            Agregar mi primer paciente
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actividad reciente (misma altura que Pacientes) -->
+            <div class="flex flex-col min-h-0">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col flex-1 min-h-0">
+                    <h2 class="text-xl font-bold text-slate-900 mb-4">Actividad Reciente</h2>
+                    {% if actividad_reciente %}
+                    <div class="space-y-4">
+                        {% for actividad in actividad_reciente %}
+                        <div class="flex gap-3">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
+                                {% if actividad.icono == 'person-plus' %}bg-emerald-100 text-emerald-600
+                                {% elif actividad.icono == 'capsule' %}bg-slate-100 text-slate-600
+                                {% elif actividad.icono == 'heart-pulse' %}bg-red-100 text-red-600
+                                {% elif actividad.icono == 'exclamation-triangle' %}bg-amber-100 text-amber-600
+                                {% elif actividad.icono == 'telephone' %}bg-slate-100 text-slate-600
+                                {% else %}bg-slate-100 text-slate-600{% endif %}">
+                                <i class="bi bi-{{ actividad.icono }} text-sm"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-slate-900">{{ actividad.descripcion }}</p>
+                                <p class="text-xs text-slate-500 mt-0.5">{{ actividad.fecha|timesince }} atrás</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'notifications' %}" class="mt-4 block text-sm font-semibold text-slate-700 hover:text-slate-900">Ver toda la actividad</a>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="bi bi-activity text-4xl text-slate-300 mb-3"></i>
+                        <p class="text-slate-600 text-sm">No hay actividad reciente</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Debajo: Recordatorios + Próximas llamadas + Adherencia -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+
+            <!-- Próximos recordatorios de medicamentos -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="bi bi-clock-history text-slate-600"></i>
+                    Recordatorios hoy
+                </h2>
+                {% if proximos_recordatorios %}
+                <ul class="space-y-3">
+                    {% for item in proximos_recordatorios %}
+                    <li class="flex items-center gap-3 text-sm">
+                        <span class="font-mono font-semibold text-slate-700 w-10 flex-shrink-0">{{ item.horario|time:"H:i" }}</span>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-medium text-slate-800 truncate">{{ item.medicamento.nombre }}</p>
+                            <p class="text-xs text-slate-600 truncate">{{ item.medicamento.paciente.get_display_nombre }}</p>
+                        </div>
+                        {% if item.llamada_hoy %}
+                            {% with r=item.llamada_hoy.respuesta %}
+                            {% if r %}
+                                {% if r.resultado == "confirmada" %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
+                                    <i class="bi bi-check-circle-fill text-xs"></i> Tomado
+                                </span>
+                                {% elif r.resultado == "negativa" %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+                                    <i class="bi bi-x-circle-fill text-xs"></i> No tomado
+                                </span>
+                                {% elif r.resultado == "despues" %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+                                    <i class="bi bi-clock-fill text-xs"></i> Después
+                                </span>
+                                {% elif r.como_respondio == "no_atendida" or r.como_respondio == "buzon" %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">
+                                    <i class="bi bi-telephone-x-fill text-xs"></i> Sin respuesta
+                                </span>
+                                {% else %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">
+                                    <i class="bi bi-question-circle text-xs"></i> Sin confirmar
+                                </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">
+                                    <i class="bi bi-telephone-x-fill text-xs"></i> Sin respuesta
+                                </span>
+                            {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center py-6">
+                    <i class="bi bi-clock text-3xl text-slate-300 mb-2 block"></i>
+                    <p class="text-sm text-slate-500">Sin horarios fijos configurados.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Próximas llamadas programadas -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="bi bi-telephone-outbound text-slate-500"></i>
+                        Próximas llamadas
+                    </h2>
+                    <a href="{% url 'historial_llamadas' %}" class="text-xs font-semibold text-slate-500 hover:text-slate-700">Ver historial</a>
+                </div>
+                {% if proximas_llamadas %}
+                <ul class="space-y-3">
+                    {% for llamada in proximas_llamadas %}
+                    <li class="flex items-start gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center mt-0.5">
+                            <i class="bi bi-telephone text-slate-600 text-sm"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-semibold text-slate-800 truncate">
+                                {% if llamada.medicamento %}{{ llamada.medicamento.nombre }}{% else %}Sin medicamento{% endif %}
+                            </p>
+                            <p class="text-xs text-slate-500 truncate">{{ llamada.paciente.get_display_nombre }}</p>
+                            <p class="text-xs font-mono text-slate-600 mt-0.5">{{ llamada.fecha_programada|date:"d/m H:i" }}</p>
+                        </div>
+                        {% if llamada.intentos > 1 %}
+                        <span class="flex-shrink-0 text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">R{{ llamada.intentos }}</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center py-6">
+                    <i class="bi bi-telephone-outbound text-3xl text-slate-300 mb-2 block"></i>
+                    <p class="text-sm text-slate-500">No hay llamadas programadas.</p>
+                    <p class="text-xs text-slate-500 mt-1">Se programan al agregar un medicamento con horario.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Llamadas esta semana -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h2 class="text-lg font-bold text-slate-900 mb-4">Llamadas esta semana</h2>
+
+                {% if llamadas_semana > 0 %}
+                <div class="flex items-baseline gap-2 mb-3">
+                    <span class="text-3xl font-black text-slate-900">{{ llamadas_atendidas_semana }}</span>
+                    <span class="text-slate-500 text-sm">de {{ llamadas_semana }} atendidas</span>
+                    <span class="ml-auto text-sm font-bold {% if adherencia_semana >= 80 %}text-emerald-600{% elif adherencia_semana >= 50 %}text-amber-600{% else %}text-red-500{% endif %}">
+                        {{ adherencia_semana }}%
+                    </span>
+                </div>
+                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
+                    <div class="h-full rounded-full {% if adherencia_semana >= 80 %}bg-emerald-500{% elif adherencia_semana >= 50 %}bg-amber-400{% else %}bg-red-400{% endif %}" style="width:{{ adherencia_semana }}%"></div>
+                </div>
+                <div class="space-y-1.5 text-xs text-slate-500">
+                    <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>Atendidas: {{ llamadas_atendidas_semana }}</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-slate-300 inline-block"></span>No atendidas: {{ llamadas_no_atendidas_semana }}</span>
+                </div>
+                {% else %}
+                <div class="text-center py-6">
+                    <i class="bi bi-telephone-x text-3xl text-slate-300 mb-2 block"></i>
+                    <p class="text-sm text-slate-500">Sin llamadas esta semana</p>
+                </div>
+                {% endif %}
+                <a href="{% url 'historial_llamadas' %}" class="mt-5 block text-xs font-semibold text-slate-600 hover:text-slate-900">Ver historial completo →</a>
+            </div>
+        </div>
+    </main>
+</div>
+</script>
+{% endblock %}

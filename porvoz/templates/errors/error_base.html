@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<main class="min-h-screen flex items-center justify-center px-4 py-16 bg-slate-50">
+    <div class="max-w-lg w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sm:p-10 text-center">
+        <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full {% block error_icon_bg %}bg-slate-100{% endblock %}">
+            <i class="bi {% block error_icon %}bi-exclamation-triangle{% endblock %} text-3xl {% block error_icon_color %}text-slate-600{% endblock %}"></i>
+        </div>
+
+        <p class="text-sm font-semibold tracking-widest uppercase text-slate-500 mb-2">{% block error_code %}Error{% endblock %}</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-3">{% block error_title %}Algo salió mal{% endblock %}</h1>
+        <p class="text-slate-600 mb-8 leading-relaxed">{% block error_message %}Ocurrió un problema inesperado. Por favor, intenta de nuevo en unos segundos.{% endblock %}</p>
+
+        {% block error_extra %}{% endblock %}
+
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            {% block error_actions %}
+            <button type="button"
+                    onclick="window.location.reload()"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium px-5 py-2.5 transition-colors">
+                <i class="bi bi-arrow-clockwise"></i>
+                Reintentar
+            </button>
+            <a href="{% url 'dashboard_router' %}"
+               class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-5 py-2.5 transition-colors">
+                <i class="bi bi-house"></i>
+                Volver al inicio
+            </a>
+            {% endblock %}
+        </div>
+
+        <p class="mt-8 text-xs text-slate-400">
+            Si el problema persiste, contacta a soporte en
+            <a href="mailto:porvozcolombia@gmail.com" class="text-slate-600 hover:text-slate-900 underline">porvozcolombia@gmail.com</a>
+        </p>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100 w-full max-w-full overflow-x-hidden">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20">
+
+        <!-- Header -->
+        <div class="mb-6 mt-12 lg:mt-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Usuarios</h1>
+                <p class="text-sm text-slate-500 mt-0.5">
+                    <span class="text-emerald-600 font-semibold">{{ usuarios_activos }} activos</span>
+                    · {{ total_usuarios }} total
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{% url 'crear_usuario_admin' %}"
+                    class="self-start sm:self-center inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-colors">
+                    <i class="bi bi-person-plus"></i> Crear usuario
+                </a>
+                <a href="{% url 'admin_dashboard' %}" class="btn-dashboard-primary self-start sm:self-center">
+                    <i class="bi bi-house"></i>
+                    Ir a Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Search + filter pills -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 mb-5 space-y-3">
+            <form method="get" class="flex gap-2">
+                <input type="hidden" name="filtro" value="{{ filtro_activo }}">
+                <div class="flex-1 relative">
+                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" name="q" value="{{ busqueda }}"
+                        placeholder="Buscar por nombre, usuario o email..."
+                        class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-slate-800 outline-none bg-slate-50">
+                </div>
+                <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors">
+                    Buscar
+                </button>
+                {% if busqueda %}
+                <a href="{% url 'admin_usuarios' %}?filtro={{ filtro_activo }}" class="border border-slate-200 text-slate-600 hover:bg-slate-50 py-2 px-3 rounded-lg text-sm transition-colors flex items-center">
+                    <i class="bi bi-x"></i>
+                </a>
+                {% endif %}
+            </form>
+            <!-- Filter pills -->
+            <div class="flex flex-wrap gap-2">
+                {% for key, label, count in filtros_disponibles %}
+                <a href="?filtro={{ key }}{% if busqueda %}&q={{ busqueda }}{% endif %}"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors
+                        {% if filtro_activo == key %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                    {{ label }}
+                    <span class="{% if filtro_activo == key %}bg-white/20{% else %}bg-slate-200{% endif %} rounded-full px-1.5 py-0.5 text-[10px] font-bold">{{ count }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-100 bg-slate-50">
+                            <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Usuario</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Plan</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Pacientes</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Registro</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Ir a</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for usuario in usuarios %}
+                        <tr class="hover:bg-slate-50 transition-colors group">
+
+                            <!-- Usuario: avatar + nombre + email -->
+                            <td class="px-5 py-3.5">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-shrink-0 w-9 h-9 rounded-full bg-slate-700 text-white flex items-center justify-center text-sm font-bold">
+                                        {{ usuario.first_name|default:usuario.username|slice:":1"|upper }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <p class="font-semibold text-slate-900 truncate">{{ usuario.get_full_name|default:usuario.username }}</p>
+                                            {% if usuario.is_active %}
+                                            <span class="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                            {% else %}
+                                            <span class="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-xs text-slate-400 truncate">@{{ usuario.username }} · {{ usuario.email }}</p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Plan + días restantes -->
+                            <td class="px-4 py-3.5 hidden sm:table-cell">
+                                <span class="inline-block px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold">
+                                    {{ usuario.perfil.get_plan_display|default:"—" }}
+                                </span>
+                                {% if usuario.perfil.plan_expiration %}
+                                    {% with dias=usuario.perfil.plan_expiration|timeuntil %}
+                                    <p class="text-[10px] mt-0.5 {% if usuario.perfil.plan_expiration < today %}text-red-500 font-semibold{% elif dias|slice:":1" == "0" or dias == "0\xa0minutes" %}text-amber-500 font-semibold{% else %}text-slate-400{% endif %}">
+                                        Vence {{ usuario.perfil.plan_expiration|date:"d/m/Y" }}
+                                    </p>
+                                    {% endwith %}
+                                {% endif %}
+                            </td>
+
+                            <!-- Pacientes -->
+                            <td class="px-4 py-3.5 hidden md:table-cell">
+                                <span class="font-semibold text-slate-900">{{ usuario.pacientes.count }}</span>
+                            </td>
+
+                            <!-- Registro -->
+                            <td class="px-4 py-3.5 hidden lg:table-cell text-slate-500 text-xs">
+                                {{ usuario.date_joined|date:"d/m/Y" }}
+                            </td>
+
+                            <!-- Acciones visibles -->
+                            <td class="px-3 py-3">
+                                <div class="flex items-center gap-1">
+                                    <a href="{% url 'editar_usuario' usuario.id %}?seccion=datos"
+                                        title="Datos" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors">
+                                        <i class="bi bi-person-lines-fill text-sm"></i>
+                                    </a>
+                                    <a href="{% url 'editar_usuario' usuario.id %}?seccion=plan"
+                                        title="Plan" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
+                                        <i class="bi bi-star text-sm"></i>
+                                    </a>
+                                    <a href="{% url 'editar_usuario' usuario.id %}?seccion=password"
+                                        title="Contraseña" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-amber-50 hover:text-amber-700 transition-colors">
+                                        <i class="bi bi-key text-sm"></i>
+                                    </a>
+                                    <a href="{% url 'editar_usuario' usuario.id %}?seccion=tickets"
+                                        title="Tickets" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                        <i class="bi bi-chat-dots text-sm"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-16 text-center">
+                                <i class="bi bi-people text-4xl text-slate-300 block mb-3"></i>
+                                <p class="text-slate-500 text-sm">
+                                    {% if busqueda %}No hay usuarios para "{{ busqueda }}"{% else %}No hay usuarios registrados{% endif %}
+                                </p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Stats footer -->
+        <div class="grid grid-cols-3 gap-4 mt-5">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                <p class="text-xs text-slate-500 font-medium">Total</p>
+                <p class="text-xl font-bold text-slate-900 mt-0.5">{{ total_usuarios }}</p>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                <p class="text-xs text-slate-500 font-medium">Activos</p>
+                <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ usuarios_activos }}</p>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                <p class="text-xs text-slate-500 font-medium">Inactivos</p>
+                <p class="text-xl font-bold text-red-500 mt-0.5">{{ total_usuarios|add:"-"|add:usuarios_activos }}</p>
+            </div>
+        </div>
+    </main>
+
+    {% include "footer.html" %}
+</div>
+
+{% endblock %}
