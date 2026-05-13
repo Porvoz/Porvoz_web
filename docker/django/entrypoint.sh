@@ -17,7 +17,12 @@ fi
 
 # Set environment variables with fallbacks (only used if not already set)
 export DJANGO_SECRET_KEY="${DJANGO_SECRET_KEY:-dev-secret-key-docker-default}"
-export DJANGO_ENVIRONMENT="${DJANGO_ENVIRONMENT:-development}"
+# Default to production when DATABASE_URL is set (Railway), development otherwise
+if [ -n "$DATABASE_URL" ] && [ "$DATABASE_URL" != "postgresql://porvoz:porvoz_secret@db:5432/porvoz" ]; then
+  export DJANGO_ENVIRONMENT="${DJANGO_ENVIRONMENT:-production}"
+else
+  export DJANGO_ENVIRONMENT="${DJANGO_ENVIRONMENT:-development}"
+fi
 
 # For ALLOWED_HOSTS: include Railway domain if present, else use docker-compose defaults
 if [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
