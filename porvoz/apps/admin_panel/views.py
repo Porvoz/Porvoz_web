@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.db.models import Count, Q, Sum
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from apps.admin_panel.models import CodigoAcceso, ConfiguracionPlan, MensajeTicket, PagoHistorico, TicketSoporte
@@ -349,6 +349,14 @@ def historial_pagos(request):
         "filtro_tipo": filtro_tipo,
     }
     return render(request, "admin_panel/historial_pagos.html", context)
+
+
+@login_required
+@user_passes_test(es_admin)
+def pago_detalle(request, pago_id):
+    """Ver detalle completo de un pago con comprobante"""
+    pago = get_object_or_404(PagoHistorico.objects.select_related("usuario", "codigo_usado"), id=pago_id)
+    return render(request, "admin_panel/pago_detalle.html", {"pago": pago})
 
 
 @login_required

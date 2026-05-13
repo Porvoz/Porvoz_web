@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-100">
+    {% include "sidebar.html" %}
+
+    <main class="main-content-responsive flex-1 min-w-0">
+        <div class="w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
+
+            <!-- Encabezado -->
+            <div class="flex items-center gap-3 mb-8">
+                <a href="{% url 'historial_pagos' %}" class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+                <span class="text-slate-300">/</span>
+                <h1 class="text-xl font-bold text-slate-900">Detalle del pago #{{ pago.id }}</h1>
+            </div>
+
+            <div class="grid gap-6">
+                <!-- Info principal -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Información del pago</h2>
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <dt class="text-slate-500 mb-0.5">Usuario</dt>
+                            <dd class="font-semibold text-slate-900">{{ pago.usuario.get_full_name|default:pago.usuario.username }}</dd>
+                            <dd class="text-slate-400 text-xs">{{ pago.usuario.email }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-500 mb-0.5">Plan</dt>
+                            <dd class="font-semibold text-slate-900">{{ pago.get_plan_display }}</dd>
+                            <dd class="text-slate-400 text-xs">{{ pago.duracion_meses }} mes{{ pago.duracion_meses|pluralize:"es" }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-500 mb-0.5">Método de pago</dt>
+                            <dd class="font-semibold text-slate-900">
+                                {% if pago.tipo_pago == 'transferencia' %}
+                                    {{ pago.get_metodo_transferencia_display|default:"Transferencia" }}
+                                {% elif pago.tipo_pago == 'codigo' %}
+                                    Código de acceso
+                                    {% if pago.codigo_usado %}
+                                        <span class="text-xs text-indigo-600">({{ pago.codigo_usado.codigo }})</span>
+                                    {% endif %}
+                                {% elif pago.tipo_pago == 'gratuito' %}
+                                    Gratuito
+                                {% else %}
+                                    {{ pago.get_tipo_pago_display }}
+                                {% endif %}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-500 mb-0.5">Fecha de pago</dt>
+                            <dd class="font-semibold text-slate-900">{{ pago.fecha_pago|date:"d/m/Y H:i" }}</dd>
+                        </div>
+                        {% if pago.referencia_pago %}
+                        <div>
+                            <dt class="text-slate-500 mb-0.5">Referencia</dt>
+                            <dd class="font-semibold text-slate-900 font-mono">{{ pago.referencia_pago }}</dd>
+                        </div>
+                        {% endif %}
+                    </dl>
+                </div>
+
+                <!-- Montos -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Resumen financiero</h2>
+                    <div class="flex flex-col gap-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Monto cobrado</span>
+                            <span class="font-bold text-slate-900">{% if pago.monto %}${{ pago.monto|floatformat:0 }} COP{% else %}—{% endif %}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Costo estimado</span>
+                            <span class="text-red-600">{% if pago.costo_estimado %}−${{ pago.costo_estimado|floatformat:0 }} COP{% else %}—{% endif %}</span>
+                        </div>
+                        <div class="flex justify-between border-t border-slate-100 pt-2 mt-1">
+                            <span class="font-semibold text-slate-700">Ganancia neta</span>
+                            <span class="font-bold {% if pago.ganancia_neta and pago.ganancia_neta >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
+                                {% if pago.ganancia_neta %}
+                                    {% if pago.ganancia_neta >= 0 %}+{% endif %}${{ pago.ganancia_neta|floatformat:0 }} COP
+                                {% else %}—{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notas -->
+                {% if pago.notas %}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Notas</h2>
+                    <p class="text-sm text-slate-700 whitespace-pre-line">{{ pago.notas }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Comprobante -->
+                {% if pago.comprobante %}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Comprobante adjunto</h2>
+
+                    {% with ext=pago.comprobante.name|lower %}
+                    {% if ".jpg" in ext or ".jpeg" in ext or ".png" in ext or ".webp" in ext or ".gif" in ext %}
+                        <!-- Imagen -->
+                        <a href="{{ pago.comprobante.url }}" target="_blank" class="block">
+                            <img
+                                src="{{ pago.comprobante.url }}"
+                                alt="Comprobante de pago"
+                                class="w-full max-h-[600px] object-contain rounded-xl border border-slate-200 hover:opacity-90 transition-opacity"
+                            >
+                        </a>
+                        <p class="text-xs text-slate-400 mt-2 text-center">Clic en la imagen para verla en tamaño completo</p>
+                    {% elif ".pdf" in ext %}
+                        <!-- PDF -->
+                        <div class="flex flex-col items-center gap-4 py-6">
+                            <div class="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center">
+                                <i class="bi bi-file-pdf text-3xl text-red-500"></i>
+                            </div>
+                            <p class="text-sm text-slate-600">Comprobante en formato PDF</p>
+                            <a href="{{ pago.comprobante.url }}" target="_blank"
+                               class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+                                <i class="bi bi-download"></i> Descargar / Ver PDF
+                            </a>
+                        </div>
+                    {% else %}
+                        <!-- Otro archivo -->
+                        <div class="flex flex-col items-center gap-4 py-6">
+                            <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+                                <i class="bi bi-file-earmark text-3xl text-slate-500"></i>
+                            </div>
+                            <a href="{{ pago.comprobante.url }}" target="_blank"
+                               class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+                                <i class="bi bi-download"></i> Descargar archivo
+                            </a>
+                        </div>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+                {% else %}
+                <div class="bg-slate-50 rounded-2xl border border-dashed border-slate-300 p-6 text-center">
+                    <i class="bi bi-image text-2xl text-slate-300 mb-2 block"></i>
+                    <p class="text-sm text-slate-400">No se adjuntó comprobante para este pago</p>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </main>
+
+    {% include "footer.html" %}
+</div>
+{% endblock %}
