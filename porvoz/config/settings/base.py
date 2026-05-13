@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-change-me")
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = []  # Will be set by environment-specific settings (production.py, development.py, staging.py)
 
 # Application definition
 INSTALLED_APPS = [
