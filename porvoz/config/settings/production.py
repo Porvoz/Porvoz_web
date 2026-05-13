@@ -61,19 +61,16 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False  # Must be False so Django can read CSRF token
 
-# Build CSRF_TRUSTED_ORIGINS — include Railway wildcard to cover all deployments
-CSRF_TRUSTED_ORIGINS = [
-    "https://*.up.railway.app",
-    "https://*.railway.app",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-]
-# Also include any explicitly configured hosts
+# Build CSRF_TRUSTED_ORIGINS from every known hostname
+CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
 for _host in ALLOWED_HOSTS:
     if _host not in ("localhost", "127.0.0.1"):
-        _origin = f"https://{_host}"
-        if _origin not in CSRF_TRUSTED_ORIGINS:
-            CSRF_TRUSTED_ORIGINS.append(_origin)
+        CSRF_TRUSTED_ORIGINS.append(f"https://{_host}")
+        CSRF_TRUSTED_ORIGINS.append(f"http://{_host}")
+# Railway domain explicitly (in case ALLOWED_HOSTS env var was not set)
+if _railway_domain:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_railway_domain}")
+    CSRF_TRUSTED_ORIGINS.append(f"http://{_railway_domain}")
 # Database: PostgreSQL in production, SQLite fallback for local dev
 database_url = os.getenv("DATABASE_URL", "")
 
