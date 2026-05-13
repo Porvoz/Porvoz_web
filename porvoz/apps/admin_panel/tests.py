@@ -7,7 +7,6 @@ from datetime import date, timedelta
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
-from django.utils import timezone
 
 from apps.admin_panel.models import (
     CodigoAcceso,
