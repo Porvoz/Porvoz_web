@@ -42,6 +42,15 @@ export TWILIO_FROM_NUMBER="${TWILIO_FROM_NUMBER:-+1234567890}"
 export TWILIO_BASE_URL="${TWILIO_BASE_URL:-http://web:10000}"
 export GEMINI_API_KEY="${GEMINI_API_KEY:-dummy-gemini-key}"
 
+# Map DJANGO_ENVIRONMENT to DJANGO_SETTINGS_MODULE
+if [ "$DJANGO_ENVIRONMENT" = "production" ]; then
+  export DJANGO_SETTINGS_MODULE="config.settings.production"
+elif [ "$DJANGO_ENVIRONMENT" = "staging" ]; then
+  export DJANGO_SETTINGS_MODULE="config.settings.staging"
+else
+  export DJANGO_SETTINGS_MODULE="config.settings.development"
+fi
+
 echo "[Entrypoint] Environment: $DJANGO_ENVIRONMENT"
 echo "[Entrypoint] Database: $DATABASE_URL (host redacted)"
 
@@ -85,4 +94,5 @@ exec gunicorn config.wsgi:application \
   --timeout 60 \
   --access-logfile - \
   --error-logfile - \
-  --log-level info
+  --log-level info \
+  --env DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
