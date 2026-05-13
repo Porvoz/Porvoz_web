@@ -7,6 +7,9 @@ from .base import *  # noqa
 
 DEBUG = True
 
+# ALLOWED_HOSTS for development
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "*.railway.app"]
+
 # Database: SQLite for local development
 DATABASES = {
     "default": {

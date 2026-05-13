@@ -27,6 +27,12 @@ if not os.getenv("TWILIO_DRY_RUN"):
 _ENV_LABEL = "staging"
 
 # Relax ALLOWED_HOSTS for ephemeral staging domains
+
+# Ensure ALLOWED_HOSTS is properly initialized for staging
+if not ALLOWED_HOSTS:  # noqa: F405
+    ALLOWED_HOSTS = []  # noqa: F405
+
+# Add staging-specific hosts
 _extra_hosts = os.getenv("STAGING_ALLOWED_HOSTS", "")
 if _extra_hosts:
     ALLOWED_HOSTS = ALLOWED_HOSTS + [h.strip() for h in _extra_hosts.split(",") if h.strip()]  # noqa: F405
