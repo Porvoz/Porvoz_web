@@ -5,9 +5,15 @@
     {% include "sidebar.html" %}
 
     <main class="main-content-responsive flex-1 min-w-0 lg:ml-64 px-4 py-5 sm:px-6 sm:py-7 lg:px-10 pb-20">
-        <div class="mb-8 mt-12 lg:mt-0">
-            <h1 class="text-3xl font-black text-slate-900 tracking-tight">Mis Solicitudes de Soporte</h1>
-            <p class="text-sm text-slate-500 mt-1">Historial de tus tickets y conversaciones con el equipo</p>
+        <div class="mb-8 mt-12 lg:mt-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Mis Solicitudes de Soporte</h1>
+                <p class="text-sm text-slate-500 mt-1">Historial de tus tickets y conversaciones con el equipo</p>
+            </div>
+            <a href="{% url 'contactar_soporte' %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 text-sm font-bold shadow-sm shadow-emerald-200 transition-colors self-start sm:self-auto flex-shrink-0">
+                <i class="bi bi-plus-lg"></i>
+                Nuevo ticket
+            </a>
         </div>
 
         {% if messages %}{% for msg in messages %}
@@ -52,14 +58,43 @@
             {% endif %}
         </div>
 
-        <div class="bg-blue-50 rounded-2xl border border-blue-200 p-4">
-            <h3 class="text-xs font-bold text-blue-900 mb-2 flex items-center gap-1.5"><i class="bi bi-info-circle"></i> Cómo funciona</h3>
-            <ul class="text-xs text-blue-800 space-y-1.5">
-                <li>Crea una solicitud para reportar problemas o hacer preguntas</li>
-                <li>El equipo de soporte te responderá lo antes posible</li>
-                <li>Recibirás una notificación cuando haya nuevas respuestas</li>
-                <li>Puedes responder directamente en la conversación</li>
-            </ul>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <div class="flex items-center gap-2.5 mb-4">
+                <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-600">
+                    <i class="bi bi-info-circle-fill text-sm"></i>
+                </div>
+                <h3 class="text-sm font-bold text-slate-900">¿Cómo funciona el soporte?</h3>
+            </div>
+            <div class="grid sm:grid-cols-2 gap-3">
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center mt-0.5">1</div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-800">Crea una solicitud</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Describe tu problema o pregunta con el mayor detalle posible.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 w-7 h-7 rounded-full bg-sky-100 text-sky-700 text-xs font-bold flex items-center justify-center mt-0.5">2</div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-800">Revisamos tu caso</p>
+                        <p class="text-xs text-slate-500 mt-0.5">El equipo de soporte responde lo antes posible, normalmente en menos de 24 h.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 w-7 h-7 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center mt-0.5">3</div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-800">Recibe una notificación</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Te avisamos cuando haya nuevas respuestas en tu ticket.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 w-7 h-7 rounded-full bg-violet-100 text-violet-700 text-xs font-bold flex items-center justify-center mt-0.5">4</div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-800">Conversación directa</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Responde y sigue la conversación dentro del mismo ticket.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
