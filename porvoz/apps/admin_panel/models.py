@@ -379,11 +379,10 @@ class ConfiguracionPlan(models.Model):
     """Configuración de planes: precios, costos, límites (editable por admin)"""
 
     plan = models.CharField(
-        max_length=20,
-        choices=Perfil.PLAN_CHOICES,
+        max_length=50,
         unique=True,
         db_index=True,
-        help_text="Clave del plan (freemium, growth, multi_business, profesional)",
+        help_text="Clave interna del plan (slug único, ej: plan_empresa)",
     )
     nombre = models.CharField(
         max_length=100,

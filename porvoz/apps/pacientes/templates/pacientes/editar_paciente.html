@@ -24,9 +24,9 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
-                <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all shadow-sm">
+                <a href="{% url 'detalle_paciente' paciente.id %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white text-slate-700 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all shadow-sm">
                     <i class="bi bi-arrow-left"></i>
-                    Volver
+                    Volver al paciente
                 </a>
                 <a href="{% url 'eliminar_paciente' paciente.id %}" class="inline-flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 text-sm font-semibold transition-colors shadow-sm hover:shadow-md">
                     <i class="bi bi-trash"></i>
@@ -251,9 +251,9 @@
 
                     <!-- Botones -->
                     <div class="p-6 lg:p-8 bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                        <a href="{% url 'listar_pacientes' %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                        <a href="{% url 'detalle_paciente' paciente.id %}" class="inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
                             <i class="bi bi-arrow-left"></i>
-                            <span>Volver a pacientes</span>
+                            <span>Volver al paciente</span>
                         </a>
                         <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-800 px-8 py-3.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-colors">
                             <i class="bi bi-check-circle text-lg"></i>

@@ -22,7 +22,7 @@
         <div class="w-full">
     {% endif %}
             <nav class="mb-6">
-                <a href="javascript:void(0)" onclick="history.back()" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="bi bi-arrow-left"></i>Volver</a>
+                <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="bi bi-arrow-left"></i>Volver</a>
             </nav>
 
             <header class="mb-8">

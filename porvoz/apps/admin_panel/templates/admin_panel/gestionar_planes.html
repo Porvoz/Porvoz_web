@@ -10,7 +10,7 @@
         <div class="mb-8 mt-12 lg:mt-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tight">Gestionar Planes</h1>
-                <p class="text-sm text-slate-500 mt-0.5">Edita precios, costos y visualiza márgenes de cada plan</p>
+                <p class="text-sm text-slate-500 mt-0.5">Edita, activa o desactiva planes. Los cambios se reflejan en la página de Planes para usuarios.</p>
             </div>
             <a href="{% url 'admin_dashboard' %}" class="btn-dashboard-primary self-start sm:self-center">
                 <i class="bi bi-house"></i>
@@ -24,90 +24,188 @@
         </div>
         {% endfor %}{% endif %}
 
-        <!-- Form -->
+        <!-- Formulario de edición de planes existentes -->
         <form method="post" class="space-y-6">
             {% csrf_token %}
+            <input type="hidden" name="action" value="save">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {% for config in configuraciones %}
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                    <!-- Nombre del plan -->
-                    <h2 class="text-lg font-bold text-slate-900 mb-5">{{ config.nombre }}</h2>
+                <div class="bg-white rounded-2xl border shadow-sm p-6 flex flex-col gap-4
+                    {% if config.activo %}border-slate-200{% else %}border-dashed border-slate-300 opacity-60{% endif %}">
 
-                    <!-- SECCIÓN: Precios y Costos -->
-                    <div class="bg-slate-50 rounded-xl p-3 mb-4 space-y-3">
+                    <!-- Cabecera: nombre + estado + toggle -->
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1.5">
+                                {% if config.activo %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wide">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Activo
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wide">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Oculto
+                                </span>
+                                {% endif %}
+                            </div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Nombre del plan</label>
+                            <input type="text" name="nombre_{{ config.plan }}" value="{{ config.nombre }}"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-slate-800 outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Precios y costos -->
+                    <div class="bg-slate-50 rounded-xl p-3 space-y-3">
                         <p class="text-[10px] font-bold uppercase text-slate-600">Precios</p>
-
-                        <!-- Precio Mensual -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Precio Mensual (COP)</label>
                             <input type="number" name="precio_{{ config.plan }}" value="{{ config.precio_mensual }}"
                                 class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-right text-sm focus:ring-2 focus:ring-slate-800 outline-none" step="100">
                         </div>
-
-                        <!-- Costo Estimado -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Costo Estimado (COP)</label>
                             <input type="number" name="costo_{{ config.plan }}" value="{{ config.costo_estimado }}"
                                 class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-right text-sm focus:ring-2 focus:ring-slate-800 outline-none" step="100">
                         </div>
-
-                        <!-- Margen Neto (lectura) -->
-                        <div class="pt-2 border-t border-slate-200">
-                            <p class="text-xs font-semibold text-slate-600 mb-1">Margen Neto:</p>
-                            <p class="text-right text-sm font-bold {% if config.margen_neto < 0 %}text-red-600{% else %}text-emerald-600{% endif %}">
+                        <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
+                            <p class="text-xs font-semibold text-slate-600">Margen Neto:</p>
+                            <p class="text-sm font-bold {% if config.margen_neto < 0 %}text-red-600{% else %}text-emerald-600{% endif %}">
                                 ${{ config.margen_neto|default:"0" }}
                             </p>
                         </div>
-
-                        <!-- % Margen (lectura) -->
-                        <div>
-                            <p class="text-xs font-semibold text-slate-600 mb-1">% Margen:</p>
-                            <div class="inline-block px-2 py-1 rounded text-center text-xs font-bold w-full {% if config.porcentaje_margen < 0 %}bg-red-100 text-red-700{% elif config.porcentaje_margen > 40 %}bg-emerald-100 text-emerald-700{% elif config.porcentaje_margen > 20 %}bg-amber-100 text-amber-700{% else %}bg-red-100 text-red-700{% endif %}">
+                        <div class="flex items-center justify-between">
+                            <p class="text-xs font-semibold text-slate-600">% Margen:</p>
+                            <span class="px-2 py-0.5 rounded text-xs font-bold {% if config.porcentaje_margen < 0 %}bg-red-100 text-red-700{% elif config.porcentaje_margen > 40 %}bg-emerald-100 text-emerald-700{% elif config.porcentaje_margen > 20 %}bg-amber-100 text-amber-700{% else %}bg-red-100 text-red-700{% endif %}">
                                 {{ config.porcentaje_margen }}%
-                            </div>
+                            </span>
                         </div>
                     </div>
 
-                    <!-- SECCIÓN: Límites -->
+                    <!-- Límites -->
                     <div class="bg-blue-50 rounded-xl p-3 space-y-3">
                         <p class="text-[10px] font-bold uppercase text-blue-600">Límites</p>
-
-                        <!-- Límite Pacientes -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Pacientes</label>
                             <input type="number" name="pacientes_{{ config.plan }}" value="{{ config.limite_pacientes }}"
                                 class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-right text-sm focus:ring-2 focus:ring-slate-800 outline-none" min="1">
                         </div>
-
-                        <!-- Límite Medicamentos -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Medicamentos <span class="font-normal text-slate-400">(0 = ilimitado)</span></label>
                             <input type="number" name="medicamentos_{{ config.plan }}" value="{{ config.limite_medicamentos|default:0 }}"
                                 class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-right text-sm focus:ring-2 focus:ring-slate-800 outline-none" min="0">
                         </div>
-
-                        <!-- Límite Llamadas -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Llamadas/mes</label>
                             <input type="number" name="llamadas_{{ config.plan }}" value="{{ config.limite_llamadas_mes }}"
                                 class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-right text-sm focus:ring-2 focus:ring-slate-800 outline-none" min="1">
                         </div>
                     </div>
+
+                    <!-- Slug (solo lectura, informativo) -->
+                    <p class="text-[10px] text-slate-400 font-mono truncate">clave: {{ config.plan }}</p>
                 </div>
                 {% endfor %}
             </div>
 
-            <!-- Submit -->
             <div class="flex gap-3">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
-                    <i class="bi bi-check-lg"></i> Guardar Cambios
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl text-sm transition-colors flex items-center gap-2">
+                    <i class="bi bi-check-lg"></i> Guardar cambios
                 </button>
-                <a href="{% url 'admin_dashboard' %}" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-bold px-8 py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                <a href="{% url 'admin_dashboard' %}" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-bold px-8 py-3 rounded-xl text-sm transition-colors flex items-center gap-2">
                     <i class="bi bi-x-lg"></i> Cancelar
                 </a>
             </div>
         </form>
+
+        <!-- Acciones individuales: toggle activo -->
+        <div class="mt-6">
+            <h2 class="text-sm font-bold text-slate-700 mb-3">Visibilidad de planes</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {% for config in configuraciones %}
+                <form method="post" class="flex items-center justify-between bg-white rounded-xl border border-slate-200 px-4 py-3 gap-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle_plan">
+                    <input type="hidden" name="plan_key" value="{{ config.plan }}">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="w-2 h-2 rounded-full flex-shrink-0 {% if config.activo %}bg-emerald-500{% else %}bg-slate-300{% endif %}"></span>
+                        <span class="text-sm font-semibold text-slate-800 truncate">{{ config.nombre }}</span>
+                    </div>
+                    <button type="submit" class="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors
+                        {% if config.activo %}bg-slate-100 hover:bg-red-50 hover:text-red-700 text-slate-600{% else %}bg-emerald-100 hover:bg-emerald-200 text-emerald-700{% endif %}">
+                        {% if config.activo %}<i class="bi bi-eye-slash mr-1"></i>Ocultar{% else %}<i class="bi bi-eye mr-1"></i>Activar{% endif %}
+                    </button>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Agregar plan nuevo -->
+        <div class="mt-8 bg-white rounded-2xl border border-dashed border-slate-300 shadow-sm">
+            <button type="button" onclick="document.getElementById('form-nuevo-plan').classList.toggle('hidden')"
+                class="w-full flex items-center justify-between px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-2xl transition-colors">
+                <span class="flex items-center gap-2">
+                    <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700">
+                        <i class="bi bi-plus-lg"></i>
+                    </span>
+                    Agregar nuevo plan
+                </span>
+                <i class="bi bi-chevron-down text-slate-400"></i>
+            </button>
+
+            <form id="form-nuevo-plan" method="post" class="hidden border-t border-slate-200 px-6 py-5">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_plan">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+                    <div class="sm:col-span-2 lg:col-span-3">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nombre del plan <span class="text-red-500">*</span></label>
+                        <input type="text" name="nuevo_nombre" placeholder="Ej: Plan Empresa" required
+                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <p class="text-[10px] text-slate-400 mt-1">El identificador interno se genera automáticamente.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Descripción</label>
+                        <input type="text" name="nuevo_descripcion" placeholder="Tagline breve"
+                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Precio mensual (COP)</label>
+                        <input type="number" name="nuevo_precio" placeholder="0" min="0" step="100"
+                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm text-right focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Costo estimado (COP)</label>
+                        <input type="number" name="nuevo_costo" placeholder="0" min="0" step="100"
+                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm text-right focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Pacientes</label>
+                        <input type="number" name="nuevo_pacientes" placeholder="1" min="1" value="1"
+                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm text-right focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Medicamentos <span class="font-normal text-slate-400">(0 = ilimitado)</span></label>
+                        <input type="number" name="nuevo_medicamentos" placeholder="0" min="0" value="0"
+                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm text-right focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Llamadas/mes</label>
+                        <input type="number" name="nuevo_llamadas" placeholder="15" min="1" value="15"
+                            class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm text-right focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2">
+                        <i class="bi bi-plus-lg"></i> Crear plan
+                    </button>
+                    <button type="button" onclick="document.getElementById('form-nuevo-plan').classList.add('hidden')"
+                        class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
 
     </main>
 

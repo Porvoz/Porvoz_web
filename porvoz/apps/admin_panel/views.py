@@ -165,44 +165,93 @@ def crear_codigos(request):
 def gestionar_planes(request):
     """Admin gestiona precios, costos y límites de planes"""
 
-    # Manejar actualización de planes
     if request.method == "POST":
-        for plan_key in [Perfil.PLAN_FREEMIUM, Perfil.PLAN_GROWTH, Perfil.PLAN_MULTI_BUSINESS, Perfil.PLAN_PROFESIONAL]:
+        action = request.POST.get("action", "save")
+
+        # ── Togglear activo/inactivo ──────────────────────────────────────────
+        if action == "toggle_plan":
+            plan_key = request.POST.get("plan_key", "")
             try:
                 config = ConfiguracionPlan.objects.get(plan=plan_key)
-
-                # Precios y costos
-                precio = request.POST.get(f"precio_{plan_key}")
-                costo = request.POST.get(f"costo_{plan_key}")
-                if precio:
-                    config.precio_mensual = int(precio)
-                if costo:
-                    config.costo_estimado = int(costo)
-
-                # Límites
-                pacientes = request.POST.get(f"pacientes_{plan_key}")
-                medicamentos = request.POST.get(f"medicamentos_{plan_key}")
-                llamadas = request.POST.get(f"llamadas_{plan_key}")
-
-                if pacientes:
-                    config.limite_pacientes = int(pacientes)
-                if medicamentos is not None:
-                    medicamentos_val = int(medicamentos)
-                    config.limite_medicamentos = medicamentos_val if medicamentos_val > 0 else None
-                if llamadas:
-                    config.limite_llamadas_mes = int(llamadas)
-
+                config.activo = not config.activo
                 config.save()
+                estado = "activado" if config.activo else "ocultado"
+                messages.success(request, f"Plan «{config.nombre}» {estado} del catálogo.")
             except ConfiguracionPlan.DoesNotExist:
-                pass
-        messages.success(request, "Configuración de planes actualizada")
+                messages.error(request, "Plan no encontrado.")
+            return redirect("gestionar_planes")
+
+        # ── Agregar plan nuevo ────────────────────────────────────────────────
+        if action == "add_plan":
+            nombre = request.POST.get("nuevo_nombre", "").strip()
+            if not nombre:
+                messages.error(request, "El nombre del plan es obligatorio.")
+                return redirect("gestionar_planes")
+
+            # Generar slug único a partir del nombre
+            import re
+            slug_base = re.sub(r"[^a-z0-9]+", "_", nombre.lower()).strip("_")
+            slug = slug_base
+            contador = 1
+            while ConfiguracionPlan.objects.filter(plan=slug).exists():
+                slug = f"{slug_base}_{contador}"
+                contador += 1
+
+            precio = int(request.POST.get("nuevo_precio", 0) or 0)
+            costo = int(request.POST.get("nuevo_costo", 0) or 0)
+            pacientes = int(request.POST.get("nuevo_pacientes", 1) or 1)
+            med_val = int(request.POST.get("nuevo_medicamentos", 0) or 0)
+            llamadas = int(request.POST.get("nuevo_llamadas", 15) or 15)
+            descripcion = request.POST.get("nuevo_descripcion", "").strip()
+
+            ConfiguracionPlan.objects.create(
+                plan=slug,
+                nombre=nombre,
+                descripcion=descripcion,
+                precio_mensual=precio,
+                costo_estimado=costo,
+                limite_pacientes=pacientes,
+                limite_medicamentos=med_val if med_val > 0 else None,
+                limite_llamadas_mes=llamadas,
+                activo=True,
+            )
+            messages.success(request, f"Plan «{nombre}» creado correctamente.")
+            return redirect("gestionar_planes")
+
+        # ── Guardar cambios de planes existentes ──────────────────────────────
+        for config in ConfiguracionPlan.objects.all():
+            plan_key = config.plan
+
+            nombre = request.POST.get(f"nombre_{plan_key}", "").strip()
+            if nombre:
+                config.nombre = nombre
+
+            precio = request.POST.get(f"precio_{plan_key}")
+            costo = request.POST.get(f"costo_{plan_key}")
+            if precio:
+                config.precio_mensual = int(precio)
+            if costo:
+                config.costo_estimado = int(costo)
+
+            pacientes = request.POST.get(f"pacientes_{plan_key}")
+            medicamentos = request.POST.get(f"medicamentos_{plan_key}")
+            llamadas = request.POST.get(f"llamadas_{plan_key}")
+
+            if pacientes:
+                config.limite_pacientes = int(pacientes)
+            if medicamentos is not None:
+                med_val = int(medicamentos)
+                config.limite_medicamentos = med_val if med_val > 0 else None
+            if llamadas:
+                config.limite_llamadas_mes = int(llamadas)
+
+            config.save()
+
+        messages.success(request, "Configuración de planes actualizada.")
         return redirect("gestionar_planes")
 
-    # GET: mostrar planes
-    configuraciones = ConfiguracionPlan.objects.all()
-    context = {
-        "configuraciones": configuraciones,
-    }
+    configuraciones = ConfiguracionPlan.objects.all().order_by("precio_mensual")
+    context = {"configuraciones": configuraciones}
     return render(request, "admin_panel/gestionar_planes.html", context)
 
 
@@ -731,6 +780,7 @@ def crear_usuario_admin(request):
         emergency_contact_phone_country = request.POST.get("emergency_contact_phone_country", "+57").strip()
         emergency_contact_phone_number = request.POST.get("emergency_contact_phone_number", "").strip()
         plan = request.POST.get("plan", Perfil.PLAN_FREEMIUM)
+        rol = request.POST.get("rol", "usuario")
 
         if not all([username, email, password, first_name, last_name]):
             messages.error(request, "Por favor completa todos los campos obligatorios.")
@@ -767,13 +817,19 @@ def crear_usuario_admin(request):
                     emergency_contact_phone_country=emergency_contact_phone_country,
                     emergency_contact_phone_number=emergency_contact_phone_number,
                 )
+                # Asignar rol
+                if rol == "admin":
+                    usuario.is_staff = True
+                    usuario.save()
+
                 # Asignar el plan elegido por el admin
                 if plan and plan != Perfil.PLAN_FREEMIUM:
                     perfil.plan = plan
                     perfil.plan_expiration = date.today() + timedelta(days=30)
                     perfil.save()
 
-                messages.success(request, f"Usuario '{username}' creado con plan {perfil.get_plan_display()}.")
+                rol_label = "Administrador" if rol == "admin" else "Usuario"
+                messages.success(request, f"Usuario '{username}' creado como {rol_label} con plan {perfil.get_plan_display()}.")
                 return redirect("editar_usuario", usuario_id=usuario.id)
             except Exception:
                 messages.error(request, "Error al crear el usuario. Verifica los datos e intenta de nuevo.")

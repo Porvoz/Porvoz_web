@@ -186,7 +186,33 @@
                     </div>
                 </div>
 
-                <!-- 5. Plan (solo admin) -->
+                <!-- 5. Rol de la cuenta -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <i class="bi bi-shield-person text-slate-500"></i> Rol de la cuenta
+                        <span class="text-[10px] font-normal text-slate-400 ml-1">(solo visible para el admin)</span>
+                    </h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="rol" value="usuario" checked class="sr-only peer">
+                            <div class="px-4 py-3 rounded-xl border-2 border-slate-200 text-center peer-checked:border-slate-800 peer-checked:bg-slate-800 peer-checked:text-white transition-all">
+                                <i class="bi bi-person block text-lg mb-1"></i>
+                                <span class="text-sm font-semibold">Usuario</span>
+                                <p class="text-[10px] mt-0.5 opacity-60">Acceso normal</p>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="rol" value="admin" class="sr-only peer">
+                            <div class="px-4 py-3 rounded-xl border-2 border-slate-200 text-center peer-checked:border-slate-800 peer-checked:bg-slate-800 peer-checked:text-white transition-all">
+                                <i class="bi bi-shield-fill-check block text-lg mb-1"></i>
+                                <span class="text-sm font-semibold">Administrador</span>
+                                <p class="text-[10px] mt-0.5 opacity-60">Acceso total al panel</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 6. Plan (solo admin) -->
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                     <h2 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
                         <i class="bi bi-star text-slate-500"></i> Plan inicial
